@@ -86,7 +86,7 @@ class ft260:
                 data_or_wLength = length )
 
     def set_report(self, report_id:int, data:bytes ):
-        print('set_report', data)
+        #print('set_report', data)
         return self._device.ctrl_transfer(
                 bmRequestType = 0b00100001,
                 bRequest = 0x09,
@@ -116,14 +116,27 @@ class ft260:
         self.set_report(REPORT_ID_SYSTEM_SETTING, bytes([REPORT_ID_SYSTEM_SETTING, request, value]))
         self._reload_system_setting()
 
-
     @synchronized
-    def i2c_reset():
-        self.set_report(REPORT_ID_SYSTEM_SETTING, bytes([REPORT_ID_SYSTEM_SETTING, 0x20]))
+    def i2c_reset(self):
+        self.set_report(REPORT_ID_SYSTEM_SETTING, b'\xA1\x20')
+
+    @property
+    def i2c_clock_speed(self):
+        "Ranges from 60K bps to 3400K bps"
+        i2c_status = self.get_report(REPORT_ID_I2C_STATUS,5)
+        return i2c_status[2] | (i2c_status[3] << 8)
+
+    @i2c_clock_speed.setter
+    def i2c_clock_speed(self, value:int ):
+        if value < 60 or value > 3400: 
+            raise ValueError('out of range')
+        self.set_report(REPORT_ID_SYSTEM_SETTING, b'\xA1\x22'+value.to_bytes(2, byteorder='little')  )
 
     @synchronized
     def i2c_write(self, address:int, data:list, flag:int=0x06, timeout=None):
-        buf = bytes( [0xD0, address, flag, len(data)] + data )
+        if len(data) == 0 :
+            raise ValueError('empty data')
+        buf = bytes( [ 0xD0 + ((len(data)-1) // 4), address, flag, len(data)] + data )
         #print('write', " ".join("%02x" % b for b in buf) )
         return self._i2c_ep_out.write(buf, timeout=timeout)
 
@@ -148,8 +161,13 @@ class ft260:
 
 if __name__ == '__main__':
     ft = ft260(find_devices()[0])
-    print(ft.i2c_scan())
-    print(ft.i2c_scan([32, 80, 100]))
+    #print(ft.i2c_scan())
+    #print(ft.i2c_scan([32, 80, 100]))
+
+    print(ft.i2c_clock_speed)
+    ft.i2c_clock_speed = 100
+    print(ft.i2c_clock_speed)
+
     
 
 
