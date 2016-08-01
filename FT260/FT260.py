@@ -6,6 +6,9 @@ import usb.core
 import usb.util as util
 import usb.core as core
 import threading
+import math
+import time
+from I2C import I2C
 from tools import *
 
 VENDOR_ID=0x0403
@@ -40,10 +43,10 @@ PARITY_EVEN = 2
 PARITY_HIGH = 3
 PARITY_LOW = 4
 
-class ft260:
+class FT260:
     def __init__(self, device:usb.core.Device):
         self._device = device
-        self.lock = threading.RLock()
+        
 
         cfg = self._device.get_active_configuration()
 
@@ -56,10 +59,12 @@ class ft260:
         i2c_intf = None
         self._i2c_ep_out = None
         self._i2c_ep_in = None
+        self._i2c_lock = threading.RLock()
         
         uart_intf = None
         self._uart_ep_out = None
         self._uart_ep_in = None
+        self._uart_lock = threading.RLock()
 
         if cfg.bNumInterfaces == 2 :
             if self._device.is_kernel_driver_active(1):
@@ -126,9 +131,10 @@ class ft260:
         self.set_report(REPORT_ID_SYSTEM_SETTING, bytes([REPORT_ID_SYSTEM_SETTING, request, value]))
         self._reload_system_setting()
 
-    @synchronized
     def i2c_reset(self):
-        self.set_report(REPORT_ID_SYSTEM_SETTING, b'\xA1\x20')
+        with self._i2c_lock:
+            self.set_report(REPORT_ID_SYSTEM_SETTING, b'\xA1\x20')
+            time.sleep(1)
 
     @property
     def i2c_clock_speed(self):
@@ -143,32 +149,39 @@ class ft260:
         else:
             raise ValueError('out of range')
             
-    @synchronized
     def i2c_write(self, address:int, data:bytes, flag:int=0x06, timeout=None):
         if len(data) == 0 :
             raise ValueError('empty data')
-        buf = bytes( [ 0xD0 + ((len(data)-1) // 4), address, flag, len(data)] ) + data
-        #print('write', " ".join("%02x" % b for b in buf) )
-        return self._i2c_ep_out.write(buf, timeout=timeout)
+        if len(data) > 64 :
+            raise ValueError('max len data 64')
+        with self._i2c_lock:
+            buf = bytes( [ 0xD0 + ((len(data)-1) // 4), address, flag, len(data)] ) + data
+            #print('write', " ".join("%02x" % b for b in buf) )
+            return self._i2c_ep_out.write(buf, timeout=timeout)
 
-    @synchronized
     def i2c_read(self, address:int, length:int, flag:int=0x06, timeout=1000):
-        buf = bytes( [0xC2, address, flag] ) + length.to_bytes(2, byteorder='little')
-        #print('read-write',  " ".join("%02x" % b for b in buf) )
-        self._i2c_ep_out.write(buf)
-        r = self._i2c_ep_in.read(64, timeout=timeout)
-        #print("read", " ".join("%02x" % b for b in r))
-        return bytes(r[2:length+2])
+        if length<0 or length > 64 :
+            raise ValueError('length out of range 1 - 64')
+        with self._i2c_lock:
+            buf = bytes( [0xC2, address, flag] ) + length.to_bytes(2, byteorder='little')
+            #print('read-write',  " ".join("%02x" % b for b in buf) )
+            self._i2c_ep_out.write(buf)
+            r = self._i2c_ep_in.read( 66, timeout=timeout)
+            #print("read", " ".join("%02x" % b for b in r))
+            return bytes(r[2:length+2])
 
-    @synchronized
     def i2c_scan(self, address_range:list = range(1,127) ):
-        find = []
-        for address in address_range:
-            buf = self.i2c_read(address,4)
-            if buf != b'\xFF\xFF\xFF\xFF':
-                #print("%02x" % i, buf)
-                find.append(address)
-        return find
+        with self._i2c_lock:
+            find = []
+            for address in address_range:
+                buf = self.i2c_read(address,4)
+                if buf != b'\xFF\xFF\xFF\xFF':
+                    #print("%02x" % i, buf)
+                    find.append(address)
+            return find
+
+    def get_i2c(self):
+        return I2C(self)
 
     def gpio_read_all(self):
         buf = self.get_report(REPORT_ID_GPIO, 5)
@@ -179,9 +192,10 @@ class ft260:
             raise ValueError
         return self.set_report(REPORT_ID_GPIO, b'\xB0'+data )
 
-    @synchronized
     def uart_reset(self):
-        self.set_report(REPORT_ID_SYSTEM_SETTING, b'\xA1\x40')
+        with self._uart_lock:
+            self.set_report(REPORT_ID_SYSTEM_SETTING, b'\xA1\x40')
+            time.sleep(1)
 
     @property
     def uart_status(self):
@@ -249,15 +263,24 @@ class ft260:
     def uart_breaking(self, value:bool):
         self.set_report(REPORT_ID_SYSTEM_SETTING, b'\xA1\x46'+(  b'\x01' if value else b'\x01' )  )
         
-    @synchronized
     def uart_write(self, data:bytes, timeout=None):
         if len(data) == 0 :
             raise ValueError('empty data')
-        buf = bytes( [ 0xF0 + ((len(data)-1) // 4), len(data)] ) + data 
-        return self._uart_ep_out.write(buf, timeout=timeout)
+        if len(data) > 64 :
+            raise ValueError('max len data 64')
+        with self._uart_lock:
+            buf = bytes( [ 0xF0 + ((len(data)-1) // 4), len(data)] ) + data 
+            return self._uart_ep_out.write(buf, timeout=timeout)
+
+    def uart_read(self, length:int, timeout=1000):
+        if length<0 or length > 64 :
+            raise ValueError('length out of range 1 - 64')
+        with self._uart_lock:
+            r = self._uart_ep_in.read((math.ceil(length/4)*4)+2, timeout=timeout)
+            return bytes(r[2:length+2])
 
 if __name__ == '__main__':
-    ft = ft260(find_devices()[0])
+    ft = FT260(find_devices()[0])
     # print(ft.i2c_scan())
     #print(ft.i2c_scan([32, 80, 100]))
 
@@ -270,15 +293,11 @@ if __name__ == '__main__':
     # ft.uart_reset()
     
     # print(ft.uart_baud_rate)
-    # ft.uart_baud_rate = 9600
+    ft.uart_baud_rate = 9600
     # print(ft.uart_baud_rate)
 
-    #ft.uart_write(b'haha')
-
-    # print(ft.uart_mode)
-    # ft.uart_mode = UART_MODE_XON_XOFF
-    # print(ft.uart_mode)
-    
+    # ft.uart_write(b'haha')
+    # print(ft.uart_read(1, timeout=3000))
 
 
 
