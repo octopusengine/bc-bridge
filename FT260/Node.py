@@ -7,7 +7,7 @@ class Node:
     def __init__(self, ft260:FT260):
         self._ft260 = ft260
 
-        i2c = I2C(self._ft260 )
+        i2c = I2C(self._ft260)
 
         for address in self._ft260.i2c_scan([Humidity.ADDRESS]):
             if Humidity.ADDRESS == address :
