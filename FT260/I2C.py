@@ -1,5 +1,7 @@
+from FT260 import FT260
+
 class I2C:
-    def __init__(self, ft260):
+    def __init__(self, ft260:FT260):
         self._ft260 = ft260
 
     def read(self, address:int, length:int, flag:int=0x06, timeout=1000):

@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 #
-
 import sys
 import usb.core
 import usb.util as util
@@ -8,7 +7,6 @@ import usb.core as core
 import threading
 import math
 import time
-from I2C import I2C
 from tools import *
 
 VENDOR_ID=0x0403
@@ -180,9 +178,6 @@ class FT260:
                     find.append(address)
             return find
 
-    def get_i2c(self):
-        return I2C(self)
-
     def gpio_read_all(self):
         buf = self.get_report(REPORT_ID_GPIO, 5)
         return bytes(buf[1:])
@@ -215,8 +210,7 @@ class FT260:
     @property
     def uart_baud_rate(self):
         "Ranges from 60K bps to 3400K bps"
-        uart_status = ft.uart_status
-        return int.from_bytes(uart_status[2:6],'little')
+        return int.from_bytes( self.uart_status[2:6],'little')
 
     @uart_baud_rate.setter
     def uart_baud_rate(self, value:int ):

@@ -1,11 +1,13 @@
 from FT260 import find_devices, FT260
+from I2C import I2C
+from UART import UART
 from tag.Humidity import Humidity
 
 class Node:
     def __init__(self, ft260:FT260):
         self._ft260 = ft260
 
-        i2c = self._ft260.get_i2c()
+        i2c = I2C(self._ft260 )
 
         for address in self._ft260.i2c_scan([Humidity.ADDRESS]):
             if Humidity.ADDRESS == address :
