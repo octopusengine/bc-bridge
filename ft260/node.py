@@ -1,6 +1,6 @@
-from FT260 import find_devices, FT260
-from I2C import I2C
-from UART import UART
+from ft260 import find_devices, FT260
+from i2c import I2C
+from uart import UART
 from tag.Humidity import Humidity
 
 class Node:

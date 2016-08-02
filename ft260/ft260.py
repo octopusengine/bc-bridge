@@ -15,7 +15,6 @@ DEVICE_ID=0x6030
 def find_devices():
     return list(usb.core.find(idVendor=VENDOR_ID, idProduct=DEVICE_ID, find_all=True))
 
-
 REPORT_ID_CHIP_CODE = 0xA0
 REPORT_ID_SYSTEM_SETTING = 0xA1
 REPORT_ID_GPIO = 0xB0
@@ -45,7 +44,6 @@ class FT260:
     def __init__(self, device:usb.core.Device):
         self._device = device
         
-
         cfg = self._device.get_active_configuration()
 
         if self._device.is_kernel_driver_active(0):

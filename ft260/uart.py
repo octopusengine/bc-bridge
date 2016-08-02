@@ -1,4 +1,5 @@
-from FT260 import FT260
+from ft260 import FT260
+
 class UART:
     def __init__(self, ft260:FT260):
         self._ft260 = ft260

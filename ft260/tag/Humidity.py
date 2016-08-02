@@ -1,4 +1,4 @@
-from I2C import I2C
+from i2c import I2C
 import ctypes
 
 

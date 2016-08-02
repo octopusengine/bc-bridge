@@ -1,4 +1,4 @@
-from FT260 import FT260
+from ft260 import FT260
 
 class I2C:
     def __init__(self, ft260:FT260):
