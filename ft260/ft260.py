@@ -164,6 +164,8 @@ class FT260:
             self._i2c_ep_out.write(buf)
             r = self._i2c_ep_in.read( 66, timeout=timeout)
             #print("read", " ".join("%02x" % b for b in r))
+            if r[1] < length:
+                length = r[1]
             return bytes(r[2:length+2])
 
     def i2c_scan(self, address_range:list = range(1,127) ):
@@ -269,6 +271,8 @@ class FT260:
             raise ValueError('length out of range 1 - 64')
         with self._uart_lock:
             r = self._uart_ep_in.read((math.ceil(length/4)*4)+2, timeout=timeout)
+            if r[1] < length:
+                length = r[1]
             return bytes(r[2:length+2])
 
 if __name__ == '__main__':
