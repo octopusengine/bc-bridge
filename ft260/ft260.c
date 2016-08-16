@@ -23,68 +23,128 @@
 
 #include "ft260.h"
 
-char *get_hid_path(unsigned short vendor_id, unsigned short product_id,
-                   unsigned short interface_id) {
-  struct udev *udev;
-  struct udev_enumerate *enumerate;
-  struct udev_list_entry *devices, *dev_list_entry;
-  struct udev_device *dev;
-  struct udev_device *usb_dev;
-  struct udev_device *intf_dev;
-  char *ret_path = NULL;
-  /* Create the udev object */
-  udev = udev_new();
-  if (!udev) {
-    printf("Can't create udev\n");
-    return NULL;
-  }
-  /* Create a list of the devices in the 'hidraw' subsystem. */
-  enumerate = udev_enumerate_new(udev);
-  udev_enumerate_add_match_subsystem(enumerate, "hidraw");
-  udev_enumerate_scan_devices(enumerate);
-  devices = udev_enumerate_get_list_entry(enumerate);
-  /* udev_list_entry_foreach is a macro which expands to a loop. */
-  udev_list_entry_foreach(dev_list_entry, devices) {
-    const char *path;
-    const char *dev_path;
-    const char *str;
-    unsigned short cur_vid;
-    unsigned short cur_pid;
-    unsigned short cur_interface_id;
-    path = udev_list_entry_get_name(dev_list_entry);
-    dev = udev_device_new_from_syspath(udev, path);
-    dev_path = udev_device_get_devnode(dev);
-    /* Find the next parent device, with matching
-    subsystem "usb" and devtype value "usb_device" */
-    usb_dev =
-        udev_device_get_parent_with_subsystem_devtype(dev, "usb", "usb_device");
-    if (!usb_dev) {
-      printf("Unable to find parent usb device.");
-      return NULL;
+int hid_i2c;
+int hid_uart;
+
+int ft260_open_device() {
+
+    struct udev *udev;
+    struct udev_enumerate *enumerate, *enumerate_hid;
+    struct udev_list_entry *devices, *entry, *devices_hid, *entry_hid;
+    struct udev_device *dev;
+    struct udev_device *usb_dev;
+    struct udev_device* hid = NULL;
+
+    struct udev_device *intf_dev;
+    char *ret_path = NULL;
+    /* Create the udev object */
+    udev = udev_new();
+    if (!udev) {
+        perror("Can't create udev\n");
+        return 0;
     }
-    str = udev_device_get_sysattr_value(usb_dev, "idVendor");
-    cur_vid = (str) ? strtol(str, NULL, 16) : -1;
-    str = udev_device_get_sysattr_value(usb_dev, "idProduct");
-    cur_pid = (str) ? strtol(str, NULL, 16) : -1;
-    intf_dev = udev_device_get_parent_with_subsystem_devtype(dev, "usb",
-                                                             "usb_interface");
-    if (!intf_dev) {
-      printf("Unable to find parent usb interface.");
-      return NULL;
+  
+    //enumerate over usb device
+    enumerate = udev_enumerate_new(udev);
+    udev_enumerate_add_match_subsystem(enumerate, "usb");
+    udev_enumerate_add_match_property(enumerate, "DEVTYPE", "usb_device");
+    udev_enumerate_scan_devices(enumerate);
+    devices = udev_enumerate_get_list_entry(enumerate);
+
+    udev_list_entry_foreach(entry, devices) {
+        const char *str;
+        unsigned short cur_vid;
+        unsigned short cur_did;
+        const char* path = udev_list_entry_get_name(entry);
+
+        usb_dev = udev_device_new_from_syspath(udev, path);
+    
+        str = udev_device_get_sysattr_value(usb_dev, "idVendor");
+        cur_vid = (str) ? strtol(str, NULL, 16) : -1;
+        str = udev_device_get_sysattr_value(usb_dev, "idProduct");
+        cur_did = (str) ? strtol(str, NULL, 16) : -1;
+
+        if (cur_vid == VENDOR_ID && cur_did == DEVICE_ID){
+            fprintf(stderr,"path %s \n", udev_device_get_devnode(usb_dev) );
+
+            fprintf(stderr,"idVendor %hx \n", cur_vid );
+            fprintf(stderr,"idProduct %hx \n", cur_did );
+
+            enumerate_hid = udev_enumerate_new(udev);
+            udev_enumerate_add_match_parent(enumerate_hid, usb_dev);
+            udev_enumerate_add_match_subsystem(enumerate_hid, "hidraw");
+            udev_enumerate_scan_devices(enumerate_hid);
+            devices_hid = udev_enumerate_get_list_entry(enumerate_hid);
+            udev_list_entry_foreach(entry_hid, devices_hid) {
+                const char *path = udev_list_entry_get_name(entry_hid);
+                hid = udev_device_new_from_syspath(udev, path);
+                const char *hid_path = udev_device_get_devnode(hid);
+                fprintf(stderr,"hid_path %s \n", hid_path );
+
+                if(!hid_i2c){
+                    hid_i2c = open(hid_path, O_RDWR | O_NONBLOCK);
+                    if (hid_i2c < 0) {
+                        perror("Unable to open hid0 ");
+                        return -1;
+                    }
+                }else if(!hid_uart){
+                    hid_uart = open(hid_path, O_RDWR | O_NONBLOCK);
+                    if (hid_uart < 0) {
+                        perror("Unable to open hid1 ");
+                        return -1;
+                    }
+                }else{
+                    perror("Unexpected hid device");
+                    return -1;
+                }
+            }
+            return hid_i2c>-1 && hid_uart>-1;
+        }
+
     }
-    str = udev_device_get_sysattr_value(intf_dev, "bInterfaceNumber");
-    cur_interface_id = (str) ? strtol(str, NULL, 16) : -1;
-    //printf("vid=%x pid=%x interface=%d\n", cur_vid, cur_pid, cur_interface_id);
-    if (cur_vid == vendor_id && cur_pid == product_id &&
-        cur_interface_id == interface_id) {
-      ret_path = strdup(dev_path);
-      udev_device_unref(dev);
-      break;
+
+    return 0;
+}
+
+
+void ft260_close_dev(){
+    close(hid_i2c);
+    close(hid_uart);
+}
+
+void print_buf(char* buf, int res){
+    printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+    for (int i = 0; i < res; i++){
+        printf("%d %hhx %d\n", i, buf[i], buf[i]);
     }
-    udev_device_unref(dev);
-  }
-  /* Free the enumerator object */
-  udev_enumerate_unref(enumerate);
-  udev_unref(udev);
-  return ret_path;
+}
+
+int get_feature(int hid, char* buf, size_t length){
+    return ioctl(hid, HIDIOCGFEATURE(length), buf);
+}
+
+int set_feature(int hid, char* buf, size_t length){
+    return ioctl(hid, HIDIOCSFEATURE(length), buf);
+}
+
+int ft260_check_chip_version(){
+    char buf[13];
+    buf[0] = REPORT_ID_CHIP_CODE;
+    int res = get_feature( hid_i2c, buf, sizeof(buf) );
+    if (res < 0) {
+        return 0;
+    }
+    return (buf[1]==0x02) && (buf[2]==0x60);
+}
+
+void ft260_led(int state){
+    char buf[5];
+    buf[0] = REPORT_ID_GPIO;
+    int res = get_feature( hid_i2c, buf, sizeof(buf) );
+    print_buf(buf, res);
+    state = state ? 1: 0;
+    buf[3] = (state << 7);
+    buf[4] |= 0x80;
+    print_buf(buf, res);
+    set_feature(hid_i2c, buf, sizeof(buf));
 }
