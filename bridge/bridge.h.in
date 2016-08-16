@@ -1,0 +1,2 @@
+#define Bridge_VERSION_MAJOR @Bridge_VERSION_MAJOR@
+#define Bridge_VERSION_MINOR @Bridge_VERSION_MINOR@
