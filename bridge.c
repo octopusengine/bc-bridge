@@ -31,14 +31,11 @@ int main (int argc, char *argv[])
 
     ft260_i2c_scan();
 
+    //switch i2c 
+    ft260_i2c_set_bus(SYS);
 
     //vycteni z HTS221 WHO AM I 
     unsigned char data[1];
-
-    //switch i2c 
-    data[0] = 0x01;
-    ft260_i2c_write(112, data, sizeof(data));
-
     data[0] = 0x0F;
     ft260_i2c_write(0x5F, data, sizeof(data));
     int res = ft260_i2c_read(0x5F, data, 1); //0x5F

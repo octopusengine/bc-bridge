@@ -9,6 +9,8 @@
 #define REPORT_ID_I2C_STATUS 0xC0
 #define REPORT_ID_UART_STATUS 0xE0
 
+enum I2C_BUS { SYS=1, APP=2 };
+
 int ft260_open_device();
 void ft260_close_dev();
 int ft260_check_chip_version();
@@ -16,6 +18,6 @@ void ft260_led(int state);
 void ft260_i2c_scan();
 int ft260_i2c_write(char address, char *data, char data_length);
 int ft260_i2c_read(char address, char *data, char data_length);
-
+void ft260_i2c_set_bus(enum I2C_BUS bus);
 
 void print_buf(char* buf, int res);

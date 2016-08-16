@@ -195,6 +195,12 @@ int ft260_i2c_read(char address, char *data, char data_length){
     return data_length;
 }
 
+void ft260_i2c_set_bus(enum I2C_BUS bus){
+    unsigned char data[1];
+    data[0] = bus;
+    ft260_i2c_write(112, data, sizeof(data));
+}
+
 void ft260_i2c_scan(){
     unsigned char buf[4];
     int res;
