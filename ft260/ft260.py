@@ -7,6 +7,7 @@ import usb.core as core
 import threading
 import math
 import time
+import io
 from tools import *
 
 VENDOR_ID=0x0403
@@ -61,6 +62,9 @@ class FT260:
         self._uart_ep_out = None
         self._uart_ep_in = None
         self._uart_lock = threading.RLock()
+        self._uart_read_buffer = []
+
+        self._uart_read_thread = None
 
         if cfg.bNumInterfaces == 2 :
             if self._device.is_kernel_driver_active(1):
@@ -82,7 +86,9 @@ class FT260:
         if uart_intf :
             self._uart_ep_out = usb.util.find_descriptor(uart_intf, custom_match = lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT)
             self._uart_ep_in = usb.util.find_descriptor(uart_intf, custom_match = lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN)
-    
+            # self._uart_read_thread = threading.Thread(target=self._uart_read_thread_target)
+            # self._uart_read_thread.start()
+
     def get_report(self, report_id:int, length:int ):
         wIndex = 0
         if report_id == REPORT_ID_UART_STATUS and self._i2c_ep_out :
@@ -267,13 +273,29 @@ class FT260:
             return self._uart_ep_out.write(buf, timeout=timeout)
 
     def uart_read(self, length:int, timeout=1000):
+        # r = []
+        # while self._uart_read_buffer and len(r) < length :
+        #     r.append(self._uart_read_buffer.pop(0))
+        # return bytes(r)
+
         if length<0 or length > 64 :
             raise ValueError('length out of range 1 - 64')
         with self._uart_lock:
             r = self._uart_ep_in.read((math.ceil(length/4)*4)+2, timeout=timeout)
+            print(r)
             if r[1] < length:
                 length = r[1]
             return bytes(r[2:length+2])
+
+    def _uart_read_thread_target(self):
+        while self._uart_ep_in:
+            try:
+                r = self._uart_ep_in.read(64, timeout=1000)
+            except usb.core.USBError as e :
+                if e.errno == 110 :
+                    continue
+            if r :
+                self._uart_read_buffer.extend( r[2:r[1]+2] )
 
 if __name__ == '__main__':
     ft = FT260(find_devices()[0])
@@ -284,19 +306,45 @@ if __name__ == '__main__':
     #ft.i2c_clock_speed = 100
     #print(ft.i2c_clock_speed)
 
-    #human_print_gpio(ft.gpio_read_all())
+    # human_print_gpio(ft.gpio_read_all())
+
+    # pins = ft.gpio_read_all()
+    # while 1:
+    #     ft.i2c_write(112, b'\x01')
+    #     time.sleep(1)
+    # # print(ft.i2c_scan())
+
+    # # print(0b11100000)
+    # exit()
+
+    # ft.i2c_write(0b11100011, bytes([0b00000001]) )
+
+    # ft.gpio_write_all(pins[:2]+b'\x00\x00')
+
+    #blikani diodou
+    for i in range(10):
+        ft.gpio_write_all(pins[:2]+b'\x00\xFF')
+        time.sleep(1)
+        ft.gpio_write_all(pins[:2]+b'\xFF\xFF')
+        time.sleep(1)
 
     # ft.uart_reset()
     
     # print(ft.uart_baud_rate)
-    ft.uart_baud_rate = 9600
+    # ft.uart_baud_rate = 9600
     # print(ft.uart_baud_rate)
 
-    # ft.uart_write(b'haha')
-    # print(ft.uart_read(1, timeout=3000))
+    ft.uart_write(b'hahaha')
+    print(ft.uart_read(8))
 
+    # while 1:
+    #     # try:
+    #     r = ft.uart_read(64, timeout=1000)
+    #     # except KeyboardInterrupt:
+    #     #     break
+    #     # except :
+    #     #     continue
 
-
-
-
-        
+    #     if r:
+    #         print(r)
+    #         # ft.uart_write(r)
