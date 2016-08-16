@@ -113,7 +113,7 @@ void ft260_close_dev(){
 }
 
 void print_buf(char* buf, int res){
-    printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+    printf("print_buf res: %d\n", res);
     for (int i = 0; i < res; i++){
         printf("%d %hhx %d\n", i, buf[i], buf[i]);
     }
@@ -147,4 +147,62 @@ void ft260_led(int state){
     buf[4] |= 0x80;
     print_buf(buf, res);
     set_feature(hid_i2c, buf, sizeof(buf));
+}
+
+int ft260_i2c_write(char address, char *data, char data_length){
+    uint8_t buf[ 4+data_length ];
+    memcpy(buf+4,data,data_length);
+    buf[0] = 0xD0 + ((data_length-1) / 4); /* I2C write */
+    buf[1] = address; /* Slave address */
+    buf[2] = 0x06; /* Start and Stop */
+    buf[3] = data_length;
+    return write(hid_i2c, buf, sizeof(buf));
+}
+
+int ft260_i2c_read(char address, char *data, char data_length){
+    char buf[66];
+    buf[0] = 0xC2; /* I2C write */
+    buf[1] = address; /* Slave address */
+    buf[2] = 0x06; /* Start and Stop */
+    buf[3] = data_length;
+    buf[4] = 0;
+    int res = write(hid_i2c, buf, 5);
+    if(res<0){
+        return res;
+    }
+
+    fd_set set;
+    struct timeval timeout;
+    FD_ZERO(&set); /* clear the set */
+    FD_SET(hid_i2c, &set); /* add our file descriptor to the set */
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 500000;
+    res = select(hid_i2c + 1, &set, NULL, NULL, &timeout);
+    if(res == -1)/* an error accured */
+        return -1;
+    else if(res == 0)/* a timeout occured */
+        return -1;
+    else
+        res = read(hid_i2c, buf, 66);
+        
+    if(res<0){
+        return res;
+    }    
+    if( data_length > buf[1] ){
+        data_length = buf[1];
+    }
+    memcpy(data,buf+2,data_length);
+    return data_length;
+}
+
+void ft260_i2c_scan(){
+    unsigned char buf[4];
+    int res;
+    for(uint8_t address=1; address<128; address++){
+        res = ft260_i2c_read(address, buf, 4);
+        if((res==4) && (buf[0]!=0xFF) && (buf[1]!=0xFF) && (buf[2]!=0xFF) && (buf[3]!=0xFF) ){
+            printf("address:  %hhx \n", address );
+        }
+
+    }
 }
