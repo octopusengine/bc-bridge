@@ -149,6 +149,29 @@ void ft260_led(int state){
     set_feature(hid_i2c, buf, sizeof(buf));
 }
 
+void ft260_i2c_reset(){
+    char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x20};
+    set_feature(hid_i2c, buf, sizeof(buf));
+    sleep(1);
+}
+
+int ft260_i2c_set_clock_speed(int speed){
+    if( (speed<60) || (speed>3400))
+        return 0;
+    char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x22, (char)speed, (char)(speed>>8) };
+    return set_feature(hid_i2c, buf, sizeof(buf));
+}
+
+int ft260_i2c_get_clock_speed(){
+    unsigned char buf[5];
+    buf[0] = REPORT_ID_I2C_STATUS;
+    int res = get_feature(hid_i2c, buf, sizeof(buf));
+    if( (res==5) && buf[0] == REPORT_ID_I2C_STATUS ){
+        return (int)( buf[2] | (buf[3]<<8) );
+    }
+    return -1;
+}
+
 int ft260_i2c_write(char address, char *data, char data_length){
     uint8_t buf[ 4+data_length ];
     memcpy(buf+4,data,data_length);
@@ -212,3 +235,13 @@ void ft260_i2c_scan(){
 
     }
 }
+
+// int ft260_uart_write(char *data, char data_length){
+//     uint8_t buf[ 4+data_length ];
+//     memcpy(buf+4,data,data_length);
+//     buf[0] = 0xD0 + ((data_length-1) / 4); /* I2C write */
+//     buf[1] = address; /* Slave address */
+//     buf[2] = 0x06; /* Start and Stop */
+//     buf[3] = data_length;
+//     return write(hid_i2c, buf, sizeof(buf));
+// }

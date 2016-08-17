@@ -172,10 +172,15 @@ int main (int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    printf("\tvendor: %d \n", ft260_check_chip_version() );
+    printf("chip_version: %d \n", ft260_check_chip_version() );
 
     
    //blink(5);
+
+   	ft260_i2c_reset();
+	//printf("t260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
+	//ft260_i2c_set_clock_speed(100);
+	//printf("t260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
 
     //ft260_i2c_scan();
 
