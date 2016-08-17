@@ -149,6 +149,7 @@ void ft260_led(int state){
     set_feature(hid_i2c, buf, sizeof(buf));
 }
 
+// ------------- i2c --------------------
 void ft260_i2c_reset(){
     char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x20};
     set_feature(hid_i2c, buf, sizeof(buf));
@@ -172,7 +173,7 @@ int ft260_i2c_get_clock_speed(){
     return -1;
 }
 
-int ft260_i2c_write(char address, char *data, char data_length){
+int ft260_i2c_write(unsigned char address, char *data, char data_length){
     uint8_t buf[ 4+data_length ];
     memcpy(buf+4,data,data_length);
     buf[0] = 0xD0 + ((data_length-1) / 4); /* I2C write */
@@ -182,8 +183,8 @@ int ft260_i2c_write(char address, char *data, char data_length){
     return write(hid_i2c, buf, sizeof(buf));
 }
 
-int ft260_i2c_read(char address, char *data, char data_length){
-    char buf[66];
+int ft260_i2c_read(unsigned char address, char *data, char data_length){
+    char buf[64];
     buf[0] = 0xC2; /* I2C write */
     buf[1] = address; /* Slave address */
     buf[2] = 0x06; /* Start and Stop */
@@ -206,7 +207,7 @@ int ft260_i2c_read(char address, char *data, char data_length){
     else if(res == 0)/* a timeout occured */
         return -1;
     else
-        res = read(hid_i2c, buf, 66);
+        res = read(hid_i2c, buf, 64);
         
     if(res<0){
         return res;
@@ -224,17 +225,22 @@ void ft260_i2c_set_bus(enum I2C_BUS bus){
     ft260_i2c_write(112, data, sizeof(data));
 }
 
-void ft260_i2c_scan(){
+int ft260_i2c_check_device_exist(unsigned char address){
     unsigned char buf[4];
-    int res;
-    for(uint8_t address=1; address<128; address++){
-        res = ft260_i2c_read(address, buf, 4);
-        if((res==4) && (buf[0]!=0xFF) && (buf[1]!=0xFF) && (buf[2]!=0xFF) && (buf[3]!=0xFF) ){
-            printf("address:  %hhx \n", address );
-        }
+    int res = ft260_i2c_read(address, buf, 4);
+    return ( (res==4) && !( (buf[0]==0xFF) && (buf[1]==0xFF) && (buf[2]==0xFF) && (buf[3]==0xFF) ) );
+}
 
+void ft260_i2c_scan(){
+    for(unsigned char address=1; address<128; address++){
+        if( ft260_i2c_check_device_exist(address) ){
+             printf("address:  %hhx %d \n", address, address );
+        }
+       
     }
 }
+
+// ------------- uart --------------------
 
 // int ft260_uart_write(char *data, char data_length){
 //     uint8_t buf[ 4+data_length ];

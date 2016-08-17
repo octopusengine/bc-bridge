@@ -177,16 +177,16 @@ int main (int argc, char *argv[])
     
    //blink(5);
 
-   	ft260_i2c_reset();
+   	// ft260_i2c_reset();
 	//printf("t260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
-	//ft260_i2c_set_clock_speed(100);
+	// ft260_i2c_set_clock_speed(100);
 	//printf("t260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
 
-    //ft260_i2c_scan();
-
-    //switch i2c 
+	//switch i2c 
     ft260_i2c_set_bus(SYS);
+    ft260_i2c_scan();
 
+    
     // //vycteni z HTS221 WHO AM I 
     // unsigned char data[1];
     // data[0] = 0x0F;
@@ -197,13 +197,13 @@ int main (int argc, char *argv[])
     
 
 
-    demo_humidity_init();
-    demo_temperature_init();
-    while(1){
-        demo_humidity_task();
-        demo_temperature_task();
-        sleep(1);
-    }
+    // demo_humidity_init();
+    // demo_temperature_init();
+    // while(1){
+    //     demo_humidity_task();
+    //     demo_temperature_task();
+    //     sleep(1);
+    // }
 
     ft260_close_dev();
     
