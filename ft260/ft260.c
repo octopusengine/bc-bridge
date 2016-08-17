@@ -174,7 +174,7 @@ int ft260_i2c_get_clock_speed(){
 }
 
 int ft260_i2c_write(unsigned char address, char *data, char data_length){
-    uint8_t buf[ 4+data_length ];
+    char buf[ 4+data_length ];
     memcpy(buf+4,data,data_length);
     buf[0] = 0xD0 + ((data_length-1) / 4); /* I2C write */
     buf[1] = address; /* Slave address */
@@ -242,12 +242,89 @@ void ft260_i2c_scan(){
 
 // ------------- uart --------------------
 
-// int ft260_uart_write(char *data, char data_length){
-//     uint8_t buf[ 4+data_length ];
-//     memcpy(buf+4,data,data_length);
-//     buf[0] = 0xD0 + ((data_length-1) / 4); /* I2C write */
-//     buf[1] = address; /* Slave address */
-//     buf[2] = 0x06; /* Start and Stop */
-//     buf[3] = data_length;
-//     return write(hid_i2c, buf, sizeof(buf));
+int ft260_uart_reset(){
+    char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x40};
+    set_feature(hid_uart, buf, sizeof(buf));
+    sleep(1);
+}
+
+unsigned char* get_uart_status(){
+    static unsigned char buf[10];
+    buf[0] = REPORT_ID_UART_STATUS;
+    get_feature(hid_uart, buf, sizeof(buf));
+    return buf;
+}
+
+// int ft260_uart_set_clock_speed(int speed){
+//     if( (speed<60) || (speed>3400))
+//         return 0;
+//     char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x22, (char)speed, (char)(speed>>8) };
+//     return set_feature(hid_i2c, buf, sizeof(buf));
 // }
+
+int ft260_uart_get_flow_ctrl(){
+    unsigned char *buf = get_uart_status();
+    return buf[1];  
+}
+
+int ft260_uart_get_baud_rate(){
+    unsigned char *buf = get_uart_status();
+    return (int)( buf[2] | (buf[3]<<8) | (buf[4]<<16) | (buf[5]<<24) );
+}
+
+int ft260_uart_get_data_bit(){
+    unsigned char *buf = get_uart_status();
+    return buf[6];
+}
+
+int ft260_uart_get_parity(){
+    unsigned char *buf = get_uart_status();
+    return buf[7];
+}
+
+int ft260_uart_get_stop_bit(){
+    unsigned char *buf = get_uart_status();
+    return buf[8];
+}
+
+int ft260_uart_get_breaking(){
+    unsigned char *buf = get_uart_status();
+    return buf[9];
+}
+
+int ft260_uart_write(char *data, char data_length){
+    uint8_t buf[ 2+data_length ];
+    memcpy(buf+4,data,data_length);
+    buf[0] = 0xF0 + ((data_length-1) / 4); 
+    buf[1] = data_length;
+    return write(hid_uart, buf, sizeof(buf));
+}
+
+int ft260_uart_read(char *data, char data_length){
+    char buf[64];
+    int res;
+    fd_set set;
+    struct timeval timeval_timeout;
+    FD_ZERO(&set); /* clear the set */
+    FD_SET(hid_uart, &set); /* add our file descriptor to the set */
+    timeval_timeout.tv_sec = 0;
+    timeval_timeout.tv_usec = 500000;
+    res = select(hid_uart + 1, &set, NULL, NULL, &timeval_timeout);
+    if(res == -1)/* an error accured */
+        return -1;
+    else if(res == 0)/* a timeout occured */
+        return -1;
+    else
+        res = read(hid_uart, buf, 64);
+        
+    if(res<0){
+        return res;
+    }    
+    //print_buf(buf, res);
+
+    if( data_length > buf[1] ){
+        data_length = buf[1];
+    }
+    memcpy(data,buf+2,data_length);
+    return data_length;
+}

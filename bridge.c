@@ -178,14 +178,28 @@ int main (int argc, char *argv[])
    //blink(5);
 
    	// ft260_i2c_reset();
-	//printf("t260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
+	//printf("ft260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
 	// ft260_i2c_set_clock_speed(100);
-	//printf("t260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
+	//printf("ft260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
 
 	//switch i2c 
     ft260_i2c_set_bus(SYS);
-    ft260_i2c_scan();
+    // ft260_i2c_scan();
 
+	//ft260_uart_reset();
+	//uart config
+	printf("ft260_uart_get_flow_ctrl: %d \n", ft260_uart_get_flow_ctrl() );
+	printf("ft260_uart_get_baud_rate: %d \n", ft260_uart_get_baud_rate() );
+	printf("ft260_uart_get_data_bit: %d \n", ft260_uart_get_data_bit() );
+	printf("ft260_uart_get_parity: %d \n", ft260_uart_get_parity() );
+	printf("ft260_uart_get_stop_bit: %d \n", ft260_uart_get_stop_bit() );
+	printf("ft260_uart_get_breaking: %d \n", ft260_uart_get_breaking() );
+
+	// ft260_uart_write("haha",4);
+	// char buf[32];
+	// int res = ft260_uart_read(buf,4);
+	// print_buf(buf, res);
+	
     
     // //vycteni z HTS221 WHO AM I 
     // unsigned char data[1];
@@ -193,10 +207,7 @@ int main (int argc, char *argv[])
     // ft260_i2c_write(0x5F, data, sizeof(data));
     // int res = ft260_i2c_read(0x5F, data, 1); //0x5F
     // printf("res %d \n", data[0] );
-
-    
-
-
+	
     // demo_humidity_init();
     // demo_temperature_init();
     // while(1){

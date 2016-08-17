@@ -21,8 +21,18 @@ int ft260_i2c_set_clock_speed(int speed);
 int ft260_i2c_get_clock_speed();
 int ft260_i2c_write(unsigned char address, char *data, char data_length);
 int ft260_i2c_read(unsigned char address, char *data, char data_length);
-int ft260_i2c_check_device_exist(unsigned char address)
+int ft260_i2c_check_device_exist(unsigned char address);
 void ft260_i2c_scan();
 void ft260_i2c_set_bus(enum I2C_BUS bus);
+
+int ft260_uart_reset();
+int ft260_uart_get_flow_ctrl();
+int ft260_uart_get_baud_rate();
+int ft260_uart_get_data_bit();
+int ft260_uart_get_parity();
+int ft260_uart_get_stop_bit();
+int ft260_uart_get_breaking();
+int ft260_uart_write(char *data, char data_length);
+int ft260_uart_read(char *data, char data_length);
 
 void print_buf(char* buf, int res);
