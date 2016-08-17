@@ -16,6 +16,10 @@ include_directories ("${PROJECT_SOURCE_DIR}/ft260")
 add_subdirectory (ft260)
 set (EXTRA_LIBS ${EXTRA_LIBS} ft260 -ludev)
 
+include_directories ("${PROJECT_SOURCE_DIR}/bcl/inc")
+add_subdirectory (bcl)
+set (EXTRA_LIBS ${EXTRA_LIBS} bcl)
+
 include_directories("${PROJECT_BINARY_DIR}")
 add_executable(Bridge "${PROJECT_BINARY_DIR}/bridge.c")
 target_link_libraries (${PROJECT_NAME}  ${EXTRA_LIBS})

@@ -1,7 +1,5 @@
 #include <bc/i2c/sys.h>
-#include <stm32l0xx_hal.h>
-
-extern I2C_HandleTypeDef hi2c1;
+#include <ft260.h>
 
 static bool _bc_app_i2c_tag_write(bc_tag_transfer_t *transfer, bool *communication_fault);
 static bool _bc_app_i2c_tag_read(bc_tag_transfer_t *transfer, bool *communication_fault);
@@ -21,8 +19,13 @@ static bool _bc_app_i2c_tag_write(bc_tag_transfer_t *transfer, bool *communicati
 {
 	*communication_fault = true;
 
-	if (HAL_I2C_Mem_Write(&hi2c1, transfer->device_address << 1, transfer->address, transfer->address_16_bit ? I2C_MEMADD_SIZE_16BIT : I2C_MEMADD_SIZE_8BIT, transfer->buffer, transfer->length, 0xFFFFFFFF) != HAL_OK)
-	{
+	ft260_i2c_set_bus(APP);
+
+	unsigned char buf[1+transfer->length];
+	buf[0] = transfer->address;
+	memcpy(buf+1,transfer->buffer,transfer->length);
+	int res = ft260_i2c_write(transfer->device_address, buf, 1+transfer->length );
+	if(res<1){
 		return false;
 	}
 
@@ -35,8 +38,13 @@ static bool _bc_app_i2c_tag_read(bc_tag_transfer_t *transfer, bool *communicatio
 {
 	*communication_fault = true;
 
-	if (HAL_I2C_Mem_Read(&hi2c1, transfer->device_address << 1, transfer->address, transfer->address_16_bit ? I2C_MEMADD_SIZE_16BIT : I2C_MEMADD_SIZE_8BIT, transfer->buffer, transfer->length, 0xFFFFFFFF) != HAL_OK)
-	{
+	ft260_i2c_set_bus(APP);
+
+	unsigned char buf[1];
+    buf[0] = transfer->address;
+    ft260_i2c_write(transfer->device_address, buf, 1);
+    int res = ft260_i2c_read(transfer->device_address, transfer->buffer, transfer->length);
+	if(res<transfer->length){
 		return false;
 	}
 

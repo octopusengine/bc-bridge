@@ -141,11 +141,11 @@ void ft260_led(int state){
     char buf[5];
     buf[0] = REPORT_ID_GPIO;
     int res = get_feature( hid_i2c, buf, sizeof(buf) );
-    print_buf(buf, res);
+    //print_buf(buf, res);
     state = state ? 1: 0;
     buf[3] = (state << 7);
     buf[4] |= 0x80;
-    print_buf(buf, res);
+    //print_buf(buf, res);
     set_feature(hid_i2c, buf, sizeof(buf));
 }
 
