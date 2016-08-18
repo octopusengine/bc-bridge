@@ -23,6 +23,7 @@ bool ft260_close(void);
 bool ft260_check_chip_version(void);
 bool ft260_led(ft260_led_state_t state);
 bool ft260_i2c_reset(void);
+bool ft260_i2c_get_bus_status(uint8_t *bus_status);
 bool ft260_i2c_set_clock_speed(uint32_t speed);
 bool ft260_i2c_get_clock_speed(uint32_t *speed);
 bool ft260_i2c_write(uint8_t address, uint8_t *data, uint8_t length);
@@ -32,7 +33,9 @@ bool ft260_i2c_is_device_exists(uint8_t address);
 
 void ft260_i2c_scan(void);
 
-bool ft260_uart_set_default_configuration();
+bool ft260_uart_reset(void);
+bool ft260_uart_set_default_configuration(void);
+void ft260_uart_print_configuration(void);
 
 // TODO Delete
 void print_buffer(uint8_t *buffer, int length);

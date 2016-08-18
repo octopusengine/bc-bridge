@@ -141,7 +141,7 @@ static void demo_temperature_task(void)
 				return;
 			}
 
-			printf("[\"thermometer\", {\"1/temperature\": [%f, \"℃\"]\n", value );
+			printf("[\"thermometer\", {\"0/temperature\": [%f, \"\\u2103\"]\n", value );
 
 			break;
 		}
@@ -173,7 +173,9 @@ int main (int argc, char *argv[])
     }
 
     printf("chip_version: %d \n", ft260_check_chip_version() );
+	
 	ft260_uart_set_default_configuration();
+	ft260_uart_print_configuration();
 
     
    //blink(5);
@@ -181,20 +183,28 @@ int main (int argc, char *argv[])
    	// ft260_i2c_reset();
 	//printf("ft260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
 	// ft260_i2c_set_clock_speed(100);
-	//printf("ft260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
+	// uint32_t speed;
+	// ft260_i2c_get_clock_speed(&speed);
+	// printf("ft260_i2c_get_clock_speed: %d \n", speed );
 
 	//switch i2c 
-    ft260_i2c_set_bus(FT260_I2C_BUS_0);
-    //ft260_i2c_scan();
+    // ft260_i2c_set_bus(FT260_I2C_BUS_0);
+	// uint8_t bus_status;
+	// uint8_t buffer[4];
+
+	// ft260_i2c_write(0x38, buffer, 1 );
+	// ft260_i2c_get_bus_status(&bus_status);
+	// printf("ft260_i2c_get_bus_status: %d \n", bus_status & 0x04 );
+
+    ft260_i2c_scan();
+
+	// buffer[0] = 0x02;
+	// ft260_i2c_write(0x38, buffer, 0 );
+	// ft260_i2c_read(0x38, buffer, 1 );
+	// print_buffer(buffer, 4);
 
 	//ft260_uart_reset();
-	//uart config
-	//printf("ft260_uart_get_flow_ctrl: %d \n", ft260_uart_get_flow_ctrl() );
-	///printf("ft260_uart_get_baud_rate: %d \n", ft260_uart_get_baud_rate() );
-	//printf("ft260_uart_get_data_bit: %d \n", ft260_uart_get_data_bit() );
-	//printf("ft260_uart_get_parity: %d \n", ft260_uart_get_parity() );
-	//printf("ft260_uart_get_stop_bit: %d \n", ft260_uart_get_stop_bit() );
-	//printf("ft260_uart_get_breaking: %d \n", ft260_uart_get_breaking() );
+
 
 	// ft260_uart_write("haha",4);
 	// char buf[32];
@@ -211,12 +221,15 @@ int main (int argc, char *argv[])
 	
     demo_humidity_init();
     demo_temperature_init();
+	int diode = 0;
     while(1){
+		diode = !diode ? 1 : 0;
         demo_humidity_task();
-        
-	demo_temperature_task();
+        ft260_led(diode);
+		demo_temperature_task();
         sleep(1);
-	printf("------------------------------------\n");
+		
+	//printf("------------------------------------\n");
     }
 
     ft260_close();

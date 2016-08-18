@@ -227,6 +227,21 @@ bool ft260_i2c_reset(void)
     return true;
 }
 
+bool ft260_i2c_get_bus_status(uint8_t *bus_status)
+{
+    uint8_t buffer[5];
+
+    buffer[0] = 0xC0;
+
+    if (!ft260_get_feature(hid_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
+    }
+
+    *bus_status = buffer[1];
+    return true;
+}
+
 bool ft260_i2c_set_clock_speed(uint32_t speed)
 {
     uint8_t buffer[4];
@@ -347,14 +362,19 @@ bool ft260_i2c_set_bus(ft260_i2c_bus_t i2c_bus)
 bool ft260_i2c_is_device_exists(uint8_t address)
 {
     // TODO WHY THIS
-    uint8_t buffer[4];
+    uint8_t buffer[1];
+    uint8_t bus_status;
 
-    if (!ft260_i2c_read(address, buffer, 4))
+    if (!ft260_i2c_write(address, buffer, 1))
     {
         return false;
     }
 
-    if ((buffer[0] & buffer[1] & buffer[2] & buffer[3]) == 0xFF)
+    if (!ft260_i2c_get_bus_status(&bus_status)){
+        return false;
+    }
+
+    if (bus_status & 0x04) //bit 2 = slave address was not acknowledged during last operation
     {
         return false;
     }
@@ -375,7 +395,22 @@ void ft260_i2c_scan(void)
     }
 }
 
-bool ft260_uart_set_default_configuration(){
+bool ft260_uart_reset(void)
+{
+    uint8_t buffer[2];
+
+    buffer[0] = REPORT_ID_SYSTEM_SETTING;
+    buffer[1] = 0x40;
+
+    ft260_set_feature(hid_uart, buffer, sizeof(buffer));
+
+    // TODO WHY NEEDED
+    sleep(1);
+    return true;
+}
+
+bool ft260_uart_set_default_configuration(void)
+{
     uint8_t buffer[11];
     buffer[0] = REPORT_ID_SYSTEM_SETTING;
     buffer[1] = 0x41;
@@ -389,6 +424,24 @@ bool ft260_uart_set_default_configuration(){
     buffer[9] = 0x02; //stop bits: 2 = two stop bits
     buffer[10] = 0;//breaking: 0 = no break
     return ft260_set_feature(hid_uart, buffer, sizeof(buffer));
+}
+
+void ft260_uart_print_configuration(void)
+{
+    uint8_t buffer[10];
+
+    buffer[0] = REPORT_ID_UART_STATUS;
+
+    ft260_get_feature(hid_uart, buffer, sizeof(buffer));
+    uint32_t baud_rate;
+    memcpy(&baud_rate, &buffer[2], sizeof(baud_rate));
+    
+    fprintf(stderr,"flow ctrl %d \n", buffer[1] );
+    fprintf(stderr,"baud rate %d \n", baud_rate );
+    fprintf(stderr,"data bit %d \n", buffer[6] );
+    fprintf(stderr,"parity %d \n", buffer[7] );
+    fprintf(stderr,"stop bit %d \n", buffer[8] );
+    fprintf(stderr,"breaking %d \n", buffer[9] );
 }
 
 
@@ -405,78 +458,9 @@ static bool ft260_get_feature(int hid, void *buffer, size_t length)
 
 
 
+
+
 #if 0
-
-
-void ft260_uart_reset(void)
-{
-    uint8_t buffer[2];
-
-    buffer[0] = REPORT_ID_SYSTEM_SETTING;
-    buffer[1] = 0x40;
-
-    ft260_set_feature(hid_uart, buffer, sizeof(buffer));
-
-    // TODO WHY NEEDED
-    sleep(1);
-}
-
-static uint8_t *ft260_get_uart_status(void)
-{
-    static uint8_t buffer[10];
-
-    buffer[0] = REPORT_ID_UART_STATUS;
-
-    ft260_get_feature(hid_uart, buffer, sizeof(buffer));
-
-    return buffer;
-}
-
-// int ft260_uart_set_clock_speed(int speed){
-//     if( (speed<60) || (speed>3400))
-//         return 0;
-//     char buffer[] = {REPORT_ID_SYSTEM_SETTING, 0x22, (char)speed, (char)(speed>>8) };
-//     return set_feature(hid_i2c, buffer, sizeof(buffer));
-// }
-
-int ft260_uart_get_flow_ctrl(void)
-{
-    unsigned char *buffer = ft260_get_uart_status();
-    return buffer[1];  
-}
-
-static uint32_t ft260_uart_get_baud_rate(void)
-{
-    uint8_t *buffer = ft260_get_uart_status();
-
-    uint32_t value;
-
-    memcpy(value, &buffer[2], sizeof(value));
-
-    return value;
-}
-
-int ft260_uart_get_data_bit(void)
-{
-    uint8_t *buffer = ft260_get_uart_status();
-
-    return buffer[6];
-}
-
-int ft260_uart_get_parity(){
-    unsigned char *buffer = get_uart_status();
-    return buffer[7];
-}
-
-int ft260_uart_get_stop_bit(){
-    unsigned char *buffer = get_uart_status();
-    return buffer[8];
-}
-
-int ft260_uart_get_breaking(){
-    unsigned char *buffer = get_uart_status();
-    return buffer[9];
-}
 
 int ft260_uart_write(uint8_t *data, uint8_t length)
 {
