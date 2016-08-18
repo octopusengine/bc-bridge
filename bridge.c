@@ -91,7 +91,7 @@ static void demo_humidity_task(void)
 				return;
 			}
 
-			printf("humidity %f \n", value );
+			printf("[\"humidity-sensor\", {\"0/relative-humidity\":[%f, \"%\"]}]\n", value );
 
 			break;
 		}
@@ -141,7 +141,7 @@ static void demo_temperature_task(void)
 				return;
 			}
 
-			printf("temperature %f \n", value );
+			printf("[\"thermometer\", {\"1/temperature\": [%f, \"℃\"]\n", value );
 
 			break;
 		}
@@ -208,13 +208,13 @@ int main (int argc, char *argv[])
     // int res = ft260_i2c_read(0x5F, data, 1); //0x5F
     // printf("res %d \n", data[0] );
 	
-    // demo_humidity_init();
-    // demo_temperature_init();
-    // while(1){
-    //     demo_humidity_task();
-    //     demo_temperature_task();
-    //     sleep(1);
-    // }
+    demo_humidity_init();
+    demo_temperature_init();
+    while(1){
+        demo_humidity_task();
+        demo_temperature_task();
+        sleep(1);
+    }
 
     ft260_close_dev();
     
