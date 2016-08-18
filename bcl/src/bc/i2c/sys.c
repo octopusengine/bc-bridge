@@ -38,15 +38,15 @@ static bool _bc_sys_i2c_tag_write(bc_tag_transfer_t *transfer, bool *communicati
 
 static bool _bc_sys_i2c_tag_read(bc_tag_transfer_t *transfer, bool *communication_fault)
 {
+	uint8_t buffer[1];
+
 	*communication_fault = true;
 
 	ft260_i2c_set_bus(FT260_I2C_BUS_0);
 
-	uint8_t buffer[1];
 	buffer[0] = transfer->address;
-	ft260_i2c_write(transfer->device_address, buffer, 1);
 
-        printf("_bc_sys_i2c_tag_read length %d \n", transfer->length);
+	ft260_i2c_write(transfer->device_address, buffer, 1);
 
 	if (!ft260_i2c_read(transfer->device_address, transfer->buffer, transfer->length))
 	{

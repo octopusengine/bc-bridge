@@ -43,7 +43,7 @@ static bool _bc_app_i2c_tag_read(bc_tag_transfer_t *transfer, bool *communicatio
 	uint8_t buffer[1];
 	buffer[0] = transfer->address;
 	ft260_i2c_write(transfer->device_address, buffer, 1);
-	if (ft260_i2c_read(transfer->device_address, transfer->buffer, transfer->length))
+	if (!ft260_i2c_read(transfer->device_address, transfer->buffer, transfer->length))
 	{
 		return false;
 	}
