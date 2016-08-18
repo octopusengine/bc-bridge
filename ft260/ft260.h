@@ -31,6 +31,9 @@ bool ft260_i2c_set_bus(ft260_i2c_bus_t i2c_bus);
 bool ft260_i2c_is_device_exists(uint8_t address);
 
 void ft260_i2c_scan(void);
+
+bool ft260_uart_set_default_configuration();
+
 // TODO Delete
 void print_buffer(uint8_t *buffer, int length);
 

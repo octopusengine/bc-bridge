@@ -380,6 +380,23 @@ void ft260_i2c_scan(void)
     }
 }
 
+bool ft260_uart_set_default_configuration(){
+    uint8_t buffer[11];
+    buffer[0] = REPORT_ID_SYSTEM_SETTING;
+    buffer[1] = 0x41;
+    buffer[2] = 0x04;//No flow control mode
+    buffer[3] = 0x80; // baud rate: 9600 = 0x2580
+    buffer[4] = 0x25;
+    buffer[5] = 0x00;
+    buffer[6] = 0x00;
+    buffer[7] = 0x08; //data bits: 8 = data bits
+    buffer[8] = 0x00; //parity: 0 = No parity
+    buffer[9] = 0x02; //stop bits: 2 = two stop bits
+    buffer[10] = 0;//breaking: 0 = no break
+    return ft260_set_feature(hid_uart, buffer, sizeof(buffer));
+}
+
+
 static bool ft260_set_feature(int hid, uint8_t *buffer, size_t length)
 {
     return ioctl(hid, HIDIOCSFEATURE(length), buffer) == -1 ? false : true;
@@ -389,6 +406,9 @@ static bool ft260_get_feature(int hid, void *buffer, size_t length)
 {
     return ioctl(hid, HIDIOCGFEATURE(length), buffer) == -1 ? false : true;
 }
+
+
+
 
 #if 0
 

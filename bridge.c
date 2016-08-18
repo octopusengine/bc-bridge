@@ -173,6 +173,7 @@ int main (int argc, char *argv[])
     }
 
     printf("chip_version: %d \n", ft260_check_chip_version() );
+	ft260_uart_set_default_configuration();
 
     
    //blink(5);
