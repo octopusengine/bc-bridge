@@ -1,9 +1,15 @@
 cmake_minimum_required (VERSION 2.6)
+
+set(CMAKE_C_COMPILER "/usr/bin/gcc")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+
 set(CMAKE_GENERATOR "Unix Makefiles")
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
+# set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+# set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
 
 project (Bridge)
+
+set(CMAKE_C_FLAGS "-Wall -pedantic -std=c99 -Og -g3")
 
 string(TIMESTAMP VERSION "%Y-%m-%dT%H:%M:%S")
 add_definitions(-DVERSION="${VERSION}")

@@ -19,13 +19,13 @@ static bool _bc_app_i2c_tag_write(bc_tag_transfer_t *transfer, bool *communicati
 {
 	*communication_fault = true;
 
-	ft260_i2c_set_bus(APP);
-
-	unsigned char buf[1+transfer->length];
-	buf[0] = transfer->address;
-	memcpy(buf+1,transfer->buffer,transfer->length);
-	int res = ft260_i2c_write(transfer->device_address, buf, 1+transfer->length );
-	if(res<1){
+	ft260_i2c_set_bus(FT260_I2C_BUS_1);
+	// TODO 
+	uint8_t buffer[1+transfer->length];
+	buffer[0] = transfer->address;
+	memcpy(buffer + 1,transfer->buffer, transfer->length);
+	if (!ft260_i2c_write(transfer->device_address, buffer, 1 + transfer->length ))
+	{
 		return false;
 	}
 
@@ -38,13 +38,13 @@ static bool _bc_app_i2c_tag_read(bc_tag_transfer_t *transfer, bool *communicatio
 {
 	*communication_fault = true;
 
-	ft260_i2c_set_bus(APP);
+	ft260_i2c_set_bus(FT260_I2C_BUS_1);
 
-	unsigned char buf[1];
-    buf[0] = transfer->address;
-    ft260_i2c_write(transfer->device_address, buf, 1);
-    int res = ft260_i2c_read(transfer->device_address, transfer->buffer, transfer->length);
-	if(res<transfer->length){
+	uint8_t buffer[1];
+	buffer[0] = transfer->address;
+	ft260_i2c_write(transfer->device_address, buffer, 1);
+	if (ft260_i2c_read(transfer->device_address, transfer->buffer, transfer->length))
+	{
 		return false;
 	}
 

@@ -1,16 +1,10 @@
+#include "ft260.h"
+
 #include <libudev.h>
 #include <linux/hidraw.h>
 #include <linux/input.h>
 #include <linux/types.h>
 #include <string.h>
-/*
-* For the systems that don't have the new version of hidraw.h in userspace.
-*/
-#ifndef HIDIOCSFEATURE
-#warning Please have your distro update the userspace kernel headers
-#define HIDIOCSFEATURE(len) _IOC(_IOC_WRITE | _IOC_READ, 'H', 0x06, len) //LIBUSB_REQUEST_GET_DESCRIPTOR
-#define HIDIOCGFEATURE(len) _IOC(_IOC_WRITE | _IOC_READ, 'H', 0x07, len) //LIBUSB_REQUEST_SET_DESCRIPTOR
-#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -21,27 +15,36 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "ft260.h"
+#define VENDOR_ID 0x0403
+#define DEVICE_ID 0x6030
 
-int hid_i2c;
-int hid_uart;
+#define REPORT_ID_CHIP_CODE 0xA0
+#define REPORT_ID_SYSTEM_SETTING 0xA1
+#define REPORT_ID_GPIO 0xB0
+#define REPORT_ID_I2C_STATUS 0xC0
+#define REPORT_ID_UART_STATUS 0xE0
 
-int ft260_open_device() {
+static int hid_i2c;
+static int hid_uart;
 
+static bool ft260_set_feature(int hid, uint8_t *buffer, size_t length);
+static bool ft260_get_feature(int hid, void *buffer, size_t length);
+
+bool ft260_open(void)
+{
     struct udev *udev;
     struct udev_enumerate *enumerate, *enumerate_hid;
     struct udev_list_entry *devices, *entry, *devices_hid, *entry_hid;
-    struct udev_device *dev;
     struct udev_device *usb_dev;
     struct udev_device* hid = NULL;
 
-    struct udev_device *intf_dev;
-    char *ret_path = NULL;
     /* Create the udev object */
     udev = udev_new();
-    if (!udev) {
+
+    if (!udev)
+    {
         perror("Can't create udev\n");
-        return 0;
+        return false;
     }
   
     //enumerate over usb device
@@ -51,7 +54,8 @@ int ft260_open_device() {
     udev_enumerate_scan_devices(enumerate);
     devices = udev_enumerate_get_list_entry(enumerate);
 
-    udev_list_entry_foreach(entry, devices) {
+    udev_list_entry_foreach(entry, devices)
+    {
         const char *str;
         unsigned short cur_vid;
         unsigned short cur_did;
@@ -64,8 +68,9 @@ int ft260_open_device() {
         str = udev_device_get_sysattr_value(usb_dev, "idProduct");
         cur_did = (str) ? strtol(str, NULL, 16) : -1;
 
-        if (cur_vid == VENDOR_ID && cur_did == DEVICE_ID){
-            fprintf(stderr,"path %s \n", udev_device_get_devnode(usb_dev) );
+        if (cur_vid == VENDOR_ID && cur_did == DEVICE_ID)
+        {
+            fprintf(stderr,"path %s \n", udev_device_get_devnode(usb_dev));
 
             fprintf(stderr,"idVendor %hx \n", cur_vid );
             fprintf(stderr,"idProduct %hx \n", cur_did );
@@ -75,233 +80,403 @@ int ft260_open_device() {
             udev_enumerate_add_match_subsystem(enumerate_hid, "hidraw");
             udev_enumerate_scan_devices(enumerate_hid);
             devices_hid = udev_enumerate_get_list_entry(enumerate_hid);
-            udev_list_entry_foreach(entry_hid, devices_hid) {
+
+            bool success_i2c = false;
+            bool success_uart = false;
+
+            udev_list_entry_foreach(entry_hid, devices_hid)
+            {
                 const char *path = udev_list_entry_get_name(entry_hid);
                 hid = udev_device_new_from_syspath(udev, path);
                 const char *hid_path = udev_device_get_devnode(hid);
-                fprintf(stderr,"hid_path %s \n", hid_path );
 
-                if(!hid_i2c){
+                fprintf(stderr, "hid_path %s \n", hid_path);
+
+                if (!hid_i2c)
+                {
                     hid_i2c = open(hid_path, O_RDWR | O_NONBLOCK);
-                    if (hid_i2c < 0) {
-                        perror("Unable to open hid0 ");
-                        return -1;
+
+                    if (hid_i2c < 0)
+                    {
+                        perror("Unable to open hid0");
+
+                        return false;
                     }
-                }else if(!hid_uart){
+                    else
+                    {
+                        success_i2c = true;
+                    }
+                }
+                else if (!hid_uart)
+                {
                     hid_uart = open(hid_path, O_RDWR | O_NONBLOCK);
-                    if (hid_uart < 0) {
-                        perror("Unable to open hid1 ");
-                        return -1;
+                    
+                    if (hid_uart < 0)
+                    {
+                        perror("Unable to open hid1");
+
+                        return false;
                     }
-                }else{
+                    else
+                    {
+                        success_uart = true;
+                    }
+                }
+                else
+                {
                     perror("Unexpected hid device");
-                    return -1;
+
+                    return false;
                 }
             }
-            return hid_i2c>-1 && hid_uart>-1;
+
+            return (success_i2c && success_uart) ? true : false;
         }
-
     }
 
-    return 0;
+    return false;
+}
+
+bool ft260_close(void)
+{
+    if (close(hid_i2c) == -1)
+    {
+        return false;
+    }
+
+    if (close(hid_uart) == -1)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 
-void ft260_close_dev(){
-    close(hid_i2c);
-    close(hid_uart);
-}
+// TODO Move out :-)
+void print_buffer(uint8_t *buffer, int length)
+{
+    int i;
 
-void print_buf(char* buf, int res){
-    printf("print_buf res: %d\n", res);
-    for (int i = 0; i < res; i++){
-        printf("%d %hhx %d\n", i, buf[i], buf[i]);
+    printf("print_buffer res: %d\n", length);
+
+    for (i = 0; i < length; i++)
+    {
+        printf("%d %02x %d\n", i, buffer[i], buffer[i]);
     }
 }
 
-int get_feature(int hid, char* buf, size_t length){
-    return ioctl(hid, HIDIOCGFEATURE(length), buf);
-}
 
-int set_feature(int hid, char* buf, size_t length){
-    return ioctl(hid, HIDIOCSFEATURE(length), buf);
-}
+bool ft260_check_chip_version(void)
+{
+    uint8_t buffer[13];
 
-int ft260_check_chip_version(){
-    char buf[13];
-    buf[0] = REPORT_ID_CHIP_CODE;
-    int res = get_feature( hid_i2c, buf, sizeof(buf) );
-    if (res < 0) {
-        return 0;
+    buffer[0] = REPORT_ID_CHIP_CODE;
+
+    if (!ft260_get_feature(hid_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
     }
-    return (buf[1]==0x02) && (buf[2]==0x60);
+
+    return (buffer[1] == 0x02) && (buffer[2] == 0x60) ? true : false;
 }
 
-void ft260_led(int state){
-    char buf[5];
-    buf[0] = REPORT_ID_GPIO;
-    int res = get_feature( hid_i2c, buf, sizeof(buf) );
-    //print_buf(buf, res);
-    state = state ? 1: 0;
-    buf[3] = (state << 7);
-    buf[4] |= 0x80;
-    //print_buf(buf, res);
-    set_feature(hid_i2c, buf, sizeof(buf));
+bool ft260_led(ft260_led_state_t state)
+{
+    uint8_t buffer[5];
+
+    buffer[0] = REPORT_ID_GPIO;
+
+    if (!ft260_get_feature(hid_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
+    }
+
+    buffer[3] &= 0x7F;
+
+    if (state == FT260_LED_STATE_ON)
+    {
+        buffer[3] |= 0x80;
+    }
+
+    buffer[4] |= 0x80;
+
+    if (!ft260_set_feature(hid_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
+    }
+
+    return true;
 }
 
-// ------------- i2c --------------------
-void ft260_i2c_reset(){
-    char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x20};
-    set_feature(hid_i2c, buf, sizeof(buf));
+bool ft260_i2c_reset(void)
+{
+    uint8_t buffer[2];
+
+    buffer[0] = REPORT_ID_SYSTEM_SETTING;
+    buffer[1] = 0x20;
+
+    if (!ft260_set_feature(hid_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
+    }
+
+    // TODO WHY NEEDED
     sleep(1);
+
+    return true;
 }
 
-int ft260_i2c_set_clock_speed(int speed){
-    if( (speed<60) || (speed>3400))
-        return 0;
-    char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x22, (char)speed, (char)(speed>>8) };
-    return set_feature(hid_i2c, buf, sizeof(buf));
-}
+bool ft260_i2c_set_clock_speed(uint32_t speed)
+{
+    uint8_t buffer[4];
 
-int ft260_i2c_get_clock_speed(){
-    unsigned char buf[5];
-    buf[0] = REPORT_ID_I2C_STATUS;
-    int res = get_feature(hid_i2c, buf, sizeof(buf));
-    if( (res==5) && buf[0] == REPORT_ID_I2C_STATUS ){
-        return (int)( buf[2] | (buf[3]<<8) );
+    if ((speed < 60) || (speed > 3400))
+    {
+        return false;
     }
-    return -1;
+
+    buffer[0] = REPORT_ID_SYSTEM_SETTING;
+    buffer[1] = 0x22;
+    buffer[2] = (uint8_t) speed;
+    buffer[3] = (uint8_t) (speed >> 8);
+
+    return ft260_set_feature(hid_i2c, buffer, sizeof(buffer));
 }
 
-int ft260_i2c_write(unsigned char address, char *data, char data_length){
-    char buf[ 4+data_length ];
-    memcpy(buf+4,data,data_length);
-    buf[0] = 0xD0 + ((data_length-1) / 4); /* I2C write */
-    buf[1] = address; /* Slave address */
-    buf[2] = 0x06; /* Start and Stop */
-    buf[3] = data_length;
-    return write(hid_i2c, buf, sizeof(buf));
-}
+bool ft260_i2c_get_clock_speed(uint32_t *speed)
+{
+    uint8_t buffer[5];
 
-int ft260_i2c_read(unsigned char address, char *data, char data_length){
-    char buf[64];
-    buf[0] = 0xC2; /* I2C write */
-    buf[1] = address; /* Slave address */
-    buf[2] = 0x06; /* Start and Stop */
-    buf[3] = data_length;
-    buf[4] = 0;
-    int res = write(hid_i2c, buf, 5);
-    if(res<0){
-        return res;
+    buffer[0] = REPORT_ID_I2C_STATUS;
+
+    if (!ft260_get_feature(hid_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
     }
+
+    *speed = (uint32_t) buffer[2];
+    *speed |= ((uint32_t) buffer[3]) << 8;
+
+    return true;
+}
+
+bool ft260_i2c_write(uint8_t address, uint8_t *data, uint8_t length)
+{
+    uint8_t buffer[64];
+
+    if (length > 60)
+    {
+        return false;
+    }
+
+	printf("write %02x\n", address);
+	print_buffer(data, length);
+	
+    memcpy(&buffer[4], data, length);
+
+    buffer[0] = 0xD0 + ((length - 1) / 4); /* I2C write */
+    buffer[1] = address; /* Slave address */
+    buffer[2] = 0x06; /* Start and Stop */
+    buffer[3] = length;
+    return write(hid_i2c, buffer, 4 + length) == (4 + length) ? true : false;
+}
+
+bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
+{
+    uint8_t buffer[64];
+
+    int res;
 
     fd_set set;
+
+    if (length > 60)
+    {
+        return false;
+    }
+
+    buffer[0] = 0xC2; /* I2C write */
+    buffer[1] = address; /* Slave address */
+    buffer[2] = 0x06; /* Start and Stop */
+    buffer[3] = length;
+    buffer[4] = 0;
+
+    if (write(hid_i2c, buffer, 5) == -1)
+    {
+        return false;
+    }
+
     struct timeval timeout;
+
     FD_ZERO(&set); /* clear the set */
     FD_SET(hid_i2c, &set); /* add our file descriptor to the set */
     timeout.tv_sec = 0;
     timeout.tv_usec = 500000;
-    res = select(hid_i2c + 1, &set, NULL, NULL, &timeout);
-    if(res == -1)/* an error accured */
-        return -1;
-    else if(res == 0)/* a timeout occured */
-        return -1;
-    else
-        res = read(hid_i2c, buf, 64);
-        
-    if(res<0){
-        return res;
-    }    
-    if( data_length > buf[1] ){
-        data_length = buf[1];
+
+    res = select(hid_i2c+1, &set, NULL, NULL, &timeout);
+
+    if (res == -1 || res == 0)
+    {
+        return false;
     }
-    memcpy(data,buf+2,data_length);
-    return data_length;
+
+    res = read(hid_i2c, buffer, 64);
+
+    if (res == -1)
+    {
+	return false;
+    }
+
+    if (length != buffer[1])
+    {
+        return false;
+    }
+
+    printf("read %02x length: %d \n", address, length );
+    print_buffer(buffer, res);
+
+    memcpy(data, buffer + 2, length > buffer[1] ? buffer[1] : length );
+
+    return true;
 }
 
-void ft260_i2c_set_bus(enum I2C_BUS bus){
-    unsigned char data[1];
-    data[0] = bus;
-    ft260_i2c_write(112, data, sizeof(data));
+bool ft260_i2c_set_bus(ft260_i2c_bus_t i2c_bus)
+{
+    uint8_t buffer[1];
+
+    buffer[0] = (uint8_t) i2c_bus;
+
+    return ft260_i2c_write(0x70, buffer, sizeof(buffer));
 }
 
-int ft260_i2c_check_device_exist(unsigned char address){
-    unsigned char buf[4];
-    int res = ft260_i2c_read(address, buf, 4);
-    return ( (res==4) && !( (buf[0]==0xFF) && (buf[1]==0xFF) && (buf[2]==0xFF) && (buf[3]==0xFF) ) );
+bool ft260_i2c_is_device_exists(uint8_t address)
+{
+    // TODO WHY THIS
+    uint8_t buffer[4];
+
+    if (!ft260_i2c_read(address, buffer, 4))
+    {
+        return false;
+    }
+
+    if ((buffer[0] & buffer[1] & buffer[2] & buffer[3]) == 0xFF)
+    {
+        return false;
+    }
+
+    return true;
 }
 
-void ft260_i2c_scan(){
-    for(unsigned char address=1; address<128; address++){
-        if( ft260_i2c_check_device_exist(address) ){
-             printf("address:  %hhx %d \n", address, address );
+void ft260_i2c_scan(void)
+{
+    uint8_t address;
+
+    for (address = 1; address < 128; address++)
+    {
+        if (ft260_i2c_is_device_exists(address))
+        {
+             printf("address: %hhx %d \n", address, address);
         }
-       
     }
 }
 
-// ------------- uart --------------------
+static bool ft260_set_feature(int hid, uint8_t *buffer, size_t length)
+{
+    return ioctl(hid, HIDIOCSFEATURE(length), buffer) == -1 ? false : true;
+}
 
-int ft260_uart_reset(){
-    char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x40};
-    set_feature(hid_uart, buf, sizeof(buf));
+static bool ft260_get_feature(int hid, void *buffer, size_t length)
+{
+    return ioctl(hid, HIDIOCGFEATURE(length), buffer) == -1 ? false : true;
+}
+
+#if 0
+
+
+void ft260_uart_reset(void)
+{
+    uint8_t buffer[2];
+
+    buffer[0] = REPORT_ID_SYSTEM_SETTING;
+    buffer[1] = 0x40;
+
+    ft260_set_feature(hid_uart, buffer, sizeof(buffer));
+
+    // TODO WHY NEEDED
     sleep(1);
 }
 
-unsigned char* get_uart_status(){
-    static unsigned char buf[10];
-    buf[0] = REPORT_ID_UART_STATUS;
-    get_feature(hid_uart, buf, sizeof(buf));
-    return buf;
+static uint8_t *ft260_get_uart_status(void)
+{
+    static uint8_t buffer[10];
+
+    buffer[0] = REPORT_ID_UART_STATUS;
+
+    ft260_get_feature(hid_uart, buffer, sizeof(buffer));
+
+    return buffer;
 }
 
 // int ft260_uart_set_clock_speed(int speed){
 //     if( (speed<60) || (speed>3400))
 //         return 0;
-//     char buf[] = {REPORT_ID_SYSTEM_SETTING, 0x22, (char)speed, (char)(speed>>8) };
-//     return set_feature(hid_i2c, buf, sizeof(buf));
+//     char buffer[] = {REPORT_ID_SYSTEM_SETTING, 0x22, (char)speed, (char)(speed>>8) };
+//     return set_feature(hid_i2c, buffer, sizeof(buffer));
 // }
 
-int ft260_uart_get_flow_ctrl(){
-    unsigned char *buf = get_uart_status();
-    return buf[1];  
+int ft260_uart_get_flow_ctrl(void)
+{
+    unsigned char *buffer = ft260_get_uart_status();
+    return buffer[1];  
 }
 
-int ft260_uart_get_baud_rate(){
-    unsigned char *buf = get_uart_status();
-    return (int)( buf[2] | (buf[3]<<8) | (buf[4]<<16) | (buf[5]<<24) );
+static uint32_t ft260_uart_get_baud_rate(void)
+{
+    uint8_t *buffer = ft260_get_uart_status();
+
+    uint32_t value;
+
+    memcpy(value, &buffer[2], sizeof(value));
+
+    return value;
 }
 
-int ft260_uart_get_data_bit(){
-    unsigned char *buf = get_uart_status();
-    return buf[6];
+int ft260_uart_get_data_bit(void)
+{
+    uint8_t *buffer = ft260_get_uart_status();
+
+    return buffer[6];
 }
 
 int ft260_uart_get_parity(){
-    unsigned char *buf = get_uart_status();
-    return buf[7];
+    unsigned char *buffer = get_uart_status();
+    return buffer[7];
 }
 
 int ft260_uart_get_stop_bit(){
-    unsigned char *buf = get_uart_status();
-    return buf[8];
+    unsigned char *buffer = get_uart_status();
+    return buffer[8];
 }
 
 int ft260_uart_get_breaking(){
-    unsigned char *buf = get_uart_status();
-    return buf[9];
+    unsigned char *buffer = get_uart_status();
+    return buffer[9];
 }
 
-int ft260_uart_write(char *data, char data_length){
-    uint8_t buf[ 2+data_length ];
-    memcpy(buf+4,data,data_length);
-    buf[0] = 0xF0 + ((data_length-1) / 4); 
-    buf[1] = data_length;
-    return write(hid_uart, buf, sizeof(buf));
+int ft260_uart_write(uint8_t *data, uint8_t length)
+{
+    uint8_t buffer[ 2+data_length ];
+
+    memcpy(buffer+4,data,data_length);
+
+    buffer[0] = 0xF0 + ((data_length-1) / 4); 
+    buffer[1] = data_length;
+
+    return write(hid_uart, buffer, sizeof(buffer));
 }
 
 int ft260_uart_read(char *data, char data_length){
-    char buf[64];
+    char buffer[64];
     int res;
     fd_set set;
     struct timeval timeval_timeout;
@@ -315,16 +490,20 @@ int ft260_uart_read(char *data, char data_length){
     else if(res == 0)/* a timeout occured */
         return -1;
     else
-        res = read(hid_uart, buf, 64);
+        res = read(hid_uart, buffer, 64);
         
     if(res<0){
         return res;
     }    
-    //print_buf(buf, res);
+    //print_buffer(buffer, res);
 
-    if( data_length > buf[1] ){
-        data_length = buf[1];
+    if( data_length > buffer[1] ){
+        data_length = buffer[1];
     }
-    memcpy(data,buf+2,data_length);
+    memcpy(data,buffer+2,data_length);
     return data_length;
 }
+
+
+#endif
+
