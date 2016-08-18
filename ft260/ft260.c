@@ -364,6 +364,7 @@ bool ft260_i2c_is_device_exists(uint8_t address)
     // TODO WHY THIS
     uint8_t buffer[1];
     uint8_t bus_status;
+    buffer[0] = 0x00;
 
     if (!ft260_i2c_write(address, buffer, 1))
     {
