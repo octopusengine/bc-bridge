@@ -270,15 +270,13 @@ bool ft260_i2c_write(uint8_t address, uint8_t *data, uint8_t length)
         return false;
     }
 
-	printf("write %02x\n", address);
-	print_buffer(data, length);
-	
     memcpy(&buffer[4], data, length);
 
     buffer[0] = 0xD0 + ((length - 1) / 4); /* I2C write */
     buffer[1] = address; /* Slave address */
     buffer[2] = 0x06; /* Start and Stop */
     buffer[3] = length;
+
     return write(hid_i2c, buffer, 4 + length) == (4 + length) ? true : false;
 }
 
@@ -313,7 +311,7 @@ bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
     timeout.tv_sec = 0;
     timeout.tv_usec = 500000;
 
-    res = select(hid_i2c+1, &set, NULL, NULL, &timeout);
+    res = select(hid_i2c + 1, &set, NULL, NULL, &timeout);
 
     if (res == -1 || res == 0)
     {
@@ -331,9 +329,6 @@ bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
     {
         return false;
     }
-
-    printf("read %02x length: %d \n", address, length );
-    print_buffer(buffer, res);
 
     memcpy(data, buffer + 2, length > buffer[1] ? buffer[1] : length );
 

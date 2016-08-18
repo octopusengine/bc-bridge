@@ -209,10 +209,10 @@ int main (int argc, char *argv[])
     // int res = ft260_i2c_read(0x5F, data, 1); //0x5F
     // printf("res %d \n", data[0] );
 	
-    //demo_humidity_init();
+    demo_humidity_init();
     demo_temperature_init();
     while(1){
-        //demo_humidity_task();
+        demo_humidity_task();
         
 	demo_temperature_task();
         sleep(1);
