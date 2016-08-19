@@ -19,11 +19,11 @@ void bc_module_co2_init(bc_module_co2_t *self)
 
 	self->_state = BC_MODULE_CO2_STATE_INIT;
 	self->_co2_concentration_unknown = true;
-	br_ic2_tca9534a_init(self->_tca9534a, bc_i2c_sys_get_tag_interface(), 0x38);
+	br_ic2_tca9534a_init(&self->_tca9534a, bc_i2c_sys_get_tag_interface(), 0x38);
 	
-	bc_ic2_tca9534a_set_mode(self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
-	bc_ic2_tca9534a_set_mode(self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_OUTPUT);
-	bc_ic2_tca9534a_set_mode(self->_tca9534a, RDY_Pin, BC_I2C_TCA9534A_INPUT);
+	bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
+	bc_ic2_tca9534a_set_mode(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_OUTPUT);
+	bc_ic2_tca9534a_set_mode(&self->_tca9534a, RDY_Pin, BC_I2C_TCA9534A_INPUT);
 }
 
 void bc_module_co2_task(bc_module_co2_t *self)
@@ -41,7 +41,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 			self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(180);
 
-			bc_ic2_tca9534a_write_pin(self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
+			bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
 
 			break;
 		}
@@ -52,7 +52,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 				self->_state = BC_MODULE_CO2_STATE_IDLE;
 				self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
-				bc_ic2_tca9534a_write_pin(self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
+				bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
 			}
 
 			break;
@@ -71,7 +71,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 			self->_state = BC_MODULE_CO2_STATE_CHARGE;
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
-			bc_ic2_tca9534a_write_pin(self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
+			bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
 
 			break;
 		}
@@ -82,7 +82,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 				self->_state = BC_MODULE_CO2_STATE_BOOT;
 				self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
-				bc_ic2_tca9534a_write_pin(self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_HIGH);
+				bc_ic2_tca9534a_write_pin(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_HIGH);
 			}
 
 			break;
@@ -90,7 +90,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 		case BC_MODULE_CO2_STATE_BOOT:
 		{
 
-			if (  bc_ic2_tca9534a_read_pin(self->_tca9534a, RDY_Pin, &rdy_pin_value) && 
+			if (  bc_ic2_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) && 
 			(rdy_pin_value == BC_I2C_TCA9534A_LOW ))
 			{
 				if (!self->_first_measurement_done)
@@ -173,7 +173,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 		case BC_MODULE_CO2_STATE_MEASURE:
 		{
 
-			if ( bc_ic2_tca9534a_read_pin(self->_tca9534a, RDY_Pin, &rdy_pin_value) && 
+			if ( bc_ic2_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) && 
 			(rdy_pin_value == BC_I2C_TCA9534A_HIGH) )
 			{
 				memset(self->_tx_buffer, 0, sizeof(self->_tx_buffer));
@@ -237,15 +237,15 @@ void bc_module_co2_task(bc_module_co2_t *self)
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);
 
 			// TODO Split these two operations
-			bc_ic2_tca9534a_write_pin(self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
-			bc_ic2_tca9534a_write_pin(self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
+			bc_ic2_tca9534a_write_pin(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
+			bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
 
 			break;
 		}
 		case BC_MODULE_CO2_STATE_ERROR:
 		{
-			bc_ic2_tca9534a_write_pin(self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
-			bc_ic2_tca9534a_write_pin(self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
+			bc_ic2_tca9534a_write_pin(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
+			bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
 
 			self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);

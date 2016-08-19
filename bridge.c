@@ -256,17 +256,20 @@ int main (int argc, char *argv[])
     // int res = ft260_i2c_read(0x5F, data, 1); //0x5F
     // printf("res %d \n", data[0] );
 	
+	demo_co2_init();
+
     demo_humidity_init();
     demo_temperature_init();
-	demo_co2_init();
+	
 	int diode = 0;
     while(1){
-		diode = !diode ? 1 : 0;
-        demo_humidity_task();
-        ft260_led(diode);
-		demo_temperature_task();
 		demo_co2_task();
-        sleep(1);
+    
+		diode = !diode ? 1 : 0;
+        // demo_humidity_task();
+        ft260_led(diode);
+		// demo_temperature_task();
+	    sleep(1);
 		
 	//printf("------------------------------------\n");
     }
