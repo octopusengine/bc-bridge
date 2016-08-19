@@ -21,14 +21,14 @@ typedef enum
 
 typedef enum
 {
-     BC_I2C_TCA9534A_PIN0 = 0x01,
-     BC_I2C_TCA9534A_PIN1 = 0x02,
-     BC_I2C_TCA9534A_PIN2 = 0x04,
-     BC_I2C_TCA9534A_PIN3 = 0x08,
-     BC_I2C_TCA9534A_PIN4 = 0x10,
-     BC_I2C_TCA9534A_PIN5 = 0x20,
-     BC_I2C_TCA9534A_PIN6 = 0x40,
-     BC_I2C_TCA9534A_PIN7 = 0x80
+     BC_I2C_TCA9534A_PIN0 = 0,
+     BC_I2C_TCA9534A_PIN1 = 1,
+     BC_I2C_TCA9534A_PIN2 = 2,
+     BC_I2C_TCA9534A_PIN3 = 3,
+     BC_I2C_TCA9534A_PIN4 = 4,
+     BC_I2C_TCA9534A_PIN5 = 5,
+     BC_I2C_TCA9534A_PIN6 = 6,
+     BC_I2C_TCA9534A_PIN7 = 7
 
 } bc_i2c_tca9534a_pin_t;
 
@@ -42,8 +42,11 @@ typedef struct
 
 bool br_ic2_tca9534a_init(bc_i2c_tca9534a_t *self, bc_tag_interface_t *interface, uint8_t device_address);
 bool bc_ic2_tca9534a_read_pins(bc_i2c_tca9534a_t *self, uint8_t *pins);
+bool bc_ic2_tca9534a_write_pins(bc_i2c_tca9534a_t *self, uint8_t pins);
 bool bc_ic2_tca9534a_read_pin(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_value_t *value);
-
+bool bc_ic2_tca9534a_write_pin(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_value_t value);
+bool bc_ic2_tca9534a_get_mode(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_mode_t *mode);
+bool bc_ic2_tca9534a_set_mode(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_mode_t mode);
 
 
 #endif /* _BC_I2C_TCA9534A_H */

@@ -9,6 +9,7 @@
 #include <bc/tick.h>
 #include <bc/i2c/sys.h>
 #include <bc/i2c/app.h>
+#include <bc/i2c/tca9534a.h>
 #include <bc/tag/humidity.h>
 #include <bc/tag/temperature.h>
 
@@ -175,9 +176,26 @@ int main (int argc, char *argv[])
     printf("chip_version: %d \n", ft260_check_chip_version() );
 	
 	ft260_uart_set_default_configuration();
-	ft260_uart_print_configuration();
+	//ft260_uart_print_configuration();
 
-    
+	ft260_i2c_set_bus(FT260_I2C_BUS_0);
+	bc_i2c_tca9534a_t tca9534a;
+	br_ic2_tca9534a_init(&tca9534a, bc_i2c_sys_get_tag_interface(), 0x38);
+
+	bc_ic2_tca9534a_set_mode(&tca9534a, BC_I2C_TCA9534A_PIN0, BC_I2C_TCA9534A_OUTPUT);
+
+	bc_i2c_tca9534a_mode_t mode;
+	bc_ic2_tca9534a_get_mode(&tca9534a, BC_I2C_TCA9534A_PIN0, &mode);
+
+	printf("mode: %d \n", mode );
+
+	bc_ic2_tca9534a_write_pin(&tca9534a, BC_I2C_TCA9534A_PIN0, 1);
+
+	bc_i2c_tca9534a_value_t value;
+	bc_ic2_tca9534a_read_pin(&tca9534a, BC_I2C_TCA9534A_PIN1, &value);
+    printf("value: %d \n", value );
+
+
    //blink(5);
 
    	// ft260_i2c_reset();
@@ -196,7 +214,7 @@ int main (int argc, char *argv[])
 	// ft260_i2c_get_bus_status(&bus_status);
 	// printf("ft260_i2c_get_bus_status: %d \n", bus_status & 0x04 );
 
-    ft260_i2c_scan();
+    //ft260_i2c_scan();
 
 	// buffer[0] = 0x02;
 	// ft260_i2c_write(0x38, buffer, 0 );
