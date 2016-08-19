@@ -1,3 +1,4 @@
+
 #include "ft260.h"
 
 #include <libudev.h>
@@ -337,7 +338,7 @@ bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
 
     if (res == -1)
     {
-	return false;
+	    return false;
     }
 
     if (length != buffer[1])
@@ -345,7 +346,7 @@ bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
         return false;
     }
 
-    memcpy(data, buffer + 2, length > buffer[1] ? buffer[1] : length );
+    memcpy(data, buffer + 2,  buffer[1] );
 
     return true;
 }
@@ -457,53 +458,61 @@ static bool ft260_get_feature(int hid, void *buffer, size_t length)
 }
 
 
-
-
-
-
-#if 0
-
-int ft260_uart_write(uint8_t *data, uint8_t length)
+bool ft260_uart_write(uint8_t *data, uint8_t length)
 {
-    uint8_t buffer[ 2+data_length ];
+    uint8_t buffer[ 2 + length ];
 
-    memcpy(buffer+4,data,data_length);
+    if (length > 60)
+    {
+        return false;
+    }
 
-    buffer[0] = 0xF0 + ((data_length-1) / 4); 
-    buffer[1] = data_length;
+    memcpy(&buffer[2],data,length);
 
-    return write(hid_uart, buffer, sizeof(buffer));
+    buffer[0] = 0xF0 + ((length-1) / 4); 
+    buffer[1] = length;
+
+    return write(hid_uart, buffer, sizeof(buffer))  == (2 + length) ? true : false;
 }
 
-int ft260_uart_read(char *data, char data_length){
-    char buffer[64];
+uint8_t ft260_uart_read(uint8_t *data, uint8_t length)
+{
+    uint8_t buffer[64];
+
     int res;
+
     fd_set set;
+
+    if (length > 60)
+    {
+        return -1;
+    }
+
     struct timeval timeval_timeout;
     FD_ZERO(&set); /* clear the set */
     FD_SET(hid_uart, &set); /* add our file descriptor to the set */
     timeval_timeout.tv_sec = 0;
     timeval_timeout.tv_usec = 500000;
+    
     res = select(hid_uart + 1, &set, NULL, NULL, &timeval_timeout);
-    if(res == -1)/* an error accured */
+    
+    if (res == -1 || res == 0)
+    {
         return -1;
-    else if(res == 0)/* a timeout occured */
-        return -1;
-    else
-        res = read(hid_uart, buffer, 64);
+    }
+    
+    res = read(hid_uart, buffer, 64);
         
-    if(res<0){
-        return res;
-    }    
+    if (res == -1)
+    {
+	    return -1;
+    }
     //print_buffer(buffer, res);
 
-    if( data_length > buffer[1] ){
-        data_length = buffer[1];
+    if( length > buffer[1] ){
+        length = buffer[1];
     }
-    memcpy(data,buffer+2,data_length);
-    return data_length;
+
+    memcpy(data, buffer+2, length);
+    return length;
 }
-
-
-#endif
-

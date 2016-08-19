@@ -12,6 +12,7 @@
 #include <bc/i2c/tca9534a.h>
 #include <bc/tag/humidity.h>
 #include <bc/tag/temperature.h>
+#include <bc/module/co2.h>
 
 void blink(int cnt){
     for(int i=0;i<cnt;i++){
@@ -23,6 +24,7 @@ void blink(int cnt){
 
 bc_tag_humidity_t tag_humidity;
 bc_tag_temperature_t tag_temperature;
+bc_module_co2_t module_co2;
 
 static void demo_humidity_init(void)
 {

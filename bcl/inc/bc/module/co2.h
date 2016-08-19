@@ -2,6 +2,7 @@
 #define _BC_MODULE_CO2_H
 
 #include <bc/tick.h>
+#include <bc/i2c/tca9534a.h>
 
 typedef enum
 {
@@ -28,7 +29,7 @@ typedef struct
 	int16_t _co2_concentration;
 	uint8_t _rx_buffer[64]; // TODO Trim size
 	uint8_t _tx_buffer[64]; // TODO Trim size
-	bc_i2c_tca9534a_t _tca9534a;
+	bc_i2c_tca9534a_t *_tca9534a;
 
 } bc_module_co2_t;
 

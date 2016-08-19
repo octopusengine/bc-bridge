@@ -1,5 +1,5 @@
 #include <bc/tick.h>
-#include <time.h>
+#include <sys/time.h>
 
 struct timeval start;
 struct timeval now;
