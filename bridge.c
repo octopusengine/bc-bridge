@@ -161,6 +161,23 @@ static void demo_temperature_task(void)
 	}
 }
 
+static void demo_co2_init(void)
+{
+	bc_module_co2_init(&module_co2);
+}
+
+static void demo_co2_task(void)
+{
+	int16_t co2_concentration;
+
+	bc_module_co2_task(&module_co2);
+
+	if (bc_module_co2_get_concentration(&module_co2, &co2_concentration))
+	{
+		printf("[\"co2-sensor\",{\"concentration\":[%d,\"ppm\"]}]\n", co2_concentration );
+	}
+}
+
 int main (int argc, char *argv[])
 {
     bc_tick_init();
@@ -239,12 +256,14 @@ int main (int argc, char *argv[])
 	
     demo_humidity_init();
     demo_temperature_init();
+	demo_co2_init();
 	int diode = 0;
     while(1){
 		diode = !diode ? 1 : 0;
         demo_humidity_task();
         ft260_led(diode);
 		demo_temperature_task();
+		demo_co2_task();
         sleep(1);
 		
 	//printf("------------------------------------\n");

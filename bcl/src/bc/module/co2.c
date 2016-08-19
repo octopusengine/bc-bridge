@@ -1,11 +1,14 @@
 #include <bc/module/co2.h>
-#include <stm32l0xx_hal.h>
+#include <ft260.h>
+#include <bc/i2c/tca9534a.h>
 
 // TODO Implement ABC calibration
 // TODO Extract all constants to the macros in the beginning
 // TODO Implement possibility to add own interface
 
-extern UART_HandleTypeDef huart1;
+#define BOOST_Pin BC_I2C_TCA9534A_PIN5
+#define EN_Pin BC_I2C_TCA9534A_PIN4
+#define RDY_Pin BC_I2C_TCA9534A_PIN0
 
 static uint16_t _bc_module_co2_calculate_crc16(uint8_t *buffer, uint8_t length);
 
@@ -15,6 +18,7 @@ void bc_module_co2_init(bc_module_co2_t *self)
 
 	self->_state = BC_MODULE_CO2_STATE_INIT;
 	self->_co2_concentration_unknown = true;
+	br_ic2_tca9534a_init(&self->_tca9534a, bc_i2c_sys_get_tag_interface(), 0x38);
 }
 
 void bc_module_co2_task(bc_module_co2_t *self)
