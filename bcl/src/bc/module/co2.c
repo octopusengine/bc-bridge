@@ -19,11 +19,15 @@ void bc_module_co2_init(bc_module_co2_t *self)
 	self->_state = BC_MODULE_CO2_STATE_INIT;
 	self->_co2_concentration_unknown = true;
 	br_ic2_tca9534a_init(&self->_tca9534a, bc_i2c_sys_get_tag_interface(), 0x38);
+	bc_ic2_tca9534a_set_mode(&tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
+	bc_ic2_tca9534a_set_mode(&tca9534a, EN_Pin, BC_I2C_TCA9534A_OUTPUT);
+	bc_ic2_tca9534a_set_mode(&tca9534a, RDY_Pin, BC_I2C_TCA9534A_INPUT);
 }
 
 void bc_module_co2_task(bc_module_co2_t *self)
 {
 	bc_tick_t t_now;
+	bc_i2c_tca9534a_value_t rdy_pin_value;
 
 	t_now = bc_tick_get();
 
@@ -35,7 +39,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 			self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(180);
 
-			HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
+			bc_ic2_tca9534a_write_pin(&tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
 
 			break;
 		}
@@ -46,7 +50,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 				self->_state = BC_MODULE_CO2_STATE_IDLE;
 				self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
-				HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
+				bc_ic2_tca9534a_write_pin(&tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
 			}
 
 			break;
@@ -65,7 +69,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 			self->_state = BC_MODULE_CO2_STATE_CHARGE;
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
-			HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
+			bc_ic2_tca9534a_write_pin(&tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
 
 			break;
 		}
@@ -76,14 +80,16 @@ void bc_module_co2_task(bc_module_co2_t *self)
 				self->_state = BC_MODULE_CO2_STATE_BOOT;
 				self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
-				HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_SET);
+				bc_ic2_tca9534a_write_pin(&tca9534a, EN_Pin, BC_I2C_TCA9534A_HIGH);
 			}
 
 			break;
 		}
 		case BC_MODULE_CO2_STATE_BOOT:
 		{
-			if (HAL_GPIO_ReadPin(RDY_GPIO_Port, RDY_Pin) == GPIO_PIN_RESET)
+
+			if (  bc_ic2_tca9534a_read_pin(&tca9534a, RDY_Pin, &rdy_pin_value) && 
+			(rdy_pin_value == BC_I2C_TCA9534A_LOW ))
 			{
 				if (!self->_first_measurement_done)
 				{
@@ -164,7 +170,9 @@ void bc_module_co2_task(bc_module_co2_t *self)
 		}
 		case BC_MODULE_CO2_STATE_MEASURE:
 		{
-			if (HAL_GPIO_ReadPin(RDY_GPIO_Port, RDY_Pin) == GPIO_PIN_SET)
+
+			if ( bc_ic2_tca9534a_read_pin(&tca9534a, RDY_Pin, &rdy_pin_value) && 
+			(rdy_pin_value == BC_I2C_TCA9534A_HIGH) )
 			{
 				memset(self->_tx_buffer, 0, sizeof(self->_tx_buffer));
 
@@ -227,15 +235,15 @@ void bc_module_co2_task(bc_module_co2_t *self)
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);
 
 			// TODO Split these two operations
-			HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_RESET);
+			bc_ic2_tca9534a_write_pin(&tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
+			bc_ic2_tca9534a_write_pin(&tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
 
 			break;
 		}
 		case BC_MODULE_CO2_STATE_ERROR:
 		{
-			HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(BOOST_GPIO_Port, BOOST_Pin, GPIO_PIN_SET);
+			bc_ic2_tca9534a_write_pin(&tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
+			bc_ic2_tca9534a_write_pin(&tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
 
 			self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);

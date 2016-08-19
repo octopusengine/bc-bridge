@@ -11,7 +11,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/inc")
 
 FILE(GLOB_RECURSE SOURCES *.c)
 #message("${SOURCES}")
-list(REMOVE_ITEM SOURCES "${PROJECT_SOURCE_DIR}/src/bc/module/co2.c")
+#list(REMOVE_ITEM SOURCES "${PROJECT_SOURCE_DIR}/src/bc/module/co2.c")
 
 
 add_library(${LIBRARY_NAME} STATIC ${SOURCES} )

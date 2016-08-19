@@ -1,13 +1,15 @@
 #include <bc/tick.h>
 #include <time.h>
 
-clock_t start;
+struct timeval start;
+struct timeval now;
 
 void bc_tick_init(){
-	start=clock();
+	gettimeofday(&start,NULL);
 }
 
 bc_tick_t bc_tick_get(void)
 {
-	return (bc_tick_t)(clock()-start);
+	gettimeofday(&now,NULL);
+	return (bc_tick_t)( (1000000 * (now.tv_sec - start.tv_sec) )+ ( now.tv_usec - start.tv_usec ) );
 }
