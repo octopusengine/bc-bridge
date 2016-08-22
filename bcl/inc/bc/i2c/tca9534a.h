@@ -32,6 +32,8 @@ typedef enum
 
 } bc_i2c_tca9534a_pin_t;
 
+#define BC_I2C_TCA9534A_ALL_OUTPUT 0x00
+
 typedef struct
 {
 	bc_tag_interface_t *_interface;
@@ -45,6 +47,7 @@ bool bc_ic2_tca9534a_read_pins(bc_i2c_tca9534a_t *self, uint8_t *pins);
 bool bc_ic2_tca9534a_write_pins(bc_i2c_tca9534a_t *self, uint8_t pins);
 bool bc_ic2_tca9534a_read_pin(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_value_t *value);
 bool bc_ic2_tca9534a_write_pin(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_value_t value);
+bool bc_ic2_tca9534a_set_modes(bc_i2c_tca9534a_t *self, uint8_t modes);
 bool bc_ic2_tca9534a_get_mode(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_mode_t *mode);
 bool bc_ic2_tca9534a_set_mode(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_mode_t mode);
 
