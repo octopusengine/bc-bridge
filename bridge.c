@@ -182,13 +182,14 @@ static void demo_co2_task(void)
 
 int main (int argc, char *argv[])
 {
-    bc_tick_init();
+
+	uint8_t bus_status;
 
     fprintf(stderr,"Bridge version %d.%d\n", Bridge_VERSION_MAJOR,Bridge_VERSION_MINOR );
     fprintf(stderr,"Bridge build %s \n", VERSION );
 
     if (!ft260_open()) {
-        perror("Can not find the device");
+        perror("Can not find the device\n");
         return EXIT_FAILURE;
     }
 
@@ -197,27 +198,41 @@ int main (int argc, char *argv[])
 	ft260_uart_set_default_configuration();
 	//ft260_uart_print_configuration();
 
+	ft260_i2c_set_clock_speed(200);
+
+	//Pro jistotu reset i2c a pak kontrola na i2c switch
+   	if (!ft260_i2c_reset() || !ft260_i2c_is_device_exists(0x70) ){
+		
+		ft260_i2c_get_bus_status(&bus_status);
+
+		perror("Error on i2c bus : it is necessary to disconnect and reconnect the device\n");
+		fprintf(stderr, "bus_status value dec %d \n", bus_status);
+		return EXIT_FAILURE;
+	}
+
 	ft260_i2c_set_bus(FT260_I2C_BUS_0);
-	bc_i2c_tca9534a_t tca9534a;
-	br_ic2_tca9534a_init(&tca9534a, bc_i2c_sys_get_tag_interface(), 0x38);
-
-	bc_ic2_tca9534a_set_mode(&tca9534a, BC_I2C_TCA9534A_PIN0, BC_I2C_TCA9534A_OUTPUT);
-
-	bc_i2c_tca9534a_mode_t mode;
-	bc_ic2_tca9534a_get_mode(&tca9534a, BC_I2C_TCA9534A_PIN0, &mode);
-
-	printf("mode: %d \n", mode );
-
-	bc_ic2_tca9534a_write_pin(&tca9534a, BC_I2C_TCA9534A_PIN0, 1);
-
-	bc_i2c_tca9534a_value_t value;
-	bc_ic2_tca9534a_read_pin(&tca9534a, BC_I2C_TCA9534A_PIN1, &value);
-    printf("value: %d \n", value );
 
 
-   //blink(5);
+	// bc_i2c_tca9534a_t tca9534a;
+	// br_ic2_tca9534a_init(&tca9534a, bc_i2c_sys_get_tag_interface(), 0x38);
 
-   	// ft260_i2c_reset();
+	// bc_ic2_tca9534a_set_mode(&tca9534a, BC_I2C_TCA9534A_PIN0, BC_I2C_TCA9534A_OUTPUT);
+
+	// bc_i2c_tca9534a_mode_t mode;
+	// bc_ic2_tca9534a_get_mode(&tca9534a, BC_I2C_TCA9534A_PIN0, &mode);
+
+	// printf("mode: %d \n", mode );
+
+	// bc_ic2_tca9534a_write_pin(&tca9534a, BC_I2C_TCA9534A_PIN0, 1);
+
+	// bc_i2c_tca9534a_value_t value;
+	// bc_ic2_tca9534a_read_pin(&tca9534a, BC_I2C_TCA9534A_PIN1, &value);
+    // printf("value: %d \n", value );
+
+
+
+	
+	
 	//printf("ft260_i2c_get_clock_speed: %d \n", ft260_i2c_get_clock_speed() );
 	// ft260_i2c_set_clock_speed(100);
 	// uint32_t speed;
@@ -233,21 +248,37 @@ int main (int argc, char *argv[])
 	// ft260_i2c_get_bus_status(&bus_status);
 	// printf("ft260_i2c_get_bus_status: %d \n", bus_status & 0x04 );
 
-    //ft260_i2c_scan();
+    ft260_i2c_scan();
 
-	// buffer[0] = 0x02;
-	// ft260_i2c_write(0x38, buffer, 0 );
-	// ft260_i2c_read(0x38, buffer, 1 );
-	// print_buffer(buffer, 4);
+	// printf("humidity tag %d \n", ft260_i2c_is_device_exists( 0x5F ) );
+	
+	
+	// for (int i=0; i<10; i++)
+	// {
+	// 	ft260_i2c_get_bus_status(&bus_status);
+	// 	fprintf(stderr, "bus_status value dec %d \n", bus_status);
+	// 	usleep(100*1000);
+	// }
+
 
 	//ft260_uart_reset();
 
-
-	// ft260_uart_write("haha",4);
-	// char buf[32];
-	// int res = ft260_uart_read(buf,4);
-	// print_buf(buf, res);
+	// uint8_t buffer_out[64];
+	// buffer_out[0] = 30;
+	// buffer_out[1] = 32;
+	// buffer_out[2] = 34;
+	// buffer_out[3] = 36;
 	
+	// ft260_uart_write(buffer_out,4);
+	
+	// uint8_t buffer_in[64];
+	// memset(buffer_in, 0, 64);
+
+	// ft260_uart_read(buffer_in,4, 100);
+	// print_buffer(buffer_in, 4);
+	
+	// return EXIT_SUCCESS;
+
     
     // //vycteni z HTS221 WHO AM I 
     // unsigned char data[1];
@@ -256,14 +287,14 @@ int main (int argc, char *argv[])
     // int res = ft260_i2c_read(0x5F, data, 1); //0x5F
     // printf("res %d \n", data[0] );
 	
-	demo_co2_init();
+	//demo_co2_init();
 
-    demo_humidity_init();
-    demo_temperature_init();
+    // demo_humidity_init();
+    //demo_temperature_init();
 	
 	int diode = 0;
     while(1){
-		demo_co2_task();
+	//	demo_co2_task();
     
 		diode = !diode ? 1 : 0;
         // demo_humidity_task();
