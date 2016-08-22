@@ -14,7 +14,8 @@ typedef enum
 typedef enum
 {
     FT260_I2C_BUS_0 = 1,
-    FT260_I2C_BUS_1 = 2
+    FT260_I2C_BUS_1 = 2,
+    FT260_I2C_BUS_UNKNOWN = 0
 
 } ft260_i2c_bus_t;
 
@@ -37,7 +38,7 @@ bool ft260_uart_reset(void);
 bool ft260_uart_set_default_configuration(void);
 void ft260_uart_print_configuration(void);
 bool ft260_uart_write(uint8_t *data, uint8_t length);
-uint8_t ft260_uart_read(uint8_t *data, uint8_t length);
+uint8_t ft260_uart_read(uint8_t *data, uint8_t length, uint8_t timeout_ms);
 
 // TODO Delete
 void print_buffer(uint8_t *buffer, int length);

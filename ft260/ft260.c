@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #define VENDOR_ID 0x0403
 #define DEVICE_ID 0x6030
@@ -27,9 +28,11 @@
 
 static int hid_i2c;
 static int hid_uart;
+static ft260_i2c_bus_t selected_i2c_bus = FT260_I2C_BUS_UNKNOWN;
 
 static bool ft260_set_feature(int hid, uint8_t *buffer, size_t length);
 static bool ft260_get_feature(int hid, void *buffer, size_t length);
+static int32_t get_now_in_ms();
 
 bool ft260_open(void)
 {
@@ -213,6 +216,8 @@ bool ft260_led(ft260_led_state_t state)
 bool ft260_i2c_reset(void)
 {
     uint8_t buffer[2];
+    uint8_t bus_status;
+    int32_t start;
 
     buffer[0] = REPORT_ID_SYSTEM_SETTING;
     buffer[1] = 0x20;
@@ -222,10 +227,20 @@ bool ft260_i2c_reset(void)
         return false;
     }
 
-    // TODO WHY NEEDED
-    sleep(1);
+    start = get_now_in_ms();
+    //kontroluje se stav i2c, pokud do 1s nedojde k resetu vraci false
+    do
+    {
+        if( !ft260_i2c_get_bus_status(&bus_status) ){ 
+            return false;
+        }
+        if(bus_status==0x20){
+            return true;
+        }
+        
+    }while( get_now_in_ms() - start < 1000 );
 
-    return true;
+    return false;
 }
 
 bool ft260_i2c_get_bus_status(uint8_t *bus_status)
@@ -280,6 +295,7 @@ bool ft260_i2c_get_clock_speed(uint32_t *speed)
 bool ft260_i2c_write(uint8_t address, uint8_t *data, uint8_t length)
 {
     uint8_t buffer[64];
+    uint8_t bus_status=0;
 
     if (length > 60)
     {
@@ -293,12 +309,25 @@ bool ft260_i2c_write(uint8_t address, uint8_t *data, uint8_t length)
     buffer[2] = 0x06; /* Start and Stop */
     buffer[3] = length;
 
-    return write(hid_i2c, buffer, 4 + length) == (4 + length) ? true : false;
+    if (write(hid_i2c, buffer, 4 + length) != (4 + length))
+    {
+        return false;
+    }
+
+    if (!ft260_i2c_get_bus_status(&bus_status) || ( (bus_status & 0x1F) != 0x00 ) )
+    {
+        //fprintf(stderr, "ft260_i2c_write bus_status %x %d \n", address, bus_status);
+        return false;
+    }
+    
+    return true;
 }
 
 bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
 {
     uint8_t buffer[64];
+    uint8_t bus_status=0;
+    struct timeval timeout;
 
     int res;
 
@@ -320,12 +349,16 @@ bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
         return false;
     }
 
-    struct timeval timeout;
-
+    if (!ft260_i2c_get_bus_status(&bus_status) || ( (bus_status & 0x1E) != 0x00 ) )
+    {
+        //fprintf(stderr, "ft260_i2c_read bus_status %x %d \n", address, bus_status);
+        return false;
+    }
+    
     FD_ZERO(&set); /* clear the set */
     FD_SET(hid_i2c, &set); /* add our file descriptor to the set */
     timeout.tv_sec = 0;
-    timeout.tv_usec = 500000;
+    timeout.tv_usec = 10000;
 
     res = select(hid_i2c + 1, &set, NULL, NULL, &timeout);
 
@@ -343,6 +376,7 @@ bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
 
     if (length != buffer[1])
     {
+        //fprintf(stderr, "ft260_i2c_read nesedi length a buffer %d %d\n", length, buffer[1]);
         return false;
     }
 
@@ -355,9 +389,20 @@ bool ft260_i2c_set_bus(ft260_i2c_bus_t i2c_bus)
 {
     uint8_t buffer[1];
 
+    if (selected_i2c_bus == i2c_bus)
+    {
+        return true;
+    }
+
     buffer[0] = (uint8_t) i2c_bus;
 
-    return ft260_i2c_write(0x70, buffer, sizeof(buffer));
+    if (ft260_i2c_write(0x70, buffer, sizeof(buffer)))
+    {
+        selected_i2c_bus = i2c_bus;
+        return true;
+    }
+    
+    return false;
 }
 
 bool ft260_i2c_is_device_exists(uint8_t address)
@@ -376,12 +421,13 @@ bool ft260_i2c_is_device_exists(uint8_t address)
         return false;
     }
 
-    if (bus_status & 0x04) //bit 2 = slave address was not acknowledged during last operation
+    //printf("bus_status %x %x %d \n", address, bus_status, bus_status);
+    if ( (bus_status & 0x1f) == 0x00 ) //bit 2 = slave address was not acknowledged during last operation
     {
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 void ft260_i2c_scan(void)
@@ -460,6 +506,8 @@ static bool ft260_get_feature(int hid, void *buffer, size_t length)
 
 bool ft260_uart_write(uint8_t *data, uint8_t length)
 {
+    printf("ft260_uart_write \n");
+
     uint8_t buffer[ 2 + length ];
 
     if (length > 60)
@@ -475,9 +523,12 @@ bool ft260_uart_write(uint8_t *data, uint8_t length)
     return write(hid_uart, buffer, sizeof(buffer))  == (2 + length) ? true : false;
 }
 
-uint8_t ft260_uart_read(uint8_t *data, uint8_t length)
+uint8_t ft260_uart_read(uint8_t *data, uint8_t length, uint8_t timeout_ms)
 {
+    printf("ft260_uart_read \n");
     uint8_t buffer[64];
+    uint8_t data_length = 0;
+    uint8_t read_length;
 
     int res;
 
@@ -492,27 +543,47 @@ uint8_t ft260_uart_read(uint8_t *data, uint8_t length)
     FD_ZERO(&set); /* clear the set */
     FD_SET(hid_uart, &set); /* add our file descriptor to the set */
     timeval_timeout.tv_sec = 0;
-    timeval_timeout.tv_usec = 500000;
+    timeval_timeout.tv_usec = timeout_ms * 1000;
     
-    res = select(hid_uart + 1, &set, NULL, NULL, &timeval_timeout);
-    
-    if (res == -1 || res == 0)
+    while(timeval_timeout.tv_usec > 0)
     {
-        return -1;
-    }
-    
-    res = read(hid_uart, buffer, 64);
+        res = select(hid_uart + 1, &set, NULL, NULL, &timeval_timeout);
+
+        printf("timeval_timeout %ld %d \n", timeval_timeout.tv_usec, res);
         
-    if (res == -1)
-    {
-	    return -1;
-    }
-    //print_buffer(buffer, res);
+        if (res == -1 )
+        {
+            return -1;
+        }
 
-    if( length > buffer[1] ){
-        length = buffer[1];
+        if (res > 0){
+            res = read(hid_uart, buffer, 64);
+            if (res == -1)
+            {
+                return -1;
+            }
+            
+            read_length = length - data_length;
+
+            if( read_length > buffer[1] ){
+                read_length = buffer[1];
+            }
+            
+            memcpy(&data[data_length], &buffer[2], read_length);
+
+            data_length += read_length;
+
+        }
+
     }
 
-    memcpy(data, buffer+2, length);
-    return length;
+    return data_length;
+}
+
+
+static int32_t get_now_in_ms()
+{
+    struct timeval now;
+    gettimeofday(&now,NULL);
+    return (1000 * now.tv_sec  ) + (now.tv_usec/1000);
 }
