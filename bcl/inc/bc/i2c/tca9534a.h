@@ -33,6 +33,7 @@ typedef enum
 } bc_i2c_tca9534a_pin_t;
 
 #define BC_I2C_TCA9534A_ALL_OUTPUT 0x00
+#define BC_I2C_TCA9534A_ALL_INPUT 0xff
 
 typedef struct
 {

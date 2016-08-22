@@ -13,6 +13,7 @@
 #include <bc/tag/humidity.h>
 #include <bc/tag/temperature.h>
 #include <bc/module/co2.h>
+#include <bc/module/relay.h>
 
 void blink(int cnt){
     for(int i=0;i<cnt;i++){
@@ -25,6 +26,7 @@ void blink(int cnt){
 bc_tag_humidity_t tag_humidity;
 bc_tag_temperature_t tag_temperature;
 bc_module_co2_t module_co2;
+bc_module_relay_t module_relay;
 
 static void demo_humidity_init(void)
 {
@@ -287,19 +289,21 @@ int main (int argc, char *argv[])
     // int res = ft260_i2c_read(0x5F, data, 1); //0x5F
     // printf("res %d \n", data[0] );
 	
-	demo_co2_init();
+	bc_module_relay_init(&module_relay);
+
+	//demo_co2_init();
 
     // demo_humidity_init();
     //demo_temperature_init();
 	
 	int diode = 0;
 	while(1){
-		demo_co2_task();
+		//demo_co2_task();
     
 		diode = !diode ? 1 : 0;
         // demo_humidity_task();
-        printf("diode %d \n", diode);
 		ft260_led(diode);
+		bc_module_relay_set_mode(&module_relay, diode ? BC_MODULE_RELAY_MODE_NO : BC_MODULE_RELAY_MODE_NC);
 		// demo_temperature_task();
 		
 	    sleep(1);
