@@ -20,18 +20,20 @@ void bc_module_co2_init(bc_module_co2_t *self)
 	self->_state = BC_MODULE_CO2_STATE_INIT;
 	self->_co2_concentration_unknown = true;
 	br_ic2_tca9534a_init(&self->_tca9534a, bc_i2c_sys_get_tag_interface(), 0x38);
-	
-	bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
-	bc_ic2_tca9534a_set_mode(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_OUTPUT);
+	bc_ic2_tca9534a_set_modes(&self->_tca9534a, BC_I2C_TCA9534A_ALL_OUTPUT);
 	bc_ic2_tca9534a_set_mode(&self->_tca9534a, RDY_Pin, BC_I2C_TCA9534A_INPUT);
+
 }
 
 void bc_module_co2_task(bc_module_co2_t *self)
 {
+	printf("bc_module_co2_task %d \n", self->_state);
+
 	bc_tick_t t_now;
 	bc_i2c_tca9534a_value_t rdy_pin_value;
 
 	t_now = bc_tick_get();
+
 
 	switch (self->_state)
 	{
@@ -40,6 +42,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 			// TODO Adjust time to > 1min
 			self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
 			self->_t_state_timeout = t_now + BC_TICK_SECONDS(180);
+			printf("_t_state_timeout %d \n", self->_t_state_timeout);
 
 			bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
 
@@ -142,7 +145,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 					}
 				}
 
-				if (ft260_uart_read(self->_rx_buffer, 4) != 4)
+				if (ft260_uart_read(self->_rx_buffer, 4, 100) != 4)
 				{
 					self->_state = BC_MODULE_CO2_STATE_ERROR;
 					break;
@@ -192,7 +195,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 					break;
 				}
 
-				if (ft260_uart_read(self->_rx_buffer, 45) != 45)
+				if (ft260_uart_read(self->_rx_buffer, 45, 100) != 45)
 				{
 					self->_state = BC_MODULE_CO2_STATE_ERROR;
 					break;
