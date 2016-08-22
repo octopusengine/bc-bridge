@@ -52,7 +52,7 @@ static bool _bc_module_relay_set_mode(bc_module_relay_t *self, uint8_t pins)
         return false;
     }
 
-    if (!bc_ic2_tca9534a_write_pins(&self->_tca9534a, 0x50 )){
+    if (!bc_ic2_tca9534a_write_pins(&self->_tca9534a, pins )){
         return false;
     }
 
