@@ -33,6 +33,7 @@ static ft260_i2c_bus_t selected_i2c_bus = FT260_I2C_BUS_UNKNOWN;
 static bool ft260_set_feature(int hid, uint8_t *buffer, size_t length);
 static bool ft260_get_feature(int hid, void *buffer, size_t length);
 static int32_t get_now_in_ms();
+static bool is_valid_fd(int fd);
 
 bool ft260_open(void)
 {
@@ -302,6 +303,11 @@ bool ft260_i2c_write(uint8_t address, uint8_t *data, uint8_t length)
         return false;
     }
 
+    if (!is_valid_fd(hid_i2c))
+    {
+        return false;
+    }
+
     memcpy(&buffer[4], data, length);
 
     buffer[0] = 0xD0 + ((length - 1) / 4); /* I2C write */
@@ -334,6 +340,11 @@ bool ft260_i2c_read(uint8_t address, uint8_t *data, uint8_t length)
     fd_set set;
 
     if (length > 60)
+    {
+        return false;
+    }
+
+    if (!is_valid_fd(hid_i2c))
     {
         return false;
     }
@@ -495,11 +506,19 @@ void ft260_uart_print_configuration(void)
 
 static bool ft260_set_feature(int hid, uint8_t *buffer, size_t length)
 {
+    if (!is_valid_fd(hid))
+    {
+        return false;
+    }
     return ioctl(hid, HIDIOCSFEATURE(length), buffer) == -1 ? false : true;
 }
 
 static bool ft260_get_feature(int hid, void *buffer, size_t length)
 {
+    if (!is_valid_fd(hid))
+    {
+        return false;
+    }
     return ioctl(hid, HIDIOCGFEATURE(length), buffer) == -1 ? false : true;
 }
 
@@ -511,6 +530,11 @@ bool ft260_uart_write(uint8_t *data, uint8_t length)
     uint8_t buffer[ 2 + length ];
 
     if (length > 60)
+    {
+        return false;
+    }
+
+    if (!is_valid_fd(hid_uart))
     {
         return false;
     }
@@ -580,10 +604,16 @@ uint8_t ft260_uart_read(uint8_t *data, uint8_t length, uint8_t timeout_ms)
     return data_length;
 }
 
-
 static int32_t get_now_in_ms()
 {
     struct timeval now;
     gettimeofday(&now,NULL);
     return (1000 * now.tv_sec  ) + (now.tv_usec/1000);
+}
+
+static bool is_valid_fd(int fd)
+{
+    struct stat s;
+    fstat(fd, &s);
+    return s.st_nlink < 1 ? false : true;
 }
