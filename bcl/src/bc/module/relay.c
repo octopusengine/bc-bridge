@@ -21,7 +21,6 @@ void bc_module_relay_init(bc_module_relay_t *self)
 bool bc_module_relay_set_mode(bc_module_relay_t *self, bc_module_relay_mode_t relay_mode) 
 {
     uint8_t pins = 0x30; //BC_MODULE_RELAY_MODE_NC
-    bc_tick_t start;
 
     if (relay_mode == BC_MODULE_RELAY_MODE_NO)
     {
@@ -33,9 +32,7 @@ bool bc_module_relay_set_mode(bc_module_relay_t *self, bc_module_relay_mode_t re
         return false;
     }
     
-    //sleep 10 ms
-    start = bc_tick_get();
-    while( (bc_tick_get() - start) < 10 ) {}
+    bc_os_sleep(10);
    
     if (!_bc_module_relay_set_mode(self, 0x50))
     {

@@ -2,6 +2,7 @@
 #define _BC_MODULE_RELAY_H
 
 #include <bc/tick.h>
+#include <bc/os.h>
 #include <bc/i2c/tca9534a.h>
 
 typedef enum 
