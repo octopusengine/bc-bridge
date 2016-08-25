@@ -23,7 +23,7 @@ set(SOURCE_FILES
         bcl/src/bc/tag/barometer.c
         bcl/src/bc/tag/humidity.c
         bcl/src/bc/tag/lux_meter.c
-        #bcl/src/bc/tag/temperature.c
+        bcl/src/bc/tag/temperature.c
 )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} -ludev)

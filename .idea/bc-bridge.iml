@@ -8,13 +8,14 @@
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/i2c/tca9534a.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/i2c/app.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/i2c/sys.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/os.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag/temperature.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag/lux_meter.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag/barometer.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag/humidity.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag/accelerometer.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/module/co2.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/module/relay.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/os.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ft260/ft260.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ft260/ft260.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/jsmn/jsmn.c" isTestSource="false" />
