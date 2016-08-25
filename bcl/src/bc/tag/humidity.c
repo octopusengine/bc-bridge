@@ -5,8 +5,6 @@
 // TODO Implement continuous conversion
 // TODO Review and optimize calculation (linear interpolation)
 
-#define BC_TAG_HUMIDITY_DEVICE_ADDRESS 0x5F
-
 static bool _bc_tag_humidity_write_register(bc_tag_humidity_t *self, uint8_t address, uint8_t value);
 static bool _bc_tag_humidity_read_register(bc_tag_humidity_t *self, uint8_t address, uint8_t *value);
 

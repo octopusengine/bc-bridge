@@ -3,6 +3,8 @@
 
 #include <bc/tag.h>
 
+#define BC_TAG_HUMIDITY_DEVICE_ADDRESS 0x5F
+
 typedef enum
 {
 	BC_TAG_HUMIDITY_STATE_CALIBRATION_NOT_READ = 0,
