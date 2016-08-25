@@ -12,6 +12,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3fc9b859-1b4c-4e38-b284-1d6dfe80724a" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/main.c" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/bcl/CMakeLists.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/bridge.c" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/bridge.h" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/ft260/CMakeLists.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/jsmn/CMakeLists.txt" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/CMakeLists.txt" afterPath="$PROJECT_DIR$/CMakeLists.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bcl/inc/bc/os.h" afterPath="$PROJECT_DIR$/bcl/inc/bc/os.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bcl/inc/bc/tag/humidity.h" afterPath="$PROJECT_DIR$/bcl/inc/bc/tag/humidity.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bcl/src/bc/tag/humidity.c" afterPath="$PROJECT_DIR$/bcl/src/bc/tag/humidity.c" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ft260/ft260.c" afterPath="$PROJECT_DIR$/ft260/ft260.c" />
     </list>
     <ignored path="bc-bridge.iws" />
@@ -32,24 +42,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="bridge.c" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/bridge.c">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="477">
-              <caret line="290" column="4" selection-start-line="290" selection-start-column="4" selection-end-line="290" selection-end-column="4" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="ft260.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ft260/ft260.c">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="-324">
               <caret line="10" column="18" selection-start-line="10" selection-start-column="18" selection-end-line="10" selection-end-column="18" />
-              <folding />
+              <folding>
+                <marker date="1472141921564" expanded="true" signature="10:11" ph="..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -358,12 +358,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1472133085732</updated>
-      <workItem from="1472133086987" duration="2633000" />
+      <workItem from="1472133086987" duration="2698000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="2633000" />
+    <option name="totallyTimeSpent" value="2698000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1200" extended-state="6" />
@@ -427,9 +427,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="477">
           <caret line="290" column="4" selection-start-line="290" selection-start-column="4" selection-end-line="290" selection-end-column="4" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -437,7 +435,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-324">
           <caret line="10" column="18" selection-start-line="10" selection-start-column="18" selection-end-line="10" selection-end-column="18" />
-          <folding />
+          <folding>
+            <marker date="1472141921564" expanded="true" signature="10:11" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
