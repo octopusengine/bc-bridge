@@ -18,7 +18,7 @@
 #include <sys/time.h>
 #include <sys/file.h>
 #include <pthread.h>
-#include <bc/bridge.h>
+
 
 #define VENDOR_ID 0x0403
 #define DEVICE_ID 0x6030

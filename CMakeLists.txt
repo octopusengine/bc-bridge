@@ -1,9 +1,17 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(bc-bridge C)
+
 # set(CMAKE_VERBOSE_MAKEFILE on)
 set(CMAKE_C_FLAGS "-Wall -pedantic -std=c99")
+
 string(TIMESTAMP VERSION "%Y-%m-%dT%H:%M:%S")
 add_definitions(-DVERSION="${VERSION}")
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
+find_package(Threads REQUIRED)
+find_package(Libudev REQUIRED)
+
 include_directories(bcl/inc)
 include_directories(ft260)
 include_directories(jsmn)
@@ -25,5 +33,6 @@ set(SOURCE_FILES
         bcl/src/bc/tag/lux_meter.c
         bcl/src/bc/tag/temperature.c
 )
+
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} -ludev -pthread )
+target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES})
