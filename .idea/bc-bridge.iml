@@ -2,8 +2,7 @@
 <module type="CPP_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/os.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tick.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/i2c/tca9534a.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/i2c/app.c" isTestSource="false" />
@@ -13,15 +12,13 @@
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag/barometer.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag/humidity.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag/accelerometer.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/module/co2.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/module/relay.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/os.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/ft260/ft260.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/ft260/ft260.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bcl/src/bc/tag.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/main.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/jsmn/jsmn.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/jsmn/jsmn.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/bridge.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/bridge.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ft260/ft260.c" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
