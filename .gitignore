@@ -1,6 +1,10 @@
 .vscode/*
-CMakeFiles
+*~
+*.pyc
+*.a
+CMakeFiles*
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+Bridge
 bc-bridge

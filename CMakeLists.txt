@@ -26,4 +26,4 @@ set(SOURCE_FILES
         bcl/src/bc/tag/temperature.c
 )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} -ludev)
+target_link_libraries(${PROJECT_NAME} -ludev -pthread )

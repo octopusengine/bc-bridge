@@ -32,8 +32,15 @@ int main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	sleep(60);
+	printf("zamikame");
 
+	bc_bridge_i2c_lock(&bridge);
+	printf("1");
+	bc_bridge_i2c_lock(&bridge);
+	printf("2");
+
+	bc_bridge_i2c_unlock(&bridge);
+	bc_bridge_i2c_unlock(&bridge);
 
     return EXIT_SUCCESS;
 }
