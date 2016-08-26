@@ -39,6 +39,17 @@ typedef struct
 
 } bc_bridge_i2c_transfer_t;
 
+typedef struct
+{
+    bc_bridge_i2c_channel_t channel;
+    uint8_t device_address;
+    uint16_t address;
+    bool address_16_bit;
+    uint8_t *buffer;
+    uint16_t length;
+
+} bc_bridge_i2c_transfer_register_t;
+
 typedef enum
 {
     BC_BRIDGE_LED_STATE_OFF = 0,
@@ -49,10 +60,10 @@ typedef enum
 bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length);
 bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info);
 bool bc_bridge_close(bc_bridge_t *self);
-void bc_bridge_i2c_lock(bc_bridge_t *self);
-void bc_bridge_i2c_unlock(bc_bridge_t *self);
 bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);
 bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);
+bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_register_t *transfer);
+bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_register_t *transfer);
 bool bc_bridge_led_set_state(bc_bridge_t *self, bc_bridge_led_state_t state);
 
 #endif

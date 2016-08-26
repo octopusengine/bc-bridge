@@ -4,20 +4,12 @@
 #include <libudev.h>
 #include <linux/hidraw.h>
 #include <linux/input.h>
-#include <linux/types.h>
-#include <string.h>
-#include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
-#include <sys/time.h>
 #include <sys/file.h>
-#include <pthread.h>
+#include <bc/tag.h>
+#include <bc/bridge.h>
 
 
 #define VENDOR_ID 0x0403
@@ -36,7 +28,7 @@ static bool _ft260_get_i2c_bus_status(int fd_hid, uint8_t *bus_status);
 static bool _ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t length);
 static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t length);
 
-static bool _ft260_uart_set_default_configuration(int fd_hid);
+//static bool _ft260_uart_set_default_configuration(int fd_hid);
 static void _ft260_check_fd(int fd_hid);
 static int32_t _get_now_in_ms();
 static bool _ft260_get_feature(int fd_hid, void *buffer, size_t length);
@@ -79,9 +71,9 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
         usb_dev = udev_device_new_from_syspath(udev, path);
     
         str = udev_device_get_sysattr_value(usb_dev, "idVendor");
-        cur_vid = (str) ? strtol(str, NULL, 16) : -1;
+        cur_vid = (unsigned short) ((str) ? strtol(str, NULL, 16) : -1);
         str = udev_device_get_sysattr_value(usb_dev, "idProduct");
-        cur_did = (str) ? strtol(str, NULL, 16) : -1;
+        cur_did = (unsigned short) ((str) ? strtol(str, NULL, 16) : -1);
 
         if (cur_vid == VENDOR_ID && cur_did == DEVICE_ID)
         {
@@ -94,8 +86,8 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
 
             udev_list_entry_foreach(entry_hid, devices_hid)
             {
-                const char *path = udev_list_entry_get_name(entry_hid);
-                hid = udev_device_new_from_syspath(udev, path);
+                const char *entry_hid_path = udev_list_entry_get_name(entry_hid);
+                hid = udev_device_new_from_syspath(udev, entry_hid_path);
 
                 if (i2c_hid_path==NULL)
                 {
@@ -132,8 +124,6 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
 
 bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
 {
-    pthread_mutexattr_t attr;
-
     memset(self, 0, sizeof(*self));
 
     self->_i2c_fd_hid = open(info->i2c_hid_path, O_RDWR | O_NONBLOCK);
@@ -149,16 +139,11 @@ bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
         return false;
     }
 
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
-
-    if (pthread_mutex_init(&(self->_i2c_mutex), &attr) != 0)
+    if (pthread_mutex_init(&(self->_i2c_mutex), NULL) != 0)
     {
         printf("mutex init failed\n");
         return 1;
     }
-
-    pthread_mutexattr_destroy(&attr);
 
     _ft260_i2c_set_clock_speed(self->_i2c_fd_hid, 100);
     _bc_bridge_i2c_set_channel(self, BC_BRIDGE_I2C_CHANNEL_1);
@@ -173,44 +158,109 @@ bool bc_bridge_close(bc_bridge_t *self)
     return true;
 }
 
-void bc_bridge_i2c_lock(bc_bridge_t *self)
-{
-    pthread_mutex_lock(&(self->_i2c_mutex));
-}
-
-void bc_bridge_i2c_unlock(bc_bridge_t *self)
-{
-    pthread_mutex_unlock(&(self->_i2c_mutex));
-}
-
 bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
-    bool status;
+    bool status=false;
 
     pthread_mutex_lock(&(self->_i2c_mutex));
 
-    _bc_bridge_i2c_set_channel(self, transfer->channel);
+    if (_bc_bridge_i2c_set_channel(self, transfer->channel))
+    {
+        status = _ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, transfer->buffer, transfer->length);
+    }
 
-    status = _ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, transfer->buffer, transfer->length);
-
-    pthread_mutex_lock(&(self->_i2c_mutex));
+    pthread_mutex_unlock(&(self->_i2c_mutex));
 
     return status;
 }
 
 bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
-    bool status;
+    bool status=false;
 
     pthread_mutex_lock(&(self->_i2c_mutex));
 
-    _bc_bridge_i2c_set_channel(self, transfer->channel);
+    if (_bc_bridge_i2c_set_channel(self, transfer->channel)){
+        status = _ft260_i2c_read(self->_i2c_fd_hid, transfer->device_address, transfer->buffer, transfer->length);
+    }
 
-    status = _ft260_i2c_read(self->_i2c_fd_hid, transfer->device_address, transfer->buffer, transfer->length);
-
-    pthread_mutex_lock(&(self->_i2c_mutex));
+    pthread_mutex_unlock(&(self->_i2c_mutex));
 
     return status;
+}
+
+bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_register_t *transfer)
+{
+    bool status;
+    uint8_t buffer[60];
+
+    if (transfer->address_16_bit)
+    {
+        if (transfer->length > 58)
+        {
+            return false;
+        }
+        buffer[0] = (uint8_t) (transfer->address >> 8);
+        buffer[1] = (uint8_t) transfer->address;
+        memcpy(buffer + 2,transfer->buffer, transfer->length);
+    }
+    else
+    {
+        if (transfer->length > 59)
+        {
+            return false;
+        }
+        buffer[0] = (uint8_t) transfer->address;
+        memcpy(buffer + 1, transfer->buffer, transfer->length);
+    }
+
+    pthread_mutex_lock(&(self->_i2c_mutex));
+
+    if (_bc_bridge_i2c_set_channel(self, transfer->channel))
+    {
+        status = _ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, buffer, (transfer->address_16_bit ? 2 : 1) + transfer->length );
+    }
+
+    pthread_mutex_unlock(&(self->_i2c_mutex));
+
+    return  status;
+}
+
+bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_register_t *transfer)
+{
+    bool status;
+    uint8_t buffer[2];
+
+    if (transfer->length > 60)
+    {
+        return false;
+    }
+
+    if (transfer->address_16_bit)
+    {
+        buffer[0] = (uint8_t) (transfer->address >> 8);
+        buffer[1] = (uint8_t) transfer->address;
+    }
+    else
+    {
+        buffer[0] = (uint8_t) transfer->address;
+    }
+
+    pthread_mutex_lock(&(self->_i2c_mutex));
+
+    if (_bc_bridge_i2c_set_channel(self, transfer->channel))
+    {
+        status = _ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, buffer, (transfer->address_16_bit ? 2 : 1) );
+        if (status)
+        {
+            status = _ft260_i2c_read(self->_i2c_fd_hid, transfer->device_address, transfer->buffer, transfer->length);
+        }
+    }
+
+    pthread_mutex_unlock(&(self->_i2c_mutex));
+
+    return status;
+
 }
 
 bool bc_bridge_led_set_state(bc_bridge_t *self, bc_bridge_led_state_t state);
@@ -283,23 +333,6 @@ static bool _ft260_i2c_set_clock_speed(int fd_hid, uint32_t speed)
     return _ft260_set_feature(fd_hid, buffer, sizeof(buffer));
 }
 
-static bool _ft260_i2c_get_clock_speed(int fd_hid, uint32_t *speed)
-{
-    uint8_t buffer[5];
-
-    buffer[0] = REPORT_ID_I2C_STATUS;
-
-    if (!_ft260_get_feature(fd_hid, buffer, sizeof(buffer)))
-    {
-        return false;
-    }
-
-    *speed = (uint32_t) buffer[2];
-    *speed |= ((uint32_t) buffer[3]) << 8;
-
-    return true;
-}
-
 static bool _ft260_get_i2c_bus_status(int fd_hid, uint8_t *bus_status)
 {
     uint8_t buffer[5];
@@ -327,7 +360,7 @@ static bool _ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t
 
     memcpy(&buffer[4], data, length);
 
-    buffer[0] = 0xD0 + ((length - 1) / 4); /* I2C write */
+    buffer[0] = (uint8_t) (0xD0 + ((length - 1) / 4)); /* I2C write */
     buffer[1] = address; /* Slave address */
     buffer[2] = 0x06; /* Start and Stop */
     buffer[3] = length;
@@ -395,7 +428,7 @@ static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t 
         return false;
     }
 
-    res = read(fd_hid, buffer, 64);
+    res = (int) read(fd_hid, buffer, 64);
 
     if (res == -1)
     {
@@ -413,54 +446,54 @@ static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t 
     return true;
 }
 
-static bool _ft260_uart_reset(int fd_hid)
-{
-    uint8_t buffer[2];
+//static bool _ft260_uart_reset(int fd_hid)
+//{
+//    uint8_t buffer[2];
+//
+//    buffer[0] = REPORT_ID_SYSTEM_SETTING;
+//    buffer[1] = 0x40;
+//
+//    _ft260_set_feature(fd_hid, buffer, sizeof(buffer));
+//
+//    // TODO WHY NEEDED
+//    sleep(1);
+//    return true;
+//}
 
-    buffer[0] = REPORT_ID_SYSTEM_SETTING;
-    buffer[1] = 0x40;
+//static bool _ft260_uart_set_default_configuration(int fd_hid)
+//{
+//    uint8_t buffer[11];
+//    buffer[0] = REPORT_ID_SYSTEM_SETTING;
+//    buffer[1] = 0x41;
+//    buffer[2] = 0x04;//No flow control mode
+//    buffer[3] = 0x80; // baud rate: 9600 = 0x2580
+//    buffer[4] = 0x25;
+//    buffer[5] = 0x00;
+//    buffer[6] = 0x00;
+//    buffer[7] = 0x08; //data bits: 8 = data bits
+//    buffer[8] = 0x00; //parity: 0 = No parity
+//    buffer[9] = 0x02; //stop bits: 2 = two stop bits
+//    buffer[10] = 0;//breaking: 0 = no break
+//    return _ft260_set_feature(fd_hid, buffer, sizeof(buffer));
+//}
 
-    _ft260_set_feature(fd_hid, buffer, sizeof(buffer));
-
-    // TODO WHY NEEDED
-    sleep(1);
-    return true;
-}
-
-static bool _ft260_uart_set_default_configuration(int fd_hid)
-{
-    uint8_t buffer[11];
-    buffer[0] = REPORT_ID_SYSTEM_SETTING;
-    buffer[1] = 0x41;
-    buffer[2] = 0x04;//No flow control mode
-    buffer[3] = 0x80; // baud rate: 9600 = 0x2580
-    buffer[4] = 0x25;
-    buffer[5] = 0x00;
-    buffer[6] = 0x00;
-    buffer[7] = 0x08; //data bits: 8 = data bits
-    buffer[8] = 0x00; //parity: 0 = No parity
-    buffer[9] = 0x02; //stop bits: 2 = two stop bits
-    buffer[10] = 0;//breaking: 0 = no break
-    return _ft260_set_feature(fd_hid, buffer, sizeof(buffer));
-}
-
-static void _ft260_uart_print_configuration(int fd_hid)
-{
-    uint8_t buffer[10];
-
-    buffer[0] = REPORT_ID_UART_STATUS;
-
-    _ft260_get_feature(fd_hid, buffer, sizeof(buffer));
-    uint32_t baud_rate;
-    memcpy(&baud_rate, &buffer[2], sizeof(baud_rate));
-
-    fprintf(stderr,"flow ctrl %d \n", buffer[1] );
-    fprintf(stderr,"baud rate %d \n", baud_rate );
-    fprintf(stderr,"data bit %d \n", buffer[6] );
-    fprintf(stderr,"parity %d \n", buffer[7] );
-    fprintf(stderr,"stop bit %d \n", buffer[8] );
-    fprintf(stderr,"breaking %d \n", buffer[9] );
-}
+//static void _ft260_uart_print_configuration(int fd_hid)
+//{
+//    uint8_t buffer[10];
+//
+//    buffer[0] = REPORT_ID_UART_STATUS;
+//
+//    _ft260_get_feature(fd_hid, buffer, sizeof(buffer));
+//    uint32_t baud_rate;
+//    memcpy(&baud_rate, &buffer[2], sizeof(baud_rate));
+//
+//    fprintf(stderr,"flow ctrl %d \n", buffer[1] );
+//    fprintf(stderr,"baud rate %d \n", baud_rate );
+//    fprintf(stderr,"data bit %d \n", buffer[6] );
+//    fprintf(stderr,"parity %d \n", buffer[7] );
+//    fprintf(stderr,"stop bit %d \n", buffer[8] );
+//    fprintf(stderr,"breaking %d \n", buffer[9] );
+//}
 
 /**
  *
@@ -481,7 +514,7 @@ static int32_t _get_now_in_ms()
 {
     struct timeval now;
     gettimeofday(&now,NULL);
-    return (1000 * now.tv_sec  ) + (now.tv_usec/1000);
+    return (int32_t) ((1000 * now.tv_sec  ) + (now.tv_usec / 1000));
 }
 
 static bool _ft260_get_feature(int fd_hid, void *buffer, size_t length)
