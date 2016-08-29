@@ -1,8 +1,12 @@
 #include <bc/i2c/sys.h>
-#include <ft260.h>
 
-static bool _bc_sys_i2c_tag_write(bc_tag_transfer_t *transfer, bool *communication_fault);
-static bool _bc_sys_i2c_tag_read(bc_tag_transfer_t *transfer, bool *communication_fault);
+#ifdef BRIDGE
+
+#else
+
+static bool _bc_sys_i2c_tag_write(bc_tag_interface_t *self, bc_tag_transfer_t *transfer, bool *communication_fault);
+static bool _bc_sys_i2c_tag_read(bc_tag_interface_t *self, bc_tag_transfer_t *transfer, bool *communication_fault);
+
 
 bc_tag_interface_t *bc_i2c_sys_get_tag_interface(void)
 {
@@ -19,41 +23,43 @@ static bool _bc_sys_i2c_tag_write(bc_tag_transfer_t *transfer, bool *communicati
 {
 	*communication_fault = true;
 
-	ft260_i2c_set_bus(FT260_I2C_BUS_0);
+	 ft260_i2c_set_bus(FT260_I2C_BUS_0);
 
-	// TODO 
-	uint8_t buffer[1+transfer->length];
+	 // TODO
+	 uint8_t buffer[1+transfer->length];
 
-	buffer[0] = transfer->address;
-	memcpy(buffer + 1,transfer->buffer, transfer->length);
-	if (!ft260_i2c_write(transfer->device_address, buffer, 1 + transfer->length ))
-	{
-		return false;
-	}
+	 buffer[0] = transfer->address;
+	 memcpy(buffer + 1,transfer->buffer, transfer->length);
+	 if (!ft260_i2c_write(transfer->device_address, buffer, 1 + transfer->length ))
+	 {
+	 	return false;
+	 }
 
-	*communication_fault = false;
+	 *communication_fault = false;
 
 	return true;
 }
 
 static bool _bc_sys_i2c_tag_read(bc_tag_transfer_t *transfer, bool *communication_fault)
 {
-	uint8_t buffer[1];
 
 	*communication_fault = true;
+	 uint8_t buffer[1];
 
-	ft260_i2c_set_bus(FT260_I2C_BUS_0);
+	 ft260_i2c_set_bus(FT260_I2C_BUS_0);
 
-	buffer[0] = transfer->address;
+	 buffer[0] = transfer->address;
 
-	ft260_i2c_write(transfer->device_address, buffer, 1);
+	 ft260_i2c_write(transfer->device_address, buffer, 1);
 
-	if (!ft260_i2c_read(transfer->device_address, transfer->buffer, transfer->length))
-	{
-		return false;
-	}
+	 if (!ft260_i2c_read(transfer->device_address, transfer->buffer, transfer->length))
+	 {
+	 	return false;
+	 }
 
-	*communication_fault = false;
+	 *communication_fault = false;
 
 	return true;
 }
+
+#endif

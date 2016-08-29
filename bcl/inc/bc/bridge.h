@@ -14,8 +14,8 @@ typedef struct
 
 typedef enum
 {
-    BC_BRIDGE_I2C_CHANNEL_0 = 0,
-    BC_BRIDGE_I2C_CHANNEL_1 = 1
+    BC_BRIDGE_I2C_CHANNEL_0 = 1,
+    BC_BRIDGE_I2C_CHANNEL_1 = 2
 
 } bc_bridge_i2c_channel_t;
 

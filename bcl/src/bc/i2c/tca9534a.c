@@ -97,10 +97,21 @@ static bool _bc_ic2_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t add
 
 	buffer[0] = (uint8_t) value;
 
+#ifdef BRIDGE
+    self->_communication_fault = true;
+    transfer.channel = self->_interface->channel;
+    if (!bc_bridge_i2c_write_register( self->_interface->bridge, &transfer))
+    {
+        return false;
+    }
+    self->_communication_fault = false;
+#else
+
 	if (!self->_interface->write(&transfer, &self->_communication_fault))
 	{
 		return false;
 	}
+#endif
 
 	return true;
 }
@@ -118,10 +129,20 @@ static bool _bc_ic2_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t addr
 	transfer.address = address;
 	transfer.length = 1;
 
+#ifdef BRIDGE
+    self->_communication_fault = true;
+    transfer.channel = self->_interface->channel;
+    if (!bc_bridge_i2c_read_register( self->_interface->bridge, &transfer))
+    {
+        return false;
+    }
+    self->_communication_fault = false;
+#else
 	if (!self->_interface->read(&transfer, &self->_communication_fault))
 	{
 		return false;
 	}
+#endif
 
 	*value = buffer[0];
 

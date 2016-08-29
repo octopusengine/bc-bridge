@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/file.h>
+#include <bc/os.h>
 #include <bc/tag.h>
 #include <bc/bridge.h>
 
@@ -23,16 +24,16 @@
 
 static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_t i2c_channel);
 
-static bool _ft260_i2c_set_clock_speed(int fd_hid, uint32_t speed);
-static bool _ft260_get_i2c_bus_status(int fd_hid, uint8_t *bus_status);
-static bool _ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t length);
-static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t length);
+static bool _bc_bridge_ft260_i2c_set_clock_speed(int fd_hid, uint32_t speed);
+static bool _bc_bridge_ft260_get_i2c_bus_status(int fd_hid, uint8_t *bus_status);
+static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t length);
+static bool _bc_bridge_ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t length);
 
-//static bool _ft260_uart_set_default_configuration(int fd_hid);
-static void _ft260_check_fd(int fd_hid);
-static int32_t _get_now_in_ms();
-static bool _ft260_get_feature(int fd_hid, void *buffer, size_t length);
-static bool _ft260_set_feature(int fd_hid, uint8_t *buffer, size_t length);
+//static bool _bc_bridge_ft260_uart_set_default_configuration(int fd_hid);
+static void _bc_bridge_ft260_check_fd(int fd_hid);
+static int32_t _bc_bridge_get_now_in_ms();
+static bool _bc_bridge_ft260_get_feature(int fd_hid, void *buffer, size_t length);
+static bool _bc_bridge_ft260_set_feature(int fd_hid, uint8_t *buffer, size_t length);
 
 bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
 {
@@ -139,13 +140,8 @@ bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
         return false;
     }
 
-    if (pthread_mutex_init(&(self->_i2c_mutex), NULL) != 0)
-    {
-        printf("mutex init failed\n");
-        return 1;
-    }
-
-    _ft260_i2c_set_clock_speed(self->_i2c_fd_hid, 100);
+    bc_os_mutex_init( &self->_i2c_mutex );
+    _bc_bridge_ft260_i2c_set_clock_speed(self->_i2c_fd_hid, 100);
     _bc_bridge_i2c_set_channel(self, BC_BRIDGE_I2C_CHANNEL_1);
 
     return true;
@@ -162,14 +158,15 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
     bool status=false;
 
-    pthread_mutex_lock(&(self->_i2c_mutex));
+    bc_os_mutex_lock(&(self->_i2c_mutex));
 
     if (_bc_bridge_i2c_set_channel(self, transfer->channel))
     {
-        status = _ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, transfer->buffer, transfer->length);
+        status = _bc_bridge_ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, transfer->buffer,
+                                            transfer->length);
     }
 
-    pthread_mutex_unlock(&(self->_i2c_mutex));
+    bc_os_mutex_unlock(&(self->_i2c_mutex));
 
     return status;
 }
@@ -178,13 +175,14 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
     bool status=false;
 
-    pthread_mutex_lock(&(self->_i2c_mutex));
+    bc_os_mutex_lock(&(self->_i2c_mutex));
 
     if (_bc_bridge_i2c_set_channel(self, transfer->channel)){
-        status = _ft260_i2c_read(self->_i2c_fd_hid, transfer->device_address, transfer->buffer, transfer->length);
+        status = _bc_bridge_ft260_i2c_read(self->_i2c_fd_hid, transfer->device_address, transfer->buffer,
+                                           transfer->length);
     }
 
-    pthread_mutex_unlock(&(self->_i2c_mutex));
+    bc_os_mutex_unlock(&(self->_i2c_mutex));
 
     return status;
 }
@@ -214,14 +212,15 @@ bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regi
         memcpy(buffer + 1, transfer->buffer, transfer->length);
     }
 
-    pthread_mutex_lock(&(self->_i2c_mutex));
+    bc_os_mutex_lock(&(self->_i2c_mutex));
 
     if (_bc_bridge_i2c_set_channel(self, transfer->channel))
     {
-        status = _ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, buffer, (transfer->address_16_bit ? 2 : 1) + transfer->length );
+        status = _bc_bridge_ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, buffer,
+                                            (transfer->address_16_bit ? 2 : 1) + transfer->length);
     }
 
-    pthread_mutex_unlock(&(self->_i2c_mutex));
+    bc_os_mutex_unlock(&(self->_i2c_mutex));
 
     return  status;
 }
@@ -246,18 +245,20 @@ bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regis
         buffer[0] = (uint8_t) transfer->address;
     }
 
-    pthread_mutex_lock(&(self->_i2c_mutex));
+    bc_os_mutex_lock(&(self->_i2c_mutex));
 
     if (_bc_bridge_i2c_set_channel(self, transfer->channel))
     {
-        status = _ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, buffer, (transfer->address_16_bit ? 2 : 1) );
+        status = _bc_bridge_ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, buffer,
+                                            (transfer->address_16_bit ? 2 : 1));
         if (status)
         {
-            status = _ft260_i2c_read(self->_i2c_fd_hid, transfer->device_address, transfer->buffer, transfer->length);
+            status = _bc_bridge_ft260_i2c_read(self->_i2c_fd_hid, transfer->device_address, transfer->buffer,
+                                               transfer->length);
         }
     }
 
-    pthread_mutex_unlock(&(self->_i2c_mutex));
+    bc_os_mutex_unlock(&(self->_i2c_mutex));
 
     return status;
 
@@ -277,7 +278,7 @@ static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_
 
     buffer[0] = (uint8_t) i2c_channel;
 
-    if (_ft260_i2c_write(self->_i2c_fd_hid, 0x70, buffer, sizeof(buffer)))
+    if (_bc_bridge_ft260_i2c_write(self->_i2c_fd_hid, 0x70, buffer, sizeof(buffer)))
     {
         self->_i2c_channel = i2c_channel;
         return true;
@@ -295,28 +296,28 @@ bool ft260_i2c_reset(int fd_hid)
     buffer[0] = REPORT_ID_SYSTEM_SETTING;
     buffer[1] = 0x20;
 
-    if (!_ft260_set_feature(fd_hid, buffer, sizeof(buffer)))
+    if (!_bc_bridge_ft260_set_feature(fd_hid, buffer, sizeof(buffer)))
     {
         return false;
     }
 
-    start = _get_now_in_ms();
+    start = _bc_bridge_get_now_in_ms();
     //kontroluje se stav i2c, pokud do 1s nedojde k resetu vraci false
     do
     {
-        if( !_ft260_get_i2c_bus_status(fd_hid, &bus_status) ){
+        if( !_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status) ){
             return false;
         }
         if(bus_status==0x20){
             return true;
         }
 
-    }while( _get_now_in_ms() - start < 1000 );
+    }while(_bc_bridge_get_now_in_ms() - start < 1000 );
 
     return false;
 }
 
-static bool _ft260_i2c_set_clock_speed(int fd_hid, uint32_t speed)
+static bool _bc_bridge_ft260_i2c_set_clock_speed(int fd_hid, uint32_t speed)
 {
     uint8_t buffer[4];
 
@@ -330,16 +331,16 @@ static bool _ft260_i2c_set_clock_speed(int fd_hid, uint32_t speed)
     buffer[2] = (uint8_t) speed;
     buffer[3] = (uint8_t) (speed >> 8);
 
-    return _ft260_set_feature(fd_hid, buffer, sizeof(buffer));
+    return _bc_bridge_ft260_set_feature(fd_hid, buffer, sizeof(buffer));
 }
 
-static bool _ft260_get_i2c_bus_status(int fd_hid, uint8_t *bus_status)
+static bool _bc_bridge_ft260_get_i2c_bus_status(int fd_hid, uint8_t *bus_status)
 {
     uint8_t buffer[5];
 
     buffer[0] = 0xC0;
 
-    if (!_ft260_get_feature(fd_hid, buffer, sizeof(buffer)))
+    if (!_bc_bridge_ft260_get_feature(fd_hid, buffer, sizeof(buffer)))
     {
         return false;
     }
@@ -348,7 +349,7 @@ static bool _ft260_get_i2c_bus_status(int fd_hid, uint8_t *bus_status)
     return true;
 }
 
-static bool _ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t length)
+static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t length)
 {
     uint8_t buffer[64];
     uint8_t bus_status=0;
@@ -365,7 +366,7 @@ static bool _ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t
     buffer[2] = 0x06; /* Start and Stop */
     buffer[3] = length;
 
-    _ft260_check_fd(fd_hid);
+    _bc_bridge_ft260_check_fd(fd_hid);
 
     if (write(fd_hid, buffer, 4 + length) != (4 + length))
     {
@@ -373,16 +374,17 @@ static bool _ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t
     }
 
     //TODO co delat pokud je 1 bit v 1 a neplati ostatni ?
-    if (!_ft260_get_i2c_bus_status(fd_hid, &bus_status) || ( (bus_status & 0x1F) != 0x00 ) )
+    if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status) ||
+            ( ((bus_status & 0x01) == 0) &&  ( (bus_status & 0x1E) != 0x00 ) ) )
     {
-        //fprintf(stderr, "ft260_i2c_write bus_status %x %d \n", address, bus_status);
+        fprintf(stderr, "ft260_i2c_write bus_status %x %d \n", address, bus_status);
         return false;
     }
 
     return true;
 }
 
-static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t length)
+static bool _bc_bridge_ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t length)
 {
     uint8_t buffer[64];
     uint8_t bus_status=0;
@@ -403,16 +405,17 @@ static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t 
     buffer[3] = length;
     buffer[4] = 0;
 
-    _ft260_check_fd(fd_hid);
+    _bc_bridge_ft260_check_fd(fd_hid);
 
     if (write(fd_hid, buffer, 5) == -1)
     {
         return false;
     }
 
-    if (!_ft260_get_i2c_bus_status(fd_hid, &bus_status) || ( (bus_status & 0x1E) != 0x00 ) )
+    if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status) ||
+            ( ((bus_status & 0x01) == 0) &&  ( (bus_status & 0x1E) != 0x00 ) ) )
     {
-        //fprintf(stderr, "ft260_i2c_read bus_status %x %d \n", address, bus_status);
+        fprintf(stderr, "ft260_i2c_read bus_status %x %d \n", address, bus_status);
         return false;
     }
 
@@ -453,14 +456,14 @@ static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t 
 //    buffer[0] = REPORT_ID_SYSTEM_SETTING;
 //    buffer[1] = 0x40;
 //
-//    _ft260_set_feature(fd_hid, buffer, sizeof(buffer));
+//    _bc_bridge_ft260_set_feature(fd_hid, buffer, sizeof(buffer));
 //
 //    // TODO WHY NEEDED
 //    sleep(1);
 //    return true;
 //}
 
-//static bool _ft260_uart_set_default_configuration(int fd_hid)
+//static bool _bc_bridge_ft260_uart_set_default_configuration(int fd_hid)
 //{
 //    uint8_t buffer[11];
 //    buffer[0] = REPORT_ID_SYSTEM_SETTING;
@@ -474,7 +477,7 @@ static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t 
 //    buffer[8] = 0x00; //parity: 0 = No parity
 //    buffer[9] = 0x02; //stop bits: 2 = two stop bits
 //    buffer[10] = 0;//breaking: 0 = no break
-//    return _ft260_set_feature(fd_hid, buffer, sizeof(buffer));
+//    return _bc_bridge_ft260_set_feature(fd_hid, buffer, sizeof(buffer));
 //}
 
 //static void _ft260_uart_print_configuration(int fd_hid)
@@ -483,7 +486,7 @@ static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t 
 //
 //    buffer[0] = REPORT_ID_UART_STATUS;
 //
-//    _ft260_get_feature(fd_hid, buffer, sizeof(buffer));
+//    _bc_bridge_ft260_get_feature(fd_hid, buffer, sizeof(buffer));
 //    uint32_t baud_rate;
 //    memcpy(&baud_rate, &buffer[2], sizeof(baud_rate));
 //
@@ -499,7 +502,7 @@ static bool _ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t 
  *
  * @param fd file descriptor
  */
-static void _ft260_check_fd(int fd_hid)
+static void _bc_bridge_ft260_check_fd(int fd_hid)
 {
     struct stat s;
     fstat(fd_hid, &s);
@@ -510,21 +513,21 @@ static void _ft260_check_fd(int fd_hid)
     }
 }
 
-static int32_t _get_now_in_ms()
+static int32_t _bc_bridge_get_now_in_ms()
 {
     struct timeval now;
     gettimeofday(&now,NULL);
     return (int32_t) ((1000 * now.tv_sec  ) + (now.tv_usec / 1000));
 }
 
-static bool _ft260_get_feature(int fd_hid, void *buffer, size_t length)
+static bool _bc_bridge_ft260_get_feature(int fd_hid, void *buffer, size_t length)
 {
-    _ft260_check_fd(fd_hid);
+    _bc_bridge_ft260_check_fd(fd_hid);
     return ioctl(fd_hid, HIDIOCGFEATURE(length), buffer) == -1 ? false : true;
 }
 
-static bool _ft260_set_feature(int fd_hid, uint8_t *buffer, size_t length)
+static bool _bc_bridge_ft260_set_feature(int fd_hid, uint8_t *buffer, size_t length)
 {
-    _ft260_check_fd(fd_hid);
+    _bc_bridge_ft260_check_fd(fd_hid);
     return ioctl(fd_hid, HIDIOCSFEATURE(length), buffer) == -1 ? false : true;
 }

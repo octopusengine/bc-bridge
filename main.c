@@ -4,43 +4,57 @@
 #include <string.h>
 
 #include "bc/bridge.h"
-#include "jsmn.h"
-#include <bc/tick.h>
-#include <bc/i2c/sys.h>
-#include <bc/i2c/app.h>
-#include <bc/i2c/tca9534a.h>
-#include <bc/tag/humidity.h>
-#include <bc/tag/temperature.h>
-#include <bc/module/co2.h>
-#include <bc/module/relay.h>
+#include <jsmn.h>
+#include "tags.h"
+
+
+tags_data_t data;
+bc_tag_temperature_t tag_temperature;
+bc_tag_humidity_t tag_humidity;
 
 int main (int argc, char *argv[])
 {
 
     fprintf(stderr,"Bridge build %s \n", VERSION );
     
-	bc_bridge_device_info_t devices[6];
-	uint8_t length;
-	bc_bridge_t bridge;
+    bc_bridge_device_info_t devices[6];//TODO predelat na dinamicke pole
 
-	bc_bridge_scan(devices, &length);
+    uint8_t length;
+    bc_bridge_t bridge;
 
-	fprintf(stderr,"found devices %d \n", length );
+    bc_bridge_scan(devices, &length);
 
-	if (!bc_bridge_open(&bridge, &devices[0]))
-	{
-		return EXIT_FAILURE;
-	}
+    fprintf(stderr,"found devices %d \n", length );
 
-	printf("zamikame");
+    if (length==0)
+    {
+        fprintf(stderr,"no found any devices, exit \n");
+        return EXIT_SUCCESS;
+    }
 
-	bc_bridge_i2c_lock(&bridge);
-	printf("1");
-	bc_bridge_i2c_lock(&bridge);
-	printf("2");
+    if (!bc_bridge_open(&bridge, &devices[0]))
+    {
+        return EXIT_FAILURE;
+    }
 
-	bc_bridge_i2c_unlock(&bridge);
-	bc_bridge_i2c_unlock(&bridge);
+    bc_tag_interface_t tag_i2c0_interface = {
+            .channel = BC_BRIDGE_I2C_CHANNEL_0,
+            .bridge = &bridge
+    };
+
+    bc_tag_humidity_init(&tag_humidity, &tag_i2c0_interface);
+
+    while(1){
+
+        tags_humidity_task(&tag_humidity, &data);
+        if (!data.null)
+        {
+            printf("[\"humidity-sensor\", {\"0/relative-humidity\":[%f, \"%%\"]}]\n", data.value );
+        }
+        sleep(1);
+        //printf("------------------------------------\n");
+    }
+
 
     return EXIT_SUCCESS;
 }
