@@ -28,6 +28,7 @@ static bool _bc_bridge_ft260_i2c_set_clock_speed(int fd_hid, uint32_t speed);
 static bool _bc_bridge_ft260_get_i2c_bus_status(int fd_hid, uint8_t *bus_status);
 static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *data, uint8_t length);
 static bool _bc_bridge_ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data, uint8_t length);
+static bool _bc_bridge_ft260_i2c_reset(int fd_hid);
 
 //static bool _bc_bridge_ft260_uart_set_default_configuration(int fd_hid);
 static void _bc_bridge_ft260_check_fd(int fd_hid);
@@ -264,6 +265,15 @@ bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regis
 
 }
 
+bool bc_bridge_i2c_reset(bc_bridge_t *self)
+{
+    bool status;
+    bc_os_mutex_lock(&self->_i2c_mutex);
+    status = _bc_bridge_ft260_i2c_reset(self->_i2c_fd_hid);
+    bc_os_mutex_unlock(&self->_i2c_mutex);
+    return status;
+}
+
 bool bc_bridge_led_set_state(bc_bridge_t *self, bc_bridge_led_state_t state);
 
 
@@ -287,7 +297,7 @@ static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_
     return false;
 }
 
-bool ft260_i2c_reset(int fd_hid)
+static bool _bc_bridge_ft260_i2c_reset(int fd_hid)
 {
     uint8_t buffer[2];
     uint8_t bus_status;

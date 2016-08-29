@@ -22,12 +22,14 @@ set(SOURCE_FILES
         main.c
         ft260/ft260.c
         jsmn/jsmn.c
+        tags.c
         bcl/src/bc/os.c
         bcl/src/bc/tag.c
         bcl/src/bc/tick.c
         bcl/src/bc/i2c/app.c
         bcl/src/bc/i2c/sys.c
         bcl/src/bc/i2c/tca9534a.c
+        bcl/src/bc/i2c/sc16is740.c
         #bcl/src/bc/module/co2.c
         bcl/src/bc/module/relay.c
         #bcl/src/bc/tag/accelerometer.c
@@ -35,7 +37,7 @@ set(SOURCE_FILES
         bcl/src/bc/tag/humidity.c
         bcl/src/bc/tag/lux_meter.c
         bcl/src/bc/tag/temperature.c
-        tags.c tags.h)
+         )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES})

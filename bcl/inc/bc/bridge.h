@@ -64,6 +64,7 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);
 bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);
 bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_register_t *transfer);
 bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_register_t *transfer);
+bool bc_bridge_i2c_reset(bc_bridge_t *self);
 bool bc_bridge_led_set_state(bc_bridge_t *self, bc_bridge_led_state_t state);
 
 #endif

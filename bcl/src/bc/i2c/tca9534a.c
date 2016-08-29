@@ -3,7 +3,7 @@
 static bool _bc_ic2_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t value);
 static bool _bc_ic2_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t *value);
 
-bool br_ic2_tca9534a_init(bc_i2c_tca9534a_t *self, bc_tag_interface_t *interface, uint8_t device_address)
+bool bc_ic2_tca9534a_init(bc_i2c_tca9534a_t *self, bc_tag_interface_t *interface, uint8_t device_address)
 {
 	memset(self, 0, sizeof(*self));
 

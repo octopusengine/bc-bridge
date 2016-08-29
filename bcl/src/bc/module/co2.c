@@ -7,9 +7,10 @@
 // TODO Extract all constants to the macros in the beginning
 // TODO Implement possibility to add own interface
 
-#define BOOST_Pin BC_I2C_TCA9534A_PIN5
-#define EN_Pin BC_I2C_TCA9534A_PIN4
-#define RDY_Pin BC_I2C_TCA9534A_PIN0
+#define BOOST_Pin BC_I2C_TCA9534A_PIN1
+#define VDD2_PIN BC_I2C_TCA9534A_PIN2
+#define EN_Pin BC_I2C_TCA9534A_PIN3
+#define RDY_Pin BC_I2C_TCA9534A_PIN7
 
 static uint16_t _bc_module_co2_calculate_crc16(uint8_t *buffer, uint8_t length);
 

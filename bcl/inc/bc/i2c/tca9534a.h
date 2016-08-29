@@ -1,9 +1,9 @@
 #ifndef _BC_I2C_TCA9534A_H
 #define _BC_I2C_TCA9534A_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <bc/tag.h>
+#include <stdbool.h>
 
 typedef enum
 {
@@ -43,7 +43,7 @@ typedef struct
 
 } bc_i2c_tca9534a_t;
 
-bool br_ic2_tca9534a_init(bc_i2c_tca9534a_t *self, bc_tag_interface_t *interface, uint8_t device_address);
+bool bc_ic2_tca9534a_init(bc_i2c_tca9534a_t *self, bc_tag_interface_t *interface, uint8_t device_address);
 bool bc_ic2_tca9534a_read_pins(bc_i2c_tca9534a_t *self, uint8_t *pins);
 bool bc_ic2_tca9534a_write_pins(bc_i2c_tca9534a_t *self, uint8_t pins);
 bool bc_ic2_tca9534a_read_pin(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_value_t *value);
