@@ -2,7 +2,9 @@
 #define _BC_MODULE_CO2_H
 
 #include <bc/tick.h>
+#include <bc/tag.h>
 #include <bc/i2c/tca9534a.h>
+#include <bc/i2c/sc16is740.h>
 
 typedef enum
 {
@@ -30,10 +32,11 @@ typedef struct
 	uint8_t _rx_buffer[64]; // TODO Trim size
 	uint8_t _tx_buffer[64]; // TODO Trim size
 	bc_i2c_tca9534a_t _tca9534a;
+    bc_i2c_sc16is740_t _sc16is740;
 
 } bc_module_co2_t;
 
-void bc_module_co2_init(bc_module_co2_t *self);
+void bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface);
 void bc_module_co2_task(bc_module_co2_t *self);
 bool bc_module_co2_get_concentration(bc_module_co2_t *self, int16_t *concentration);
 

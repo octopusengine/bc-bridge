@@ -387,7 +387,7 @@ static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *dat
     if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status) ||
             ( ((bus_status & 0x01) == 0) &&  ( (bus_status & 0x1E) != 0x00 ) ) )
     {
-        //fprintf(stderr, "ft260_i2c_write bus_status %x %d \n", address, bus_status);
+        fprintf(stderr, "ft260_i2c_write bus_status %x %d \n", address, bus_status);
         return false;
     }
 

@@ -1,9 +1,9 @@
 #include <bc/os.h>
 #include <unistd.h>
 
-void bc_os_sleep(bc_tick_t timeout)
+void bc_os_sleep(bc_tick_t milisec)
 {
-    usleep(timeout*1000);
+    usleep(milisec*1000);
 }
 
 void bc_os_mutex_init(bc_os_mutex_t *mutex)

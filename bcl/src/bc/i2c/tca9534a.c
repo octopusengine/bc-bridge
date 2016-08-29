@@ -52,6 +52,14 @@ bool bc_ic2_tca9534a_write_pin(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pi
     return bc_ic2_tca9534a_write_pins(self, pins);
 }
 
+bool bc_ic2_tca9534a_get_modes(bc_i2c_tca9534a_t *self, uint8_t *modes)
+{
+    if (!_bc_ic2_tca9534a_read_register(self, 0x03, &modes)){
+        return false;
+    }
+    return true;
+}
+
 bool bc_ic2_tca9534a_set_modes(bc_i2c_tca9534a_t *self, uint8_t modes)
 {
     return _bc_ic2_tca9534a_write_register(self, 0x03, modes);
@@ -60,7 +68,7 @@ bool bc_ic2_tca9534a_set_modes(bc_i2c_tca9534a_t *self, uint8_t modes)
 bool bc_ic2_tca9534a_get_mode(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_mode_t *mode)
 {
     uint8_t modes;
-    if (!_bc_ic2_tca9534a_read_register(self, 0x03, &modes)){
+    if (!bc_ic2_tca9534a_get_modes(self, &modes)){
         return false;
     }
     *mode = modes & (1 << pin);

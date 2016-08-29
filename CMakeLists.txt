@@ -30,7 +30,7 @@ set(SOURCE_FILES
         bcl/src/bc/i2c/sys.c
         bcl/src/bc/i2c/tca9534a.c
         bcl/src/bc/i2c/sc16is740.c
-        #bcl/src/bc/module/co2.c
+        bcl/src/bc/module/co2.c
         bcl/src/bc/module/relay.c
         #bcl/src/bc/tag/accelerometer.c
         bcl/src/bc/tag/barometer.c
