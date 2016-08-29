@@ -143,11 +143,21 @@ static bool _bc_tag_lux_meter_write_register(bc_tag_lux_meter_t *self, uint8_t a
 
 	buffer[0] = (uint8_t) (value >> 8);
 	buffer[1] = (uint8_t) value;
+#ifdef BRIDGE
+    self->_communication_fault = true;
+    transfer.channel = self->_interface->channel;
+    if (!bc_bridge_i2c_write_register( self->_interface->bridge, &transfer))
+    {
+        return false;
+    }
+    self->_communication_fault = false;
 
+#else
 	if (!self->_interface->write(&transfer, &self->_communication_fault))
 	{
 		return false;
 	}
+#endif
 
 	return true;
 }
@@ -165,10 +175,20 @@ static bool _bc_tag_lux_meter_read_register(bc_tag_lux_meter_t *self, uint8_t ad
 	transfer.address = address;
 	transfer.length = 2;
 
+#ifdef BRIDGE
+    self->_communication_fault = true;
+    transfer.channel = self->_interface->channel;
+    if (!bc_bridge_i2c_read_register( self->_interface->bridge, &transfer))
+    {
+        return false;
+    }
+    self->_communication_fault = false;
+#else
 	if (!self->_interface->read(&transfer, &self->_communication_fault))
 	{
 		return false;
 	}
+#endif
 
 	*value = (uint16_t) buffer[1];
 	*value |= ((uint16_t) buffer[0]) << 8;

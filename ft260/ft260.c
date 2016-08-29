@@ -212,7 +212,7 @@ bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regi
         memcpy(buffer + 1, transfer->buffer, transfer->length);
     }
 
-    bc_os_mutex_lock(&(self->_i2c_mutex));
+    bc_os_mutex_lock(&self->_i2c_mutex);
 
     if (_bc_bridge_i2c_set_channel(self, transfer->channel))
     {
@@ -220,7 +220,7 @@ bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regi
                                             (transfer->address_16_bit ? 2 : 1) + transfer->length);
     }
 
-    bc_os_mutex_unlock(&(self->_i2c_mutex));
+    bc_os_mutex_unlock(&self->_i2c_mutex);
 
     return  status;
 }
@@ -245,7 +245,7 @@ bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regis
         buffer[0] = (uint8_t) transfer->address;
     }
 
-    bc_os_mutex_lock(&(self->_i2c_mutex));
+    bc_os_mutex_lock(&self->_i2c_mutex);
 
     if (_bc_bridge_i2c_set_channel(self, transfer->channel))
     {
@@ -258,7 +258,7 @@ bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regis
         }
     }
 
-    bc_os_mutex_unlock(&(self->_i2c_mutex));
+    bc_os_mutex_unlock(&self->_i2c_mutex);
 
     return status;
 
@@ -377,7 +377,7 @@ static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *dat
     if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status) ||
             ( ((bus_status & 0x01) == 0) &&  ( (bus_status & 0x1E) != 0x00 ) ) )
     {
-        fprintf(stderr, "ft260_i2c_write bus_status %x %d \n", address, bus_status);
+        //fprintf(stderr, "ft260_i2c_write bus_status %x %d \n", address, bus_status);
         return false;
     }
 
@@ -415,7 +415,7 @@ static bool _bc_bridge_ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data
     if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status) ||
             ( ((bus_status & 0x01) == 0) &&  ( (bus_status & 0x1E) != 0x00 ) ) )
     {
-        fprintf(stderr, "ft260_i2c_read bus_status %x %d \n", address, bus_status);
+        //fprintf(stderr, "ft260_i2c_read bus_status %x %d \n", address, bus_status);
         return false;
     }
 

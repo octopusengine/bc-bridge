@@ -31,10 +31,10 @@ set(SOURCE_FILES
         #bcl/src/bc/module/co2.c
         bcl/src/bc/module/relay.c
         #bcl/src/bc/tag/accelerometer.c
-        #bcl/src/bc/tag/barometer.c
+        bcl/src/bc/tag/barometer.c
         bcl/src/bc/tag/humidity.c
-        #bcl/src/bc/tag/lux_meter.c
-        #bcl/src/bc/tag/temperature.c
+        bcl/src/bc/tag/lux_meter.c
+        bcl/src/bc/tag/temperature.c
         tags.c tags.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
