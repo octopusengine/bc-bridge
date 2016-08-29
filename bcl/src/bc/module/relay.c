@@ -11,10 +11,10 @@
 
 static bool _bc_module_relay_set_mode(bc_module_relay_t *self, uint8_t pins);
 
-void bc_module_relay_init(bc_module_relay_t *self)
+void bc_module_relay_init(bc_module_relay_t *self, bc_tag_interface_t *interface)
 {
 	memset(self, 0, sizeof(*self));
-	br_ic2_tca9534a_init(&self->_tca9534a, bc_i2c_sys_get_tag_interface(), 0x3B );
+	br_ic2_tca9534a_init(&self->_tca9534a, interface, 0x3B );
 	_bc_module_relay_set_mode(self, 0x50);
 }
 
