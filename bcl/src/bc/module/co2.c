@@ -25,9 +25,6 @@ void bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 	bc_ic2_tca9534a_set_modes(&self->_tca9534a, BC_I2C_TCA9534A_ALL_INPUT);
     bc_ic2_tca9534a_write_pins(&self->_tca9534a, 0x00);
 
-    self->_tx_buffer[0] = 0x01;
-    bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 1);
-
 }
 
 void bc_module_co2_task(bc_module_co2_t *self)
@@ -125,7 +122,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 					self->_tx_buffer[6] = 0x28;
 					self->_tx_buffer[7] = 0x7E;
 
-					if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 8) )
+					if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 8))
 					{
                         perror("BC_MODULE_CO2_STATE_ERROR 1");
 						self->_state = BC_MODULE_CO2_STATE_ERROR;

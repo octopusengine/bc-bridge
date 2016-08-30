@@ -12,6 +12,7 @@
 #include <bc/tag.h>
 #include <bc/bridge.h>
 
+#define BC_BRIDGE_DEBUG 1
 
 #define VENDOR_ID 0x0403
 #define DEVICE_ID 0x6030
@@ -143,7 +144,10 @@ bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
 
     bc_os_mutex_init( &self->_i2c_mutex );
     _bc_bridge_ft260_i2c_set_clock_speed(self->_i2c_fd_hid, 100);
-    _bc_bridge_i2c_set_channel(self, BC_BRIDGE_I2C_CHANNEL_1);
+    if (!_bc_bridge_i2c_set_channel(self, BC_BRIDGE_I2C_CHANNEL_1))
+    {
+        return false;
+    }
 
     return true;
 }
@@ -363,6 +367,7 @@ static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *dat
 {
     uint8_t buffer[64];
     uint8_t bus_status=0;
+    uint8_t stop;
 
     if (length > 60)
     {
@@ -376,18 +381,44 @@ static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *dat
     buffer[2] = 0x06; /* Start and Stop */
     buffer[3] = length;
 
-    _bc_bridge_ft260_check_fd(fd_hid);
+    stop = _bc_bridge_get_now_in_ms() + 10;
+
+    //wait on i2c redy
+    do
+    {
+        if (_bc_bridge_get_now_in_ms() > stop)
+        {
+            return false;
+        }
+        if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status))
+        {
+            return false;
+        }
+    }
+    while ( (bus_status & 0b00010001) != 0x00 );
+    //bit 0 = controller busy: all other status bits invalid
+    //bit 5 = controller idle
 
     if (write(fd_hid, buffer, 4 + length) != (4 + length))
     {
         return false;
     }
 
-    //TODO co delat pokud je 1 bit v 1 a neplati ostatni ?
-    if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status) ||
-            ( ((bus_status & 0x01) == 0) &&  ( (bus_status & 0x1E) != 0x00 ) ) )
+    do
     {
-        fprintf(stderr, "ft260_i2c_write bus_status %x %d \n", address, bus_status);
+        if (_bc_bridge_get_now_in_ms() > stop )
+        {
+            return false;
+        }
+        if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status))
+        {
+            return false;
+        }
+    }
+    while ( (bus_status & 0x01) != 0 );
+
+    if ((bus_status & 0x1E) != 0x00)
+    {
         return false;
     }
 
@@ -398,7 +429,9 @@ static bool _bc_bridge_ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data
 {
     uint8_t buffer[64];
     uint8_t bus_status=0;
+    uint32_t stop;
     struct timeval timeout;
+
 
     int res;
 
@@ -415,17 +448,44 @@ static bool _bc_bridge_ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data
     buffer[3] = length;
     buffer[4] = 0;
 
-    _bc_bridge_ft260_check_fd(fd_hid);
+    stop = _bc_bridge_get_now_in_ms() + 10;
+
+    //wait on i2c redy
+    do
+    {
+        if (_bc_bridge_get_now_in_ms() > stop)
+        {
+            return false;
+        }
+        if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status))
+        {
+            return false;
+        }
+    }
+    while ( (bus_status & 0b00010001) != 0x00 );
+    //bit 0 = controller busy: all other status bits invalid
+    //bit 5 = controller idle
 
     if (write(fd_hid, buffer, 5) == -1)
     {
         return false;
     }
 
-    if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status) ||
-            ( ((bus_status & 0x01) == 0) &&  ( (bus_status & 0x1E) != 0x00 ) ) )
+    do
     {
-        //fprintf(stderr, "ft260_i2c_read bus_status %x %d \n", address, bus_status);
+        if (_bc_bridge_get_now_in_ms() > stop )
+        {
+            return false;
+        }
+        if (!_bc_bridge_ft260_get_i2c_bus_status(fd_hid, &bus_status))
+        {
+            return false;
+        }
+    }
+    while ( (bus_status & 0x01) != 0 );
+
+    if ((bus_status & 0x1E) != 0x00)
+    {
         return false;
     }
 

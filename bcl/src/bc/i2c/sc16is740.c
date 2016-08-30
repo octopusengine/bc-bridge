@@ -96,9 +96,10 @@ bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t len
 {
     uint8_t i;
     for(i=0; i<length; i++){
-        bc_ic2_sc16is740_available_write(self);
-
+        //bc_ic2_sc16is740_available_write(self);
+        printf("bc_ic2_sc16is740_write %d %x \n", i, data[i]);
         if (!_bc_ic2_sc16is740_write_register(self, 0x00, data[i])){
+            printf("write error i = %d \n", i);
             return false;
         }
     }
@@ -194,6 +195,7 @@ static bool _bc_ic2_sc16is740_write_register(bc_i2c_sc16is740_t *self, uint8_t a
     bc_tag_transfer_t transfer;
 
     uint8_t buffer[1];
+    buffer[0] = (uint8_t) value;
 
     bc_tag_transfer_init(&transfer);
 
@@ -201,8 +203,6 @@ static bool _bc_ic2_sc16is740_write_register(bc_i2c_sc16is740_t *self, uint8_t a
     transfer.buffer = buffer;
     transfer.address = address;
     transfer.length = 1;
-
-    buffer[0] = (uint8_t) value;
 
 #ifdef BRIDGE
     self->_communication_fault = true;

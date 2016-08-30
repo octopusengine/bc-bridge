@@ -113,6 +113,7 @@ static bool _bc_ic2_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t add
         return false;
     }
     self->_communication_fault = false;
+
 #else
 
 	if (!self->_interface->write(&transfer, &self->_communication_fault))
