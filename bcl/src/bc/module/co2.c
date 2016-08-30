@@ -12,19 +12,36 @@
 
 static uint16_t _bc_module_co2_calculate_crc16(uint8_t *buffer, uint8_t length);
 
-void bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
+bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 {
 	memset(self, 0, sizeof(*self));
 
-	self->_state = BC_MODULE_CO2_STATE_INIT;
+    self->_state = BC_MODULE_CO2_STATE_ERROR;
 	self->_co2_concentration_unknown = true;
 
-    bc_ic2_tca9534a_init(&self->_tca9534a, interface, 0x38);
-    bc_ic2_sc16is740_init(&self->_sc16is740, interface, 0x4d);
+    if (!bc_ic2_tca9534a_init(&self->_tca9534a, interface, 0x38))
+    {
+        return false;
+    }
 
-	bc_ic2_tca9534a_set_modes(&self->_tca9534a, BC_I2C_TCA9534A_ALL_INPUT);
-    bc_ic2_tca9534a_write_pins(&self->_tca9534a, 0x00);
+    if (!bc_ic2_tca9534a_set_modes(&self->_tca9534a, BC_I2C_TCA9534A_ALL_INPUT))
+    {
+        return false;
+    }
 
+    if (!bc_ic2_sc16is740_init(&self->_sc16is740, interface, 0x4d))
+    {
+        return false;
+    }
+
+    if (!bc_ic2_tca9534a_write_pins(&self->_tca9534a, 0x00))
+    {
+        return false;
+    }
+
+    self->_state = BC_MODULE_CO2_STATE_INIT;
+
+    return true;
 }
 
 void bc_module_co2_task(bc_module_co2_t *self)
@@ -36,21 +53,16 @@ void bc_module_co2_task(bc_module_co2_t *self)
 
 	t_now = bc_tick_get();
 
-
 	switch (self->_state)
 	{
 		case BC_MODULE_CO2_STATE_INIT:
 		{
 			// TODO Adjust time to > 1min
 			self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
-			self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);//TODO 180
-
-
+			self->_t_state_timeout = t_now + BC_TICK_SECONDS(180);//TODO 180
 			//bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
-
             bc_ic2_tca9534a_set_mode(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_OUTPUT);
             bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
-
 			break;
 		}
 		case BC_MODULE_CO2_STATE_PRECHARGE:

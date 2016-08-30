@@ -36,7 +36,7 @@ typedef struct
 
 } bc_module_co2_t;
 
-void bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface);
+bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface);
 void bc_module_co2_task(bc_module_co2_t *self);
 bool bc_module_co2_get_concentration(bc_module_co2_t *self, int16_t *concentration);
 

@@ -15,7 +15,7 @@ bool bc_ic2_sc16is740_init(bc_i2c_sc16is740_t *self, bc_tag_interface_t *interfa
     self->_device_address = device_address;
     self->_communication_fault = true;
 
-    return _bc_ic2_sc16is740_set_default(self);
+    return  _bc_ic2_sc16is740_set_default(self);
 }
 
 bool bc_ic2_sc16is740_reset_device(bc_i2c_sc16is740_t *self)
@@ -34,10 +34,7 @@ bool bc_ic2_sc16is740_reset_device(bc_i2c_sc16is740_t *self)
 bool bc_ic2_sc16is740_reset_fifo(bc_i2c_sc16is740_t *self, bc_i2c_sc16is740_fifo_t fifo)
 {
     uint8_t register_fcr;
-    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_fcr)){
-        return false;
-    }
-    register_fcr |= fifo;
+    register_fcr = fifo | 0x01;
     if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_fcr)){
         return false;
     }
@@ -64,9 +61,10 @@ bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t leng
     {
         if (!_bc_ic2_sc16is740_read_register(self, 0x09, &register_rxlvl))
         {
+            perror("error _bc_ic2_sc16is740_read_register 0x09");
             return false;
         }
-        if (register_rxlvl == 0)
+        if (register_rxlvl != 0)
         {
             if (!_bc_ic2_sc16is740_read_register(self, 0x00, &register_rhr)){
                 return false;
@@ -96,10 +94,7 @@ bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t len
 {
     uint8_t i;
     for(i=0; i<length; i++){
-        //bc_ic2_sc16is740_available_write(self);
-        printf("bc_ic2_sc16is740_write %d %x \n", i, data[i]);
         if (!_bc_ic2_sc16is740_write_register(self, 0x00, data[i])){
-            printf("write error i = %d \n", i);
             return false;
         }
     }
@@ -120,7 +115,7 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
     uint8_t prescaler;
     uint16_t divisor;
 
-    if (!_bc_ic2_sc16is740_read_register(self, 0X04, &register_mcr)){ //MCR
+    if (!_bc_ic2_sc16is740_read_register(self, 0x04, &register_mcr)){ //MCR
         return false;
     }
     if ((register_mcr & 0x80) == 0x00 )
@@ -146,36 +141,39 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
         return false;
     }
 
-    register_lcr = 0xBF; //switch to access Enhanced register
+//    register_lcr = 0xBF; //switch to access Enhanced register
+//    if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
+//        return false;
+//    }
+//    //no transmit flow control
+//    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_efr)){
+//        return false;
+//    }
+//    register_efr &= 0xf0;
+//    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_efr)){
+//        return false;
+//    }
+
+    register_lcr = 0b10000111;
     if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
         return false;
     }
-    //no transmit flow control
-    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_efr)){
-        return false;
-    }
-    register_efr &= 0xf0;
-    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_efr)){
+    //fifo enabled, rxfio, txfifo reset
+    register_fcr = 0x07;
+    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_fcr)){
         return false;
     }
 
+    bc_os_sleep(10);
+
     register_lcr = 0b10000111;
-    //divisor latch enabled
+
     //no break
     //no parity
     //2 stop bits
     //8 data bits
 
     if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
-        return false;
-    }
-
-    //fifo enabled
-    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_fcr)){
-        return false;
-    }
-    register_fcr |= 0x01;
-    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_fcr)){
         return false;
     }
 
