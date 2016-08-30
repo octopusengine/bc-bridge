@@ -141,18 +141,18 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
         return false;
     }
 
-//    register_lcr = 0xBF; //switch to access Enhanced register
-//    if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
-//        return false;
-//    }
-//    //no transmit flow control
-//    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_efr)){
-//        return false;
-//    }
-//    register_efr &= 0xf0;
-//    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_efr)){
-//        return false;
-//    }
+    register_lcr = 0xBF; //switch to access Enhanced register
+    if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
+        return false;
+    }
+    //no transmit flow control
+    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_efr)){
+        return false;
+    }
+    register_efr &= 0xf0;
+    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_efr)){
+        return false;
+    }
 
     register_lcr = 0b10000111;
     if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
