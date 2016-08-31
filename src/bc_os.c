@@ -2,7 +2,6 @@
 #include "bc_log.h"
 #include <pthread.h>
 #include <semaphore.h>
-#include <time.h>
 
 void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *parameters)
 {

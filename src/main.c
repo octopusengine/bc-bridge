@@ -92,18 +92,16 @@ int main (int argc, char *argv[])
     // TODO Prejmenovat length na device_count...
     bc_bridge_scan(devices, &length);
 
-    bc_log_info("number of detected devices: %d", length);
+    bc_log_info("main: number of found devices: %d", length);
 
     if (length == 0)
     {
-        bc_log_error("no devices have been detected");
-
-        return EXIT_SUCCESS;
+        bc_log_fatal("main: no devices have been found");
     }
 
     if (!bc_bridge_open(&bridge, &devices[0]))
     {
-        return EXIT_FAILURE;
+        bc_log_fatal("main: call failed: bc_bridge_open");
     }
 
     bc_tag_interface_t tag_i2c0_interface = {
@@ -116,9 +114,7 @@ int main (int argc, char *argv[])
 
     if (!bc_module_co2_init(&module_co2, &tag_i2c0_interface))
     {
-        bc_log_fatal("call failed: bc_module_co2_init");
-
-        return EXIT_FAILURE;
+        bc_log_fatal("main: call failed: bc_module_co2_init");
     }
 
 //    uint8_t address;
