@@ -98,7 +98,7 @@ void bc_log_dump(const void *buffer, uint32_t length, const char *format, ...)
 
             bc_log_head(BC_LOG_LEVEL_DUMP);
 
-            fprintf(stderr, "%5d  %-*s %-*s", position,
+            fprintf(stderr, "%5d:  %-*s %-*s", position,
                     BC_LOG_DUMP_WIDTH * 3 + 2, hex,
                     BC_LOG_DUMP_WIDTH, text
             );

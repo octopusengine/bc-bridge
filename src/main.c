@@ -24,30 +24,24 @@ bc_module_relay_t module_relay;
 
 int main (int argc, char *argv[])
 {
-    char str[] = "mama mele maso, tata micha maltu";
     bc_log_init(BC_LOG_LEVEL_DUMP);
 
-    bc_log_dump(str, sizeof(str), "dump");
-    bc_log_debug("debug");
-    bc_log_info("info");
-    bc_log_warning("warning");
-    bc_log_error("error");
-    bc_log_fatal("fatal");
-
-    fprintf(stderr,"Bridge build %s \n", VERSION );
+    bc_log_info("build %s", VERSION);
 
     bc_bridge_device_info_t devices[6];//TODO predelat na dinamicke pole
 
     uint8_t length;
     bc_bridge_t bridge;
 
+    // TODO Prejmenovat length na device_count...
     bc_bridge_scan(devices, &length);
 
-    fprintf(stderr,"found devices %d \n", length );
+    bc_log_info("number of detected devices: %d", length);
 
-    if (length==0)
+    if (length == 0)
     {
-        fprintf(stderr,"no found any devices, exit \n");
+        bc_log_error("no devices have been detected");
+
         return EXIT_SUCCESS;
     }
 
@@ -63,9 +57,11 @@ int main (int argc, char *argv[])
 
 
     bc_module_co2_t module_co2;
+
     if (!bc_module_co2_init(&module_co2, &tag_i2c0_interface))
     {
-        perror("error bc_module_co2_init \n");
+        bc_log_fatal("call failed: bc_module_co2_init");
+
         return EXIT_FAILURE;
     }
 
@@ -94,7 +90,7 @@ int main (int argc, char *argv[])
     //bc_module_relay_mode_t relay_state = BC_MODULE_RELAY_MODE_NO;
 
     while(1){
-
+        bc_log_debug("---------");
         bc_module_co2_task(&module_co2);
         if (!module_co2._co2_concentration_unknown)
         {
