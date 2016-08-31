@@ -1,5 +1,8 @@
 
-#include "bc/bridge.h"
+#include "bc_bridge.h"
+#include "bc_os.h"
+#include "bc_tag.h"
+#include "bc_bridge.h"
 
 #include <libudev.h>
 #include <linux/hidraw.h>
@@ -8,9 +11,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/file.h>
-#include <bc/os.h>
-#include <bc/tag.h>
-#include <bc/bridge.h>
 
 #define BC_BRIDGE_DEBUG 1
 
@@ -395,7 +395,7 @@ static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *dat
             return false;
         }
     }
-    while ( (bus_status & 0b00010001) != 0x00 );
+    while ( (bus_status & 0x11) != 0x00 );
     //bit 0 = controller busy: all other status bits invalid
     //bit 5 = controller idle
 
@@ -462,7 +462,7 @@ static bool _bc_bridge_ft260_i2c_read(int fd_hid, uint8_t address, uint8_t *data
             return false;
         }
     }
-    while ( (bus_status & 0b00010001) != 0x00 );
+    while ( (bus_status & 0x11) != 0x00 );
     //bit 0 = controller busy: all other status bits invalid
     //bit 5 = controller idle
 

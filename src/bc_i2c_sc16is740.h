@@ -1,9 +1,8 @@
-#ifndef BC_I2C_SC16IS740_H
-#define BC_I2C_SC16IS740_H
+#ifndef _BC_I2C_SC16IS740_H
+#define _BC_I2C_SC16IS740_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <bc/tag.h>
+#include "bc_common.h"
+#include "bc_tag.h"
 
 typedef enum
 {
@@ -27,4 +26,4 @@ bool bc_ic2_sc16is740_available(bc_i2c_sc16is740_t *self);
 bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length, bc_tick_t timeout_milis);
 bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length);
 
-#endif //BC_I2C_SC16IS740_H
+#endif /* _BC_I2C_SC16IS740_H */

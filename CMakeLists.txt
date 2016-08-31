@@ -11,7 +11,7 @@ add_definitions(-DBRIDGE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 find_package(Threads REQUIRED)
-add_definitions(-DTHREADSAFE -D_REENTRANT)
+add_definitions(-D_BSD_SOURCE -DTHREADSAFE -D_REENTRANT)
 find_package(Libudev REQUIRED)
 
 include_directories(bcl/inc)
@@ -19,25 +19,27 @@ include_directories(ft260)
 include_directories(jsmn)
 
 set(SOURCE_FILES
-        main.c
-        ft260/ft260.c
+
+        src/bc_bridge.c
+        src/bc_i2c_app.c
+        src/bc_i2c_sys.c
+        src/bc_module_co2.c
+        src/bc_module_relay.c
+        src/bc_os.c
+        #src/bc_tag_accelerometer.c
+        src/bc_tag_barometer.c
+        src/bc_tag.c
+        src/bc_tag_humidity.c
+        src/bc_tag_lux_meter.c
+        src/bc_tag_temperature.c
+        src/bc_tick.c
+        src/main.c
+        src/bc_i2c_sc16is740.c
+        src/tags.c
+        src/bc_i2c_tca9534a.c
+
         jsmn/jsmn.c
-        tags.c
-        bcl/src/bc/os.c
-        bcl/src/bc/tag.c
-        bcl/src/bc/tick.c
-        bcl/src/bc/i2c/app.c
-        bcl/src/bc/i2c/sys.c
-        bcl/src/bc/i2c/tca9534a.c
-        bcl/src/bc/i2c/sc16is740.c
-        bcl/src/bc/module/co2.c
-        bcl/src/bc/module/relay.c
-        #bcl/src/bc/tag/accelerometer.c
-        bcl/src/bc/tag/barometer.c
-        bcl/src/bc/tag/humidity.c
-        bcl/src/bc/tag/lux_meter.c
-        bcl/src/bc/tag/temperature.c
-         )
+)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES})

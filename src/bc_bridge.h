@@ -1,8 +1,8 @@
 #ifndef _BC_BRIDGE_H
 #define _BC_BRIDGE_H
 
-#include <bc/common.h>
-#include <bc/os.h>
+#include "bc_common.h"
+#include "bc_os.h"
 
 typedef struct
 {

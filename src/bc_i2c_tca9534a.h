@@ -1,9 +1,8 @@
 #ifndef _BC_I2C_TCA9534A_H
 #define _BC_I2C_TCA9534A_H
 
-#include <stdint.h>
-#include <bc/tag.h>
-#include <stdbool.h>
+#include "bc_common.h"
+#include "bc_tag.h"
 
 typedef enum
 {

@@ -1,4 +1,4 @@
-#include <bc/i2c/sc16is740.h>
+#include "bc_i2c_sc16is740.h"
 
 #define BC_I2C_SC16IS740_DEBUG 1
 #define BC_I2C_SC16IS740_CRYSTCAL_FREQ (13560000UL)
@@ -154,7 +154,7 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
         return false;
     }
 
-    register_lcr = 0b10000111;
+    register_lcr = 0x87;
     if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
         return false;
     }
@@ -166,7 +166,7 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
 
     bc_os_sleep(10);
 
-    register_lcr = 0b10000111;
+    register_lcr = 0x87;
 
     //no break
     //no parity
