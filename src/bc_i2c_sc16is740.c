@@ -175,7 +175,7 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
     if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_fcr)){
         return false;
     }
-    bc_os_sleep(1);
+    bc_os_task_sleep(1);
 
     //Polled mode operation
     if (!_bc_ic2_sc16is740_read_register(self, 0x01, &register_ier)){

@@ -1,6 +1,6 @@
 #include "bc_module_relay.h"
 
-/* 
+/*
        N0_L  NC_H  NC_L  N0_H
  klid   0      1     0     1     0x50
  NC     0      0     1     1     0x30
@@ -17,7 +17,7 @@ void bc_module_relay_init(bc_module_relay_t *self, bc_tag_interface_t *interface
 	_bc_module_relay_set_mode(self, 0x50);
 }
 
-bool bc_module_relay_set_mode(bc_module_relay_t *self, bc_module_relay_mode_t relay_mode) 
+bool bc_module_relay_set_mode(bc_module_relay_t *self, bc_module_relay_mode_t relay_mode)
 {
     uint8_t pins = 0x30; //BC_MODULE_RELAY_MODE_NC
 
@@ -30,9 +30,9 @@ bool bc_module_relay_set_mode(bc_module_relay_t *self, bc_module_relay_mode_t re
     {
         return false;
     }
-    
-    bc_os_sleep(10);
-   
+
+    bc_os_task_sleep(10);
+
     if (!_bc_module_relay_set_mode(self, 0x50))
     {
         return false;

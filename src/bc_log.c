@@ -1,6 +1,7 @@
 #include "bc_log.h"
 #include "bc_os.h"
 #include <sys/time.h>
+#include <time.h>
 
 #define BC_LOG_DUMP_WIDTH 8
 
@@ -228,6 +229,8 @@ void bc_log_fatal(const char *format, ...)
     bc_log_tail();
 
     bc_os_mutex_unlock(&bc_log_mutex);
+
+    exit(EXIT_FAILURE);
 }
 
 static void bc_log_head(bc_log_level_t level)
