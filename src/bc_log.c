@@ -1,7 +1,8 @@
 #include "bc_log.h"
 #include "bc_os.h"
 #include <sys/time.h>
-#include <time.h>
+
+#define BC_LOG_DUMP_WIDTH 8
 
 static bc_os_mutex_t bc_log_mutex;
 static bc_log_level_t bc_log_level;
@@ -21,6 +22,8 @@ void bc_log_dump(const void *buffer, uint32_t length, const char *format, ...)
 {
     va_list ap;
 
+    uint32_t position;
+
     bc_os_mutex_lock(&bc_log_mutex);
 
     if ((int32_t) bc_log_level > (int32_t) BC_LOG_LEVEL_DUMP)
@@ -30,7 +33,7 @@ void bc_log_dump(const void *buffer, uint32_t length, const char *format, ...)
         return;
     }
 
-    bc_log_head(BC_LOG_LEVEL_ERROR);
+    bc_log_head(BC_LOG_LEVEL_DUMP);
 
     va_start(ap, format);
     bc_log_message(format, ap);
@@ -38,7 +41,71 @@ void bc_log_dump(const void *buffer, uint32_t length, const char *format, ...)
 
     bc_log_tail();
 
-    // TODO Dump buffer
+    if (buffer != NULL && length != 0)
+    {
+        for (position = 0; position < length; position += BC_LOG_DUMP_WIDTH)
+        {
+            static char hex[BC_LOG_DUMP_WIDTH * 3 + 2 + 1];
+            static char text[BC_LOG_DUMP_WIDTH + 1];
+
+            char *ptr_hex;
+            char *ptr_text;
+
+            uint32_t line_size;
+
+            uint32_t i;
+
+            ptr_hex = hex;
+            ptr_text = text;
+
+            if ((position + BC_LOG_DUMP_WIDTH) <= length)
+            {
+                line_size = BC_LOG_DUMP_WIDTH;
+            }
+            else
+            {
+                line_size = length - position;
+            }
+
+            for (i = 0; i < line_size; i++)
+            {
+                uint8_t value;
+
+                value = ((uint8_t *) buffer)[position + i];
+
+                if (i == (BC_LOG_DUMP_WIDTH / 2))
+                {
+                    *ptr_hex++ = '|';
+                    *ptr_hex++ = ' ';
+                }
+
+                snprintf(ptr_hex, 4, "%02X ", value);
+
+                ptr_hex += 3;
+
+                if (value < 32 || value > 126)
+                {
+                    *ptr_text++ = '.';
+                }
+                else
+                {
+                    *ptr_text++ = value;
+                }
+            }
+
+            *ptr_hex = '\0';
+            *ptr_text = '\0';
+
+            bc_log_head(BC_LOG_LEVEL_DUMP);
+
+            fprintf(stderr, "%5d:  %-*s %-*s", position,
+                    BC_LOG_DUMP_WIDTH * 3 + 2, hex,
+                    BC_LOG_DUMP_WIDTH, text
+            );
+
+            bc_log_tail();
+        }
+    }
 
     bc_os_mutex_unlock(&bc_log_mutex);
 }
@@ -185,25 +252,25 @@ static void bc_log_head(bc_log_level_t level)
     switch (level)
     {
         case BC_LOG_LEVEL_DUMP:
-            fprintf(stderr, "[DUMP ] ");
+            fprintf(stderr, "[ DUMP  ] ");
             break;
         case BC_LOG_LEVEL_DEBUG:
-            fprintf(stderr, "[DEBUG] ");
+            fprintf(stderr, "[ DEBUG ] ");
             break;
         case BC_LOG_LEVEL_INFO:
-            fprintf(stderr, "[INFO ] ");
+            fprintf(stderr, "[ INFO  ] ");
             break;
         case BC_LOG_LEVEL_WARNING:
-            fprintf(stderr, "[WARN ] ");
+            fprintf(stderr, "[ WARN  ] ");
             break;
         case BC_LOG_LEVEL_ERROR:
-            fprintf(stderr, "[ERROR] ");
+            fprintf(stderr, "[ ERROR ] ");
             break;
         case BC_LOG_LEVEL_FATAL:
-            fprintf(stderr, "[FATAL] ");
+            fprintf(stderr, "[ FATAL ] ");
             break;
         default:
-            fprintf(stderr, "[?????] ");
+            fprintf(stderr, "[ ????? ] ");
             break;
     }
 }

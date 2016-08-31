@@ -1,4 +1,5 @@
 #include "bc_module_co2.h"
+#include "bc_log.h"
 
 
 // TODO Implement ABC calibration
@@ -22,18 +23,28 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
     self->_state = BC_MODULE_CO2_STATE_ERROR;
     self->_co2_concentration_unknown = true;
 
+    bc_log_debug("bc_module_co2_init: initialization start");
+
     if (!bc_ic2_tca9534a_init(&self->_tca9534a, interface, 0x38))
     {
+        bc_log_error("bc_module_co2_init: call failed: bc_ic2_tca9534a_init");
+
         return false;
     }
 
+    bc_log_debug("bc_module_co2_init: bc_ic2_tca9534a_set_modes");
+
     if (!bc_ic2_tca9534a_set_modes(&self->_tca9534a, BC_I2C_TCA9534A_ALL_INPUT))
     {
+        bc_log_error("bc_module_co2_init: call failed: bc_ic2_tca9534a_set_modes");
+
         return false;
     }
 
     if (!bc_ic2_tca9534a_write_pins(&self->_tca9534a, 0x00))
     {
+        bc_log_error("bc_module_co2_init: call failed: bc_ic2_tca9534a_write_pins");
+
         return false;
     }
 
@@ -45,10 +56,14 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 
     if (!bc_ic2_sc16is740_init(&self->_sc16is740, interface, 0x4d))
     {
+        bc_log_error("bc_module_co2_init: call failed: bc_ic2_sc16is740_init");
         return false;
     }
 
-    while (1) {
+    bc_log_debug("bc_module_co2_init: initialization end");
+
+    while (true)
+    {
 
 
         self->_tx_buffer[0] = 0x42;
@@ -56,9 +71,12 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 
         if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 2))
         {
-            perror("error bc_ic2_sc16is740_write");
+            bc_log_error("bc_module_co2_init: call failed: bc_ic2_sc16is740_write");
+
             self->_state = BC_MODULE_CO2_STATE_ERROR;
         }
+
+        bc_os_sleep(500);
 
 //        if (!bc_ic2_sc16is740_read(&self->_sc16is740, self->_rx_buffer, 2, 1000))
 //        {
@@ -68,8 +86,6 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 //        printf("self->_rx_buffer[0] %x \n", self->_rx_buffer[0]);
 
     }
-
-
 
     self->_state = BC_MODULE_CO2_STATE_INIT;
 
