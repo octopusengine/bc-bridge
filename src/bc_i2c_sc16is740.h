@@ -25,5 +25,6 @@ bool bc_ic2_sc16is740_reset_fifo(bc_i2c_sc16is740_t *self, bc_i2c_sc16is740_fifo
 bool bc_ic2_sc16is740_available(bc_i2c_sc16is740_t *self);
 bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length, bc_tick_t timeout_milis);
 bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length);
+bool bc_ic2_sc16is740_available_write(bc_i2c_sc16is740_t *self);
 
 #endif /* _BC_I2C_SC16IS740_H */

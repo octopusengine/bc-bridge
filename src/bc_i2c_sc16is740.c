@@ -93,7 +93,16 @@ bool bc_ic2_sc16is740_available_write(bc_i2c_sc16is740_t *self)
 bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length)
 {
     uint8_t i;
+    uint8_t register_lsr;
     for(i=0; i<length; i++){
+
+        do{
+            if (!_bc_ic2_sc16is740_read_register(self, 0x05, &register_lsr))
+            {
+                return false;
+            }
+        }while (register_lsr&0x20 ==0);
+
         if (!_bc_ic2_sc16is740_write_register(self, 0x00, data[i])){
             return false;
         }
@@ -111,6 +120,8 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
     uint8_t register_mcr;
     uint8_t register_efr;
     uint8_t register_fcr;
+    uint8_t register_ier;
+    uint8_t register_spr;
 
     uint8_t prescaler;
     uint16_t divisor;
@@ -127,46 +138,54 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
 
     divisor = (BC_I2C_SC16IS740_CRYSTCAL_FREQ/prescaler)/(baudrate*16);
 
-
+    //baudrate
     register_lcr = 0x80; //switch to access Special register
     if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
         return false;
     }
-
     if (!_bc_ic2_sc16is740_write_register(self, 0x00, (uint8_t)divisor )){ //DLL
         return false;
     }
-
     if (!_bc_ic2_sc16is740_write_register(self, 0x01, (uint8_t)(divisor>>8) )){ //DLH
         return false;
     }
 
-    register_lcr = 0xBF; //switch to access Enhanced register
+//    //no transmit flow control
+//    register_lcr = 0xBF; //switch to access Enhanced register
+//    if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
+//        return false;
+//    }
+//    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_efr)){
+//        return false;
+//    }
+//    register_efr &= 0xf0;
+//    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_efr)){
+//        return false;
+//    }
+
+    register_lcr = 0x07; //General register set
     if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
-        return false;
-    }
-    //no transmit flow control
-    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_efr)){
-        return false;
-    }
-    register_efr &= 0xf0;
-    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_efr)){
         return false;
     }
 
-    register_lcr = 0x87;
-    if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
-        return false;
-    }
-    //fifo enabled, rxfio, txfifo reset
-    register_fcr = 0x07;
+    //fifo enabled
+    register_fcr = 0x01;
     if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_fcr)){
         return false;
     }
+    bc_os_sleep(1);
 
-    bc_os_sleep(10);
+    //Polled mode operation
+    if (!_bc_ic2_sc16is740_read_register(self, 0x01, &register_ier)){
+        return false;
+    }
+    register_ier &= 0xf0;
+    if (!_bc_ic2_sc16is740_write_register(self, 0x01, register_ier)){
+        return false;
+    }
 
-    register_lcr = 0x87;
+
+    register_lcr = 0x07;
 
     //no break
     //no parity
@@ -182,9 +201,23 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
     fprintf(stderr, "prescaler %d \n", prescaler);
     fprintf(stderr, "divisor %d \n", divisor);
     fprintf(stderr, "baudrate error %0.2f %% \n",((float)actual_baudrate-baudrate)*100/baudrate );
+
+    if (!_bc_ic2_sc16is740_read_register(self, 0x03, &register_lcr)){
+        return false;
+    }
+    fprintf(stderr, "register_lcr %x \n", register_lcr );
+
     #endif
 
-    return  true;
+    //TEST
+    if (!_bc_ic2_sc16is740_write_register(self, 0x07, 0x48)){
+        return false;
+    }
+    if (!_bc_ic2_sc16is740_read_register(self, 0x07, &register_spr)){ //MCR
+        return false;
+    }
+
+    return  register_spr==0x48;
 }
 
 
@@ -199,7 +232,7 @@ static bool _bc_ic2_sc16is740_write_register(bc_i2c_sc16is740_t *self, uint8_t a
 
     transfer.device_address = self->_device_address;
     transfer.buffer = buffer;
-    transfer.address = address;
+    transfer.address = address<<3;
     transfer.length = 1;
 
 #ifdef BRIDGE
@@ -231,7 +264,7 @@ static bool _bc_ic2_sc16is740_read_register(bc_i2c_sc16is740_t *self, uint8_t ad
 
     transfer.device_address = self->_device_address;
     transfer.buffer = buffer;
-    transfer.address = address;
+    transfer.address = address<<3;
     transfer.length = 1;
 
 #ifdef BRIDGE

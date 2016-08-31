@@ -62,12 +62,12 @@ int main (int argc, char *argv[])
     };
 
 
-//    bc_module_co2_t module_co2;
-//    if (!bc_module_co2_init(&module_co2, &tag_i2c0_interface))
-//    {
-//        perror("error bc_module_co2_init \n");
-//        return EXIT_FAILURE;
-//    }
+    bc_module_co2_t module_co2;
+    if (!bc_module_co2_init(&module_co2, &tag_i2c0_interface))
+    {
+        perror("error bc_module_co2_init \n");
+        return EXIT_FAILURE;
+    }
 
 //    uint8_t address;
 //    uint8_t buffer[1];
@@ -95,17 +95,17 @@ int main (int argc, char *argv[])
 
     while(1){
 
-//        bc_module_co2_task(&module_co2);
-//        if (!module_co2._co2_concentration_unknown)
-//        {
-//            printf(" co2 %d \n", module_co2._co2_concentration );
-//        }
-
-        tags_temperature_task(&tag_temperature, &data);
-        if (!data.null)
+        bc_module_co2_task(&module_co2);
+        if (!module_co2._co2_concentration_unknown)
         {
-            printf("[\"thermometer\", {\"0/temperature\": [%0.2f, \"\\u2103\"]}\n", data.value );
+            printf(" co2 %d \n", module_co2._co2_concentration );
         }
+
+//        tags_temperature_task(&tag_temperature, &data);
+//        if (!data.null)
+//        {
+//            printf("[\"thermometer\", {\"0/temperature\": [%0.2f, \"\\u2103\"]}\n", data.value );
+//        }
 
 //        tags_humidity_task(&tag_humidity, &data);
 //        if (!data.null)

@@ -378,7 +378,7 @@ static bool _bc_bridge_ft260_i2c_write(int fd_hid, uint8_t address, uint8_t *dat
 
     buffer[0] = (uint8_t) (0xD0 + ((length - 1) / 4)); /* I2C write */
     buffer[1] = address; /* Slave address */
-    buffer[2] = 0x06; /* Start and Stop */
+    buffer[2] = ((address == 0x4d) && (length==1)) ? 0x02 : 0x06; /* Start and Stop */
     buffer[3] = length;
 
     stop = _bc_bridge_get_now_in_ms() + 10;
