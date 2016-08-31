@@ -73,28 +73,28 @@ int main (int argc, char *argv[])
 
     bc_log_info("build %s", VERSION);
 
-    bc_os_semaphore_init(&semaphore_x, 0);
-    bc_os_semaphore_init(&semaphore_y, 0);
-    bc_os_task_init(&task_1, task_1_funtion, NULL);
-    bc_os_task_init(&task_2, task_2_funtion, NULL);
-    bc_os_task_init(&task_3, task_3_funtion, NULL);
-
-    while (true)
-    {
-        bc_os_task_sleep(1000);
-    }
+//    bc_os_semaphore_init(&semaphore_x, 0);
+//    bc_os_semaphore_init(&semaphore_y, 0);
+//    bc_os_task_init(&task_1, task_1_funtion, NULL);
+//    bc_os_task_init(&task_2, task_2_funtion, NULL);
+//    bc_os_task_init(&task_3, task_3_funtion, NULL);
+//
+//    while (true)
+//    {
+//        bc_os_task_sleep(1000);
+//    }
 
     bc_bridge_device_info_t devices[6];//TODO predelat na dinamicke pole
 
-    uint8_t length;
+    uint8_t device_count;
     bc_bridge_t bridge;
 
     // TODO Prejmenovat length na device_count...
-    bc_bridge_scan(devices, &length);
+    bc_bridge_scan(devices, &device_count);
 
-    bc_log_info("main: number of found devices: %d", length);
+    bc_log_info("main: number of found devices: %d", device_count);
 
-    if (length == 0)
+    if (device_count == 0)
     {
         bc_log_fatal("main: no devices have been found");
     }

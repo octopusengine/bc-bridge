@@ -38,14 +38,14 @@ static int32_t _bc_bridge_get_now_in_ms();
 static bool _bc_bridge_ft260_get_feature(int fd_hid, void *buffer, size_t length);
 static bool _bc_bridge_ft260_set_feature(int fd_hid, uint8_t *buffer, size_t length);
 
-bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
+bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
 {
     struct udev *udev;
     struct udev_enumerate *enumerate, *enumerate_hid;
     struct udev_list_entry *devices_usb, *entry, *devices_hid, *entry_hid;
     struct udev_device *usb_dev;
     struct udev_device* hid = NULL;
-    *length = 0;
+    *device_count = 0;
 
     /* Create the udev object */
     udev = udev_new();
@@ -112,13 +112,13 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
             if ((i2c_hid_path!=NULL) && (uart_hid_path!=NULL))
             {
 
-                devices[*length].usb_path = (char *)udev_device_get_devnode(usb_dev);
-                devices[*length].i2c_hid_path = (char *)i2c_hid_path;
-                devices[*length].uart_hid_path = (char *)uart_hid_path;
+                devices[*device_count].usb_path = (char *)udev_device_get_devnode(usb_dev);
+                devices[*device_count].i2c_hid_path = (char *)i2c_hid_path;
+                devices[*device_count].uart_hid_path = (char *)uart_hid_path;
 
                 bc_log_debug("bc_bridge_scan: found device %s, %s", i2c_hid_path, uart_hid_path);
 
-                *length += 1;
+                *device_count += 1;
             }
 
         }

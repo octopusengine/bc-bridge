@@ -1,6 +1,6 @@
 #include "bc_i2c_sc16is740.h"
+#include "bc_log.h"
 
-#define BC_I2C_SC16IS740_DEBUG 1
 #define BC_I2C_SC16IS740_CRYSTCAL_FREQ (13560000UL)
 
 static bool _bc_ic2_sc16is740_write_register(bc_i2c_sc16is740_t *self, uint8_t address, uint8_t value);
@@ -15,7 +15,12 @@ bool bc_ic2_sc16is740_init(bc_i2c_sc16is740_t *self, bc_tag_interface_t *interfa
     self->_device_address = device_address;
     self->_communication_fault = true;
 
-    return  _bc_ic2_sc16is740_set_default(self);
+    if (!_bc_ic2_sc16is740_set_default(self)){
+        bc_log_error("bc_ic2_sc16is740_init: call failed: _bc_ic2_sc16is740_set_default");
+        return false;
+    }
+
+    return true;
 }
 
 bool bc_ic2_sc16is740_reset_device(bc_i2c_sc16is740_t *self)
@@ -61,19 +66,15 @@ bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t leng
     {
         if (!_bc_ic2_sc16is740_read_register(self, 0x09, &register_rxlvl))
         {
-            perror("error _bc_ic2_sc16is740_read_register 0x09");
+            bc_log_error("bc_ic2_sc16is740_read: call failed: _bc_ic2_sc16is740_read_register 0x09");
             return false;
         }
 
-        register_rxlvl &= 0x7f;
-
         if (register_rxlvl != 0)
         {
-            printf("register_rxlvl %d \n", register_rxlvl);
             if (!_bc_ic2_sc16is740_read_register(self, 0x00, &register_rhr)){
                 return false;
             }
-            printf("read %x \n", register_rhr);
             data[i++] = register_rhr;
         }
         if (i==length)
@@ -98,17 +99,44 @@ bool bc_ic2_sc16is740_get_txfifo_spaces_available(bc_i2c_sc16is740_t *self, uint
 
 bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length)
 {
-    uint8_t i;
+
     uint8_t txfifo_spaces_available;
 
-    bc_ic2_sc16is740_get_txfifo_spaces_available(self, &txfifo_spaces_available);
-
-    for(i=0; i<length; i++){
-
-        if (!_bc_ic2_sc16is740_write_register(self, 0x00, data[i])){
-            return false;
-        }
+    if (length>64)
+    {
+        bc_log_error("bc_ic2_sc16is740_write: length is too big");
+        return false;
     }
+
+    do
+    {
+        bc_ic2_sc16is740_get_txfifo_spaces_available(self, &txfifo_spaces_available);
+    }
+    while ( txfifo_spaces_available < length );
+
+    bc_tag_transfer_t transfer;
+    bc_tag_transfer_init(&transfer);
+
+    transfer.device_address = self->_device_address;
+    transfer.buffer = data;
+    transfer.address = 0x00;
+    transfer.length = length;
+
+#ifdef BRIDGE
+    self->_communication_fault = true;
+    transfer.channel = self->_interface->channel;
+    if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
+    {
+        return false;
+    }
+    self->_communication_fault = false;
+#else
+
+    if (!self->_interface->write(&transfer, &self->_communication_fault))
+	{
+		return false;
+	}
+#endif
 
     return true;
 }
@@ -198,18 +226,7 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
         return false;
     }
 
-    #ifdef BC_I2C_SC16IS740_DEBUG
-    uint32_t actual_baudrate = (BC_I2C_SC16IS740_CRYSTCAL_FREQ/prescaler)/(16*divisor);
-    fprintf(stderr, "prescaler %d \n", prescaler);
-    fprintf(stderr, "divisor %d \n", divisor);
-    fprintf(stderr, "baudrate error %0.2f %% \n",((float)actual_baudrate-baudrate)*100/baudrate );
-
-    if (!_bc_ic2_sc16is740_read_register(self, 0x03, &register_lcr)){
-        return false;
-    }
-    fprintf(stderr, "register_lcr %x \n", register_lcr );
-
-    #endif
+    bc_log_debug("_bc_ic2_sc16is740_set_default: baudrate error %0.2f %%, prescaler %d, divisor %d ", ((float)((BC_I2C_SC16IS740_CRYSTCAL_FREQ/prescaler)/(16*divisor))-baudrate)*100/baudrate, prescaler, divisor);
 
     //TEST
     if (!_bc_ic2_sc16is740_write_register(self, 0x07, 0x48)){
@@ -219,7 +236,7 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
         return false;
     }
 
-    return  register_spr==0x48;
+    return register_spr==0x48;
 }
 
 
