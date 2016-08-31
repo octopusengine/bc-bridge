@@ -184,13 +184,27 @@ static void bc_log_head(bc_log_level_t level)
 
     switch (level)
     {
-        case BC_LOG_LEVEL_DUMP: fprintf(stderr, "[DUMP] "); break;
-        case BC_LOG_LEVEL_DEBUG: fprintf(stderr, "[DEBUG] "); break;
-        case BC_LOG_LEVEL_INFO: fprintf(stderr, "[INFO] "); break;
-        case BC_LOG_LEVEL_WARNING: fprintf(stderr, "[WARNING] "); break;
-        case BC_LOG_LEVEL_ERROR: fprintf(stderr, "[ERROR] "); break;
-        case BC_LOG_LEVEL_FATAL: fprintf(stderr, "[FATAL] "); break;
-        default: fprintf(stderr, "[?????] "); break;
+        case BC_LOG_LEVEL_DUMP:
+            fprintf(stderr, "[DUMP ] ");
+            break;
+        case BC_LOG_LEVEL_DEBUG:
+            fprintf(stderr, "[DEBUG] ");
+            break;
+        case BC_LOG_LEVEL_INFO:
+            fprintf(stderr, "[INFO ] ");
+            break;
+        case BC_LOG_LEVEL_WARNING:
+            fprintf(stderr, "[WARN ] ");
+            break;
+        case BC_LOG_LEVEL_ERROR:
+            fprintf(stderr, "[ERROR] ");
+            break;
+        case BC_LOG_LEVEL_FATAL:
+            fprintf(stderr, "[FATAL] ");
+            break;
+        default:
+            fprintf(stderr, "[?????] ");
+            break;
     }
 }
 
