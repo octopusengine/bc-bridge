@@ -14,12 +14,11 @@ find_package(Threads REQUIRED)
 add_definitions(-D_BSD_SOURCE -DTHREADSAFE -D_REENTRANT)
 find_package(Libudev REQUIRED)
 
-include_directories(bcl/inc)
-include_directories(ft260)
+include_directories(src)
 include_directories(jsmn)
 
 set(SOURCE_FILES
-
+        jsmn/jsmn.c
         src/bc_bridge.c
         src/bc_i2c_app.c
         src/bc_i2c_sys.c
@@ -37,9 +36,7 @@ set(SOURCE_FILES
         src/bc_i2c_sc16is740.c
         src/tags.c
         src/bc_i2c_tca9534a.c
-
-        jsmn/jsmn.c
-)
+        src/bc_log.c)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES})

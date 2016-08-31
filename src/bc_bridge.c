@@ -44,7 +44,7 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
     struct udev_list_entry *devices_usb, *entry, *devices_hid, *entry_hid;
     struct udev_device *usb_dev;
     struct udev_device* hid = NULL;
-    *length = 0; 
+    *length = 0;
 
     /* Create the udev object */
     udev = udev_new();
@@ -54,7 +54,7 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
         perror("Can't create udev\n");
         return false;
     }
-  
+
     //enumerate over usb device
     enumerate = udev_enumerate_new(udev);
     udev_enumerate_add_match_subsystem(enumerate, "usb");
@@ -72,7 +72,7 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
         const char* uart_hid_path=NULL;
 
         usb_dev = udev_device_new_from_syspath(udev, path);
-    
+
         str = udev_device_get_sysattr_value(usb_dev, "idVendor");
         cur_vid = (unsigned short) ((str) ? strtol(str, NULL, 16) : -1);
         str = udev_device_get_sysattr_value(usb_dev, "idProduct");
@@ -80,7 +80,7 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
 
         if (cur_vid == VENDOR_ID && cur_did == DEVICE_ID)
         {
-            
+
             enumerate_hid = udev_enumerate_new(udev);
             udev_enumerate_add_match_parent(enumerate_hid, usb_dev);
             udev_enumerate_add_match_subsystem(enumerate_hid, "hidraw");
@@ -112,7 +112,7 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *length)
 
                 devices[*length].usb_path = (char *)udev_device_get_devnode(usb_dev);
                 devices[*length].i2c_hid_path = (char *)i2c_hid_path;
-                devices[*length].uart_hid_path = (char *)uart_hid_path;                
+                devices[*length].uart_hid_path = (char *)uart_hid_path;
 
                 //printf("%s %s \n", i2c_hid_path, uart_hid_path);
 
@@ -135,7 +135,7 @@ bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
         perror("Unable to open hid0\n");
         return false;
     }
-    
+
     if (flock(self->_i2c_fd_hid, LOCK_EX|LOCK_NB) == -1)
     {
         perror("Unable to lock hid0\n");

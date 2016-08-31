@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "bc_log.h"
 #include "bc_bridge.h"
 #include <jsmn.h>
 #include "tags.h"
@@ -23,9 +24,17 @@ bc_module_relay_t module_relay;
 
 int main (int argc, char *argv[])
 {
+    bc_log_init(BC_LOG_LEVEL_DUMP);
+
+    bc_log_dump(NULL, 0, "dump");
+    bc_log_debug("debug");
+    bc_log_info("info");
+    bc_log_warning("warning");
+    bc_log_error("error");
+    bc_log_fatal("fatal");
 
     fprintf(stderr,"Bridge build %s \n", VERSION );
-    
+
     bc_bridge_device_info_t devices[6];//TODO predelat na dinamicke pole
 
     uint8_t length;
