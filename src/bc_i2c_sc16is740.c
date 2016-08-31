@@ -53,7 +53,7 @@ bool bc_ic2_sc16is740_available(bc_i2c_sc16is740_t *self)
 bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length, bc_tick_t timeout)
 {
     uint8_t register_rhr;
-    uint8_t i;
+    uint8_t i=0;
     bc_tick_t stop = bc_tick_get() + timeout;
     uint8_t register_rxlvl;
 
@@ -64,11 +64,16 @@ bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t leng
             perror("error _bc_ic2_sc16is740_read_register 0x09");
             return false;
         }
+
+        register_rxlvl &= 0x7f;
+
         if (register_rxlvl != 0)
         {
+            printf("register_rxlvl %d \n", register_rxlvl);
             if (!_bc_ic2_sc16is740_read_register(self, 0x00, &register_rhr)){
                 return false;
             }
+            printf("read %x \n", register_rhr);
             data[i++] = register_rhr;
         }
         if (i==length)
@@ -101,7 +106,8 @@ bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t len
             {
                 return false;
             }
-        }while (register_lsr&0x20 ==0);
+        }while (register_lsr & 0x20 ==0);
+
 
         if (!_bc_ic2_sc16is740_write_register(self, 0x00, data[i])){
             return false;
@@ -150,18 +156,18 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
         return false;
     }
 
-//    //no transmit flow control
-//    register_lcr = 0xBF; //switch to access Enhanced register
-//    if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
-//        return false;
-//    }
-//    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_efr)){
-//        return false;
-//    }
-//    register_efr &= 0xf0;
-//    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_efr)){
-//        return false;
-//    }
+    //no transmit flow control
+    register_lcr = 0xBF; //switch to access Enhanced register
+    if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
+        return false;
+    }
+    if (!_bc_ic2_sc16is740_read_register(self, 0x02, &register_efr)){
+        return false;
+    }
+    register_efr &= 0xf0;
+    if (!_bc_ic2_sc16is740_write_register(self, 0x02, register_efr)){
+        return false;
+    }
 
     register_lcr = 0x07; //General register set
     if (!_bc_ic2_sc16is740_write_register(self, 0x03, register_lcr)){
@@ -185,7 +191,7 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
     }
 
 
-    register_lcr = 0x07;
+    register_lcr = 0x87;
 
     //no break
     //no parity
