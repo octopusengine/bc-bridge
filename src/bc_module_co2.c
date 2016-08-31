@@ -62,32 +62,32 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 
     bc_log_debug("bc_module_co2_init: initialization end");
 
-    while (true)
-    {
-
-
-        self->_tx_buffer[0] = 0x55;
-        self->_tx_buffer[1] = 0xFF;
-
-        if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 2))
-        {
-            bc_log_error("bc_module_co2_init: call failed: bc_ic2_sc16is740_write");
-
-            self->_state = BC_MODULE_CO2_STATE_ERROR;
-        }
-
-
-        if (!bc_ic2_sc16is740_read(&self->_sc16is740, self->_rx_buffer, 2, 100))
-        {
-            bc_log_error("bc_module_co2_init: call failed: bc_ic2_sc16is740_read");
-            self->_state = BC_MODULE_CO2_STATE_ERROR;
-        }else{
-            bc_log_dump(self->_rx_buffer, 2, "self->_rx_buffer");
-        }
-
-        bc_os_task_sleep(1000);
-
-    }
+//    while (true)
+//    {
+//
+//
+//        self->_tx_buffer[0] = 0x55;
+//        self->_tx_buffer[1] = 0xFF;
+//
+//        if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 2))
+//        {
+//            bc_log_error("bc_module_co2_init: call failed: bc_ic2_sc16is740_write");
+//
+//            self->_state = BC_MODULE_CO2_STATE_ERROR;
+//        }
+//
+//
+//        if (!bc_ic2_sc16is740_read(&self->_sc16is740, self->_rx_buffer, 2, 100))
+//        {
+//            bc_log_error("bc_module_co2_init: call failed: bc_ic2_sc16is740_read");
+//            self->_state = BC_MODULE_CO2_STATE_ERROR;
+//        }else{
+//            bc_log_dump(self->_rx_buffer, 2, "self->_rx_buffer");
+//        }
+//
+//        bc_os_task_sleep(1000);
+//
+//    }
 
     self->_state = BC_MODULE_CO2_STATE_INIT;
 
@@ -96,7 +96,7 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 
 void bc_module_co2_task(bc_module_co2_t *self)
 {
-    printf("bc_module_co2_task %d \n", self->_state);
+    bc_log_debug("bc_module_co2_task: state %d ", self->_state);
 
     bc_tick_t t_now;
     bc_i2c_tca9534a_value_t rdy_pin_value;
@@ -109,7 +109,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         {
             // TODO Adjust time to > 1min
             self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
-            self->_t_state_timeout = t_now + BC_TICK_SECONDS(180);//TODO 180
+            self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);//TODO 180
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
             bc_ic2_tca9534a_set_mode(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_OUTPUT);
             bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
@@ -117,7 +117,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         }
         case BC_MODULE_CO2_STATE_PRECHARGE:
         {
-            printf("_t_state_timeout %d \n", self->_t_state_timeout-t_now );
+            bc_log_debug("bc_module_co2_task: precharge timeout %d ", self->_t_state_timeout-t_now);
 
             if ((t_now - self->_t_state_timeout) >= 0)
             {
@@ -167,6 +167,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         }
         case BC_MODULE_CO2_STATE_BOOT:
         {
+            bc_ic2_sc16is740_reset_fifo(&self->_sc16is740, BC_I2C_SC16IS740_FIFO_RX);
 
             if ( bc_ic2_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) &&
             (rdy_pin_value == BC_I2C_TCA9534A_LOW ))
@@ -253,6 +254,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         }
         case BC_MODULE_CO2_STATE_MEASURE:
         {
+            bc_ic2_sc16is740_reset_fifo(&self->_sc16is740, BC_I2C_SC16IS740_FIFO_RX);
 
             if ( bc_ic2_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) &&
             (rdy_pin_value == BC_I2C_TCA9534A_HIGH) )

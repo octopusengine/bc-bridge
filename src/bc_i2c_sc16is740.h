@@ -6,8 +6,8 @@
 
 typedef enum
 {
-    BC_I2C_SC16IS740_FIFO_RX = 0x04,
-    BC_I2C_SC16IS740_FIFO_TX = 0x02
+    BC_I2C_SC16IS740_FIFO_RX = 0x02,
+    BC_I2C_SC16IS740_FIFO_TX = 0x04
 
 } bc_i2c_sc16is740_fifo_t;
 

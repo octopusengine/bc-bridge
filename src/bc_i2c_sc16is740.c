@@ -62,6 +62,8 @@ bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t leng
     bc_tick_t stop = bc_tick_get() + timeout;
     uint8_t register_rxlvl;
 
+    bc_log_dump(NULL, 0, "bc_ic2_sc16is740_read: length %d bytes, timeout %d", length, timeout );
+
     while ( bc_tick_get() < stop )
     {
         if (!_bc_ic2_sc16is740_read_register(self, 0x09, &register_rxlvl))
@@ -76,12 +78,16 @@ bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t leng
                 return false;
             }
             data[i++] = register_rhr;
+            stop = bc_tick_get() + timeout;
         }
         if (i==length)
         {
+            bc_log_dump(data, length, "bc_ic2_sc16is740_read: read %d bytes", length);
             return true;
         }
     }
+
+    bc_log_error("bc_ic2_sc16is740_read: timeout");
 
     return false;
 }
@@ -107,6 +113,8 @@ bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t len
         bc_log_error("bc_ic2_sc16is740_write: length is too big");
         return false;
     }
+
+    bc_log_dump(data, length, "bc_ic2_sc16is740_write: length %d bytes", length);
 
     do
     {
@@ -215,7 +223,7 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
     }
 
 
-    register_lcr = 0x87;
+    register_lcr = 0x07;
 
     //no break
     //no parity
