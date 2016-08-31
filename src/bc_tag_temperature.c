@@ -210,13 +210,18 @@ static bool _bc_tag_temperature_read_register(bc_tag_temperature_t *self, uint8_
     transfer.length = 2;
 
 #ifdef BRIDGE
+
     self->_communication_fault = true;
+
     transfer.channel = self->_interface->channel;
-    if (!bc_bridge_i2c_read_register( self->_interface->bridge, &transfer))
+
+    if (!bc_bridge_i2c_read_register(self->_interface->bridge, &transfer))
     {
         return false;
     }
+
     self->_communication_fault = false;
+
 #else
     if (!self->_interface->read(&transfer, &self->_communication_fault))
     {
