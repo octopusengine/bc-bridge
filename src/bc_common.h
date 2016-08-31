@@ -7,5 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <errno.h>
+#include <unistd.h>
 
-#endif
+#endif /* _BC_COMMON_H */

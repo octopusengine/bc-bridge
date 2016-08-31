@@ -50,9 +50,9 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 
     //reset uart
     bc_ic2_tca9534a_set_mode(&self->_tca9534a, UART_RESET_Pin, BC_I2C_TCA9534A_OUTPUT);
-    bc_os_sleep(1);
+    bc_os_task_sleep(1);
     bc_ic2_tca9534a_set_mode(&self->_tca9534a, UART_RESET_Pin, BC_I2C_TCA9534A_INPUT);
-    bc_os_sleep(1);
+    bc_os_task_sleep(1);
 
     if (!bc_ic2_sc16is740_init(&self->_sc16is740, interface, 0x4d))
     {
@@ -66,8 +66,8 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
     {
 
 
-        self->_tx_buffer[0] = 0x42;
-        self->_tx_buffer[1] = 0x43;
+        self->_tx_buffer[0] = 0x55;
+        self->_tx_buffer[1] = 0xFF;
 
         if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 2))
         {
@@ -76,7 +76,7 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
             self->_state = BC_MODULE_CO2_STATE_ERROR;
         }
 
-        bc_os_sleep(500);
+        bc_os_task_sleep(500);
 
 //        if (!bc_ic2_sc16is740_read(&self->_sc16is740, self->_rx_buffer, 2, 1000))
 //        {

@@ -6,6 +6,7 @@
 
 #include "bc_log.h"
 #include "bc_bridge.h"
+#include "bc_os.h"
 #include <jsmn.h>
 #include "tags.h"
 #include "bc_i2c_sc16is740.h"
@@ -22,11 +23,66 @@ bc_tag_barometer_t tag_barometer;
 
 bc_module_relay_t module_relay;
 
+bc_os_task_t task_1;
+bc_os_task_t task_2;
+bc_os_task_t task_3;
+bc_os_semaphore_t semaphore_x;
+bc_os_semaphore_t semaphore_y;
+
+void *task_1_funtion(void *parameters)
+{
+    while (true)
+    {
+        bc_os_task_sleep(1000);
+        bc_log_info("task 1 alive and signaling task 2+3");
+        bc_os_semaphore_put(&semaphore_x);
+        bc_os_semaphore_put(&semaphore_y);
+    }
+
+    return NULL;
+}
+
+void *task_2_funtion(void *parameters)
+{
+    while (true)
+    {
+        bc_os_semaphore_get(&semaphore_x);
+        bc_log_info("task 2 is alive too thanks to task 1 :-)");
+    }
+    return NULL;
+}
+
+void *task_3_funtion(void *parameters)
+{
+    while (true)
+    {
+        if (!bc_os_semaphore_timed_get(&semaphore_y, 250)) {
+            bc_log_info("task 3 has timed out waiting for semaphore");
+        }
+        else
+        {
+            bc_log_info("task 3 finally got its semaphore");
+        }
+    }
+    return NULL;
+}
+
 int main (int argc, char *argv[])
 {
     bc_log_init(BC_LOG_LEVEL_DUMP);
 
     bc_log_info("build %s", VERSION);
+
+    bc_os_semaphore_init(&semaphore_x, 0);
+    bc_os_semaphore_init(&semaphore_y, 0);
+    bc_os_task_init(&task_1, task_1_funtion, NULL);
+    bc_os_task_init(&task_2, task_2_funtion, NULL);
+    bc_os_task_init(&task_3, task_3_funtion, NULL);
+
+    while (true)
+    {
+        bc_os_task_sleep(1000);
+    }
 
     bc_bridge_device_info_t devices[6];//TODO predelat na dinamicke pole
 
