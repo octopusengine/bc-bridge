@@ -51,12 +51,12 @@ int main (int argc, char *argv[])
     };
 
 
-    bc_module_co2_t module_co2;
-    if (!bc_module_co2_init(&module_co2, &tag_i2c0_interface))
-    {
-        perror("error bc_module_co2_init \n");
-        return EXIT_FAILURE;
-    }
+//    bc_module_co2_t module_co2;
+//    if (!bc_module_co2_init(&module_co2, &tag_i2c0_interface))
+//    {
+//        perror("error bc_module_co2_init \n");
+//        return EXIT_FAILURE;
+//    }
 
 //    uint8_t address;
 //    uint8_t buffer[1];
@@ -74,10 +74,8 @@ int main (int argc, char *argv[])
 //    }
 
 
-
-
+    tags_temperature_init(&tag_temperature, &tag_i2c0_interface, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT);
 //    tags_humidity_init(&tag_humidity, &tag_i2c0_interface);
-//    tags_temperature_init(&tag_temperature, &tag_i2c0_interface, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT);
 //    tags_lux_meter_init(&tag_lux_meter, &tag_i2c0_interface);
 //    tags_barometer_init(&tag_barometer, &tag_i2c0_interface);
 
@@ -86,24 +84,22 @@ int main (int argc, char *argv[])
 
     while(1){
 
-        bc_module_co2_task(&module_co2);
-        if (!module_co2._co2_concentration_unknown)
-        {
-            printf(" co2 %d \n", module_co2._co2_concentration );
-        }
+//        bc_module_co2_task(&module_co2);
+//        if (!module_co2._co2_concentration_unknown)
+//        {
+//            printf(" co2 %d \n", module_co2._co2_concentration );
+//        }
 
-        //relay_state = relay_state == BC_MODULE_RELAY_MODE_NO ? BC_MODULE_RELAY_MODE_NC : BC_MODULE_RELAY_MODE_NO;
+        tags_temperature_task(&tag_temperature, &data);
+        if (!data.null)
+        {
+            printf("[\"thermometer\", {\"0/temperature\": [%0.2f, \"\\u2103\"]}\n", data.value );
+        }
 
 //        tags_humidity_task(&tag_humidity, &data);
 //        if (!data.null)
 //        {
 //            printf("[\"humidity-sensor\", {\"0/relative-humidity\":[%0.2f, \"%%\"]}]\n", data.value );
-//        }
-
-//        tags_temperature_task(&tag_temperature, &data);
-//        if (!data.null)
-//        {
-//            printf("[\"thermometer\", {\"0/temperature\": [%0.2f, \"\\u2103\"]}\n", data.value );
 //        }
 
 //        tags_lux_meter_task(&tag_temperature, &data);
@@ -122,6 +118,7 @@ int main (int argc, char *argv[])
 //            printf("[\"barometer\", {\"0/altitude\": [%0.1f, \"m\"]}\n", altitude.value );
 //        }
 
+        //relay_state = relay_state == BC_MODULE_RELAY_MODE_NO ? BC_MODULE_RELAY_MODE_NC : BC_MODULE_RELAY_MODE_NO;
         //bc_module_relay_set_mode(&module_relay, relay_state);
 
         sleep(1);
