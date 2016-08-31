@@ -24,9 +24,10 @@ bc_module_relay_t module_relay;
 
 int main (int argc, char *argv[])
 {
+    char str[] = "mama mele maso, tata micha maltu";
     bc_log_init(BC_LOG_LEVEL_DUMP);
 
-    bc_log_dump(NULL, 0, "dump");
+    bc_log_dump(str, sizeof(str), "dump");
     bc_log_debug("debug");
     bc_log_info("info");
     bc_log_warning("warning");
