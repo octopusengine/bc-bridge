@@ -85,29 +85,25 @@ bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t leng
     return false;
 }
 
-bool bc_ic2_sc16is740_available_write(bc_i2c_sc16is740_t *self)
+/**
+ * spaces_available max 64
+ */
+bool bc_ic2_sc16is740_get_txfifo_spaces_available(bc_i2c_sc16is740_t *self, uint8_t *txfifo_spaces_available)
 {
-    uint8_t register_txlvl;
-    if (!_bc_ic2_sc16is740_read_register(self, 0x08, &register_txlvl)){
+    if (!_bc_ic2_sc16is740_read_register(self, 0x08, txfifo_spaces_available)){
         return false;
     }
-    fprintf(stderr, "register txlvl %x \n", register_txlvl);
-    return register_txlvl==0;
+    return true;
 }
 
 bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length)
 {
     uint8_t i;
-    uint8_t register_lsr;
+    uint8_t txfifo_spaces_available;
+
+    bc_ic2_sc16is740_get_txfifo_spaces_available(self, &txfifo_spaces_available);
+
     for(i=0; i<length; i++){
-
-        do{
-            if (!_bc_ic2_sc16is740_read_register(self, 0x05, &register_lsr))
-            {
-                return false;
-            }
-        }while (register_lsr & 0x20 ==0);
-
 
         if (!_bc_ic2_sc16is740_write_register(self, 0x00, data[i])){
             return false;
@@ -244,7 +240,7 @@ static bool _bc_ic2_sc16is740_write_register(bc_i2c_sc16is740_t *self, uint8_t a
 #ifdef BRIDGE
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
-    if (!bc_bridge_i2c_write_register( self->_interface->bridge, &transfer))
+    if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
     {
         return false;
     }
@@ -276,7 +272,7 @@ static bool _bc_ic2_sc16is740_read_register(bc_i2c_sc16is740_t *self, uint8_t ad
 #ifdef BRIDGE
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
-    if (!bc_bridge_i2c_read_register( self->_interface->bridge, &transfer))
+    if (!bc_bridge_i2c_read(self->_interface->bridge, &transfer))
     {
         return false;
     }

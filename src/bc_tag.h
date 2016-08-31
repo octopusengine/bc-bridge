@@ -8,7 +8,7 @@
 
 #ifdef BRIDGE
 
-typedef bc_bridge_i2c_transfer_register_t bc_tag_transfer_t;
+typedef bc_bridge_i2c_transfer_t bc_tag_transfer_t;
 
 typedef struct
 {

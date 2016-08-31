@@ -182,55 +182,17 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
     bool status;
 
-    status = false;
-
-    bc_os_mutex_lock(&self->_i2c_mutex);
-
-    if (_bc_bridge_i2c_set_channel(self, transfer->channel))
-    {
-        status = _bc_bridge_ft260_i2c_write(self->_i2c_fd_hid, transfer->device_address, transfer->buffer,
-                                            transfer->length);
-    }
-
-    bc_os_mutex_unlock(&self->_i2c_mutex);
-
-    return status;
-}
-
-bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
-{
-    bool status;
-
-    status = false;
-
-    bc_os_mutex_lock(&self->_i2c_mutex);
-
-    if (_bc_bridge_i2c_set_channel(self, transfer->channel))
-    {
-        status = _bc_bridge_ft260_i2c_read(self->_i2c_fd_hid, transfer->device_address, transfer->buffer,
-                                           transfer->length);
-    }
-
-    bc_os_mutex_unlock(&self->_i2c_mutex);
-
-    return status;
-}
-
-bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_register_t *transfer)
-{
-    bool status;
-
     uint8_t buffer[60];
 
 #if BC_BRIDGE_DEBUG == 1
     if (transfer->address_16_bit)
     {
-        bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_write_register: device 0x%02X, address 0x%04X, length %d bytes",
+        bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_write: device 0x%02X, address 0x%04X, length %d bytes",
                     transfer->device_address, transfer->address, transfer->length);
     }
     else
     {
-        bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_write_register: device 0x%02X, address 0x%02X, length %d bytes",
+        bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_write: device 0x%02X, address 0x%02X, length %d bytes",
                     transfer->device_address, transfer->address, transfer->length);
     }
 #endif
@@ -239,7 +201,7 @@ bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regi
     {
         if (transfer->length > 58)
         {
-            bc_log_error("bc_bridge_i2c_write_register: length is too big");
+            bc_log_error("bc_bridge_i2c_write: length is too big");
 
             return false;
         }
@@ -253,7 +215,7 @@ bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regi
     {
         if (transfer->length > 59)
         {
-            bc_log_error("bc_bridge_i2c_write_register: length is too big");
+            bc_log_error("bc_bridge_i2c_write: length is too big");
 
             return false;
         }
@@ -275,13 +237,13 @@ bool bc_bridge_i2c_write_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regi
 
     if (!status)
     {
-        bc_log_error("bc_bridge_i2c_write_register: failed");
+        bc_log_error("bc_bridge_i2c_write: failed");
     }
 
     return status;
 }
 
-bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_register_t *transfer)
+bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
     bool status;
 
@@ -290,19 +252,19 @@ bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regis
 #if BC_BRIDGE_DEBUG == 1
     if (transfer->address_16_bit)
     {
-        bc_log_dump(NULL, 0, "bc_bridge_i2c_read_register: device 0x%02X, address 0x%04X, length %d bytes",
+        bc_log_dump(NULL, 0, "bc_bridge_i2c_read: device 0x%02X, address 0x%04X, length %d bytes",
                     transfer->device_address, transfer->address, transfer->length);
     }
     else
     {
-        bc_log_dump(NULL, 0, "bc_bridge_i2c_read_register: device 0x%02X, address 0x%02X, length %d bytes",
+        bc_log_dump(NULL, 0, "bc_bridge_i2c_read: device 0x%02X, address 0x%02X, length %d bytes",
                     transfer->device_address, transfer->address, transfer->length);
     }
 #endif
 
     if (transfer->length > 60)
     {
-        bc_log_error("bc_bridge_i2c_read_register: length is too big");
+        bc_log_error("bc_bridge_i2c_read: length is too big");
 
         return false;
     }
@@ -329,18 +291,18 @@ bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regis
                                                transfer->length);
             if (status) {
 #if BC_BRIDGE_DEBUG == 1
-                bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_read_register: read %d bytes",
+                bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_read: read %d bytes",
                             transfer->length);
 #endif
             }
             else
             {
-                bc_log_error("bc_bridge_i2c_read_register: call failed: _bc_bridge_ft260_i2c_read");
+                bc_log_error("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_read");
             }
         }
         else
         {
-            bc_log_error("bc_bridge_i2c_read_register: call failed: _bc_bridge_ft260_i2c_write");
+            bc_log_error("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_write");
         }
     }
 
@@ -352,6 +314,7 @@ bool bc_bridge_i2c_read_register(bc_bridge_t *self, bc_bridge_i2c_transfer_regis
 bool bc_bridge_i2c_reset(bc_bridge_t *self)
 {
     bool status;
+    bc_log_info("bc_bridge_i2c_reset");
     bc_os_mutex_lock(&self->_i2c_mutex);
     status = _bc_bridge_ft260_i2c_reset(self->_i2c_fd_hid);
     bc_os_mutex_unlock(&self->_i2c_mutex);
@@ -373,16 +336,15 @@ static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_
 
     buffer[0] = (uint8_t) i2c_channel;
 
-    if (_bc_bridge_ft260_i2c_write(self->_i2c_fd_hid, 0x70, buffer, sizeof(buffer)))
+    if (!_bc_bridge_ft260_i2c_write(self->_i2c_fd_hid, 0x70, buffer, sizeof(buffer)))
     {
-        self->_i2c_channel = i2c_channel;
-
-        return true;
+        bc_log_error("_bc_bridge_i2c_set_channel: call failed: _bc_bridge_ft260_i2c_write");
+        return false;
     }
 
-    bc_log_error("_bc_bridge_i2c_set_channel: call failed: _bc_bridge_ft260_i2c_write");
+    self->_i2c_channel = i2c_channel;
 
-    return false;
+    return true;
 }
 
 static bool _bc_bridge_ft260_i2c_reset(int fd_hid)

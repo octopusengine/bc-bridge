@@ -184,7 +184,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 
                     if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 8))
                     {
-                        perror("BC_MODULE_CO2_STATE_ERROR 1");
+                        bc_log_error("bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_write");
                         self->_state = BC_MODULE_CO2_STATE_ERROR;
                         break;
                     }
@@ -214,7 +214,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
 
                     if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 33))
                     {
-                        perror("BC_MODULE_CO2_STATE_ERROR 2");
+                        bc_log_error("bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_write");
                         self->_state = BC_MODULE_CO2_STATE_ERROR;
                         break;
                     }
@@ -222,21 +222,19 @@ void bc_module_co2_task(bc_module_co2_t *self)
 
                 if (!bc_ic2_sc16is740_read(&self->_sc16is740, self->_rx_buffer, 4, 100))
                 {
-                    perror("BC_MODULE_CO2_STATE_ERROR 3");
+                    bc_log_error("bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_read");
                     self->_state = BC_MODULE_CO2_STATE_ERROR;
                     break;
                 }
 
                 if (self->_rx_buffer[0] != 0xFE || self->_rx_buffer[1] != 0x41)
                 {
-                    perror("BC_MODULE_CO2_STATE_ERROR 4");
                     self->_state = BC_MODULE_CO2_STATE_ERROR;
                     break;
                 }
 
                 if (_bc_module_co2_calculate_crc16(self->_rx_buffer, 4) != 0)
                 {
-                    perror("BC_MODULE_CO2_STATE_ERROR 5");
                     self->_state = BC_MODULE_CO2_STATE_ERROR;
                     break;
                 }
@@ -246,7 +244,6 @@ void bc_module_co2_task(bc_module_co2_t *self)
             }
             else if ((t_now - self->_t_state_timeout) >= 0)
             {
-                perror("BC_MODULE_CO2_STATE_ERROR 6");
                 self->_state = BC_MODULE_CO2_STATE_ERROR;
             }
 

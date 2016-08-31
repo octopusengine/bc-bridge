@@ -215,7 +215,7 @@ static bool _bc_tag_humidity_write_register(bc_tag_humidity_t *self, uint8_t add
 #ifdef BRIDGE
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
-    if (!bc_bridge_i2c_write_register( self->_interface->bridge, &transfer))
+    if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
     {
         return false;
     }
@@ -247,7 +247,7 @@ static bool _bc_tag_humidity_read_register(bc_tag_humidity_t *self, uint8_t addr
 #ifdef BRIDGE
 	self->_communication_fault = true;
 	transfer.channel = self->_interface->channel;
-	if (!bc_bridge_i2c_read_register( self->_interface->bridge, &transfer))
+	if (!bc_bridge_i2c_read(self->_interface->bridge, &transfer))
 	{
 		return false;
 	}
