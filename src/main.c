@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <argp.h>
 #include "bc_log.h"
+#include "bc_tick.h"
 #include "bc_bridge.h"
 #include "bc_os.h"
 #include <jsmn.h>
@@ -159,6 +160,8 @@ int main (int argc, char *argv[])
 
     exit (0);
 
+
+    bc_tick_init();
 
     bc_log_info("build %s", VERSION);
 
