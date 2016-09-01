@@ -5,8 +5,8 @@
 
 #define BC_LOG_DUMP_WIDTH 8
 
-static bc_os_mutex_t bc_log_mutex;
 static bc_log_level_t bc_log_level;
+static bc_os_mutex_t bc_log_mutex;
 
 static void bc_log_head(bc_log_level_t level);
 static void bc_log_message(const char *format, va_list ap);
@@ -14,6 +14,7 @@ static void bc_log_tail(void);
 
 void bc_log_init(bc_log_level_t level)
 {
+    // TODO Tady muze dojit k rekurzi :-)
     bc_os_mutex_init(&bc_log_mutex);
 
     bc_log_level = level;

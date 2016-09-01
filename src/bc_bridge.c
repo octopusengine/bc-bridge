@@ -165,9 +165,13 @@ bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
 
 bool bc_bridge_close(bc_bridge_t *self)
 {
+    bc_os_mutex_lock(&self->_mutex_i2c);
+
     if (flock(self->_fd_i2c, LOCK_UN) == -1)
     {
         bc_log_error("bc_bridge_close: call failed: flock");
+
+        bc_os_mutex_unlock(&self->_mutex_i2c);
 
         return false;
     }
@@ -176,17 +180,21 @@ bool bc_bridge_close(bc_bridge_t *self)
     {
         bc_log_error("bc_bridge_close: call failed: close");
 
+        bc_os_mutex_unlock(&self->_mutex_i2c);
+
         return false;
     }
+
+    bc_os_mutex_unlock(&self->_mutex_i2c);
 
     return true;
 }
 
 bool bc_bridge_i2c_reset(bc_bridge_t *self)
 {
-    bc_log_info("bc_bridge_i2c_reset");
-
     bc_os_mutex_lock(&self->_mutex_i2c);
+
+    bc_log_info("bc_bridge_i2c_reset");
 
     if (!_bc_bridge_ft260_i2c_reset(self->_fd_i2c))
     {
@@ -206,11 +214,15 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
     uint8_t buffer[60];
 
+    bc_os_mutex_lock(&self->_mutex_i2c);
+
     if (transfer->address_16_bit)
     {
         if (transfer->length > 58)
         {
             bc_log_error("bc_bridge_i2c_write: length is too big");
+
+            bc_os_mutex_unlock(&self->_mutex_i2c);
 
             return false;
         }
@@ -225,6 +237,8 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
         if (transfer->length > 59)
         {
             bc_log_error("bc_bridge_i2c_write: length is too big");
+
+            bc_os_mutex_unlock(&self->_mutex_i2c);
 
             return false;
         }
@@ -246,8 +260,6 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
                     transfer->device_address, transfer->address, transfer->length);
     }
 #endif
-
-    bc_os_mutex_lock(&self->_mutex_i2c);
 
     if (_bc_bridge_i2c_set_channel(self, transfer->channel))
     {
@@ -271,9 +283,13 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
     uint8_t buffer[2];
 
+    bc_os_mutex_lock(&self->_mutex_i2c);
+
     if (transfer->length > 60)
     {
         bc_log_error("bc_bridge_i2c_read: length is too big");
+
+        bc_os_mutex_unlock(&self->_mutex_i2c);
 
         return false;
     }
@@ -300,8 +316,6 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     {
         buffer[0] = (uint8_t) transfer->address;
     }
-
-    bc_os_mutex_lock(&self->_mutex_i2c);
 
     if (!_bc_bridge_i2c_set_channel(self, transfer->channel))
     {

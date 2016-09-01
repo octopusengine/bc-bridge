@@ -3,11 +3,13 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *parameters)
+// TODO Budeme resit kdyz se nepovede malloc ? To uz je stejne konec sveta...
+
+void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *parameter)
 {
     task->_task = malloc(sizeof(pthread_t));
 
-    if (pthread_create((pthread_t *) task->_task, NULL, task_function, parameters) != 0)
+    if (pthread_create((pthread_t *) task->_task, NULL, task_function, parameter) != 0)
     {
         bc_log_fatal("bc_os_task_init: call failed: pthread_create");
     }

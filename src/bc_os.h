@@ -22,7 +22,7 @@ typedef struct
 
 } bc_os_semaphore_t;
 
-void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *parameters);
+void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *parameter);
 void bc_os_task_sleep(bc_tick_t timeout);
 void bc_os_mutex_init(bc_os_mutex_t *mutex);
 void bc_os_mutex_lock(bc_os_mutex_t *mutex);

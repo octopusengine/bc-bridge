@@ -20,8 +20,6 @@ include_directories(jsmn)
 set(SOURCE_FILES
         jsmn/jsmn.c
         src/bc_bridge.c
-        src/bc_i2c_app.c
-        src/bc_i2c_sys.c
         src/bc_module_co2.c
         src/bc_module_relay.c
         src/bc_os.c
@@ -36,7 +34,7 @@ set(SOURCE_FILES
         src/bc_i2c_sc16is740.c
         src/tags.c
         src/bc_i2c_tca9534a.c
-        src/bc_log.c)
+        src/bc_log.c src/application.c src/application.h src/task_thermometer.c src/task_thermometer.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES})

@@ -82,6 +82,7 @@ void tags_humidity_task(bc_tag_humidity_t *tag_humidity, tags_data_t *data)
     }
 }
 
+/*
 void tags_temperature_init(bc_tag_temperature_t *tag_temperature, bc_tag_interface_t *interface,  uint8_t device_address)
 {
     bc_tag_temperature_init(tag_temperature, interface, device_address);
@@ -137,6 +138,7 @@ void tags_temperature_task(bc_tag_temperature_t *tag_temperature, tags_data_t *d
         }
     }
 }
+ */
 
 
 void tags_lux_meter_init(bc_tag_lux_meter_t *tag_lux_meter, bc_tag_interface_t *interface)
