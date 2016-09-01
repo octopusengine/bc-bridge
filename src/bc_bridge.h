@@ -7,8 +7,8 @@
 typedef struct
 {
     char *usb_path;
-    char *i2c_hid_path;
-    char *uart_hid_path;
+    char *path_i2c;
+    char *path_uart;
 
 } bc_bridge_device_info_t;
 
@@ -22,11 +22,10 @@ typedef enum
 typedef struct
 {
     bc_bridge_device_info_t _info;
-    bc_os_mutex_t _i2c_mutex;
+    bc_os_mutex_t _mutex_i2c;
     bc_bridge_i2c_channel_t _i2c_channel;
-    int _i2c_fd_hid;
-    int _uart_fd_hid;
-
+    int _fd_i2c;
+    int _fd_uart;
 
 } bc_bridge_t;
 
@@ -41,19 +40,11 @@ typedef struct
 
 } bc_bridge_i2c_transfer_t;
 
-typedef enum
-{
-    BC_BRIDGE_LED_STATE_OFF = 0,
-    BC_BRIDGE_LED_STATE_ON = 1
-
-} bc_bridge_led_state_t;
-
 bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count);
 bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info);
 bool bc_bridge_close(bc_bridge_t *self);
+bool bc_bridge_i2c_reset(bc_bridge_t *self);
 bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);
 bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);
-bool bc_bridge_i2c_reset(bc_bridge_t *self);
-bool bc_bridge_led_set_state(bc_bridge_t *self, bc_bridge_led_state_t state);
 
-#endif
+#endif /* _BC_BRIDGE_H */
