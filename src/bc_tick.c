@@ -1,18 +1,44 @@
 #include "bc_tick.h"
-#include <sys/time.h>
+#include "bc_log.h"
+#include <time.h>
 
-struct timeval start;
-struct timeval now;
+static struct timespec bc_tick_ts_start;
+
+static void bc_tick_diff(struct timespec *start, struct timespec *end, struct timespec *diff);
+
+void bc_tick_init(void)
+{
+	if (clock_gettime(CLOCK_MONOTONIC_RAW, &bc_tick_ts_start) != 0)
+	{
+		bc_log_fatal("bc_tick_init: call failed: clock_gettime");
+	}
+}
 
 bc_tick_t bc_tick_get(void)
 {
-	
-	if(start.tv_sec==0)
-	{
-		gettimeofday(&start,NULL);
-	}
-	
-	gettimeofday(&now,NULL);
+	struct timespec ts_now;
+	struct timespec ts_diff;
 
-	return (bc_tick_t)( (1000 * (now.tv_sec - start.tv_sec) ) + (( now.tv_usec - start.tv_usec )/1000) );
+	if (clock_gettime(CLOCK_MONOTONIC_RAW, &ts_now) != 0)
+	{
+		bc_log_fatal("bc_tick_get: call failed: clock_gettime");
+	}
+
+	bc_tick_diff(&bc_tick_ts_start, &ts_now, &ts_diff);
+
+	return (bc_tick_t) (ts_diff.tv_sec * 1000 + ts_diff.tv_nsec / 1000000);
+}
+
+static void bc_tick_diff(struct timespec *start, struct timespec *end, struct timespec *diff)
+{
+	if ((end->tv_nsec - start->tv_nsec) < 0)
+	{
+		diff->tv_sec = end->tv_sec - start->tv_sec - 1;
+		diff->tv_nsec = 1000000000 + end->tv_nsec - start->tv_nsec;
+	}
+	else
+	{
+		diff->tv_sec = end->tv_sec - start->tv_sec;
+		diff->tv_nsec = end->tv_nsec - start->tv_nsec;
+	}
 }

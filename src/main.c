@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "bc_log.h"
+#include "bc_tick.h"
 #include "bc_bridge.h"
 #include "bc_os.h"
 #include <jsmn.h>
@@ -70,6 +71,8 @@ void *task_3_funtion(void *parameters)
 int main (int argc, char *argv[])
 {
     bc_log_init(BC_LOG_LEVEL_DUMP);
+
+    bc_tick_init();
 
     bc_log_info("build %s", VERSION);
 
