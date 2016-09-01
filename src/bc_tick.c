@@ -26,7 +26,7 @@ bc_tick_t bc_tick_get(void)
 
 	bc_tick_diff(&bc_tick_ts_start, &ts_now, &ts_diff);
 
-	return (bc_tick_t) (ts_diff.tv_sec * 1000 + ts_diff.tv_nsec / 1000000);
+	return (bc_tick_t) (ts_diff.tv_sec * 1000L + ts_diff.tv_nsec / 1000000L);
 }
 
 static void bc_tick_diff(struct timespec *start, struct timespec *end, struct timespec *diff)
@@ -34,7 +34,7 @@ static void bc_tick_diff(struct timespec *start, struct timespec *end, struct ti
 	if ((end->tv_nsec - start->tv_nsec) < 0)
 	{
 		diff->tv_sec = end->tv_sec - start->tv_sec - 1;
-		diff->tv_nsec = 1000000000 + end->tv_nsec - start->tv_nsec;
+		diff->tv_nsec = 1000000000L + end->tv_nsec - start->tv_nsec;
 	}
 	else
 	{
