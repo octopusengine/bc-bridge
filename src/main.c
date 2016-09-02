@@ -86,8 +86,6 @@ void process_command_line(int argc, char **argv)
     arguments.no_wait_start_string = false;
     arguments.log_level = BC_LOG_LEVEL_DUMP;
 
-    signal(SIGINT, INThandler);
-
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
 }
 
@@ -99,7 +97,7 @@ int main(int argc, char **argv)
 
     // TODO Diskutovat smysluplnost - myslim ze by v application_loop stacilo cekat blokujicim zpusobem na stdin ?
     // TODO Tzn CTRL+C apod neoverridovat...
-    signal(SIGINT, INThandler);
+    //signal(SIGINT, INThandler);
 
     application_init();
 

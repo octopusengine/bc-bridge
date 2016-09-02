@@ -1,11 +1,14 @@
 #include "application.h"
 #include "bc_log.h"
 #include "task_thermometer.h"
+#include "bc_tag.h"
 #include "bc_bridge.h"
 
 bc_bridge_t bridge;
 
-task_thermometer_t *thermometer_1;
+task_thermometer_t *thermometer_1=NULL;
+
+static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address);
 
 void application_init(void)
 {
@@ -37,14 +40,53 @@ void application_init(void)
         bc_log_fatal("application_init: call failed: bc_bridge_open");
     }
 
-    thermometer_1 = task_thermometer_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48);
+    if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48))
+    {
+        thermometer_1 = task_thermometer_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48);
+    }
+
 }
 
 void application_loop(bool *quit)
 {
     bc_log_debug("---");
 
-    bc_os_semaphore_put(&thermometer_1->semaphore);
+    if(thermometer_1!=NULL)
+    {
+        bc_os_semaphore_put(&thermometer_1->semaphore);
+    }
 
     bc_os_task_sleep(1000);
+}
+
+static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address)
+{
+    bc_tag_transfer_t transfer;
+    uint8_t buffer[1];
+
+    bc_tag_transfer_init(&transfer);
+
+    transfer.device_address = device_address;
+    transfer.buffer = buffer;
+    transfer.address = 0x00;
+    transfer.length = 1;
+
+    buffer[0] = 0x00;
+
+#ifdef BRIDGE
+    transfer.channel = i2c_channel;
+    if (!bc_bridge_i2c_write(bridge, &transfer))
+    {
+        return false;
+    }
+#else
+    bool communication_fault;
+
+    if (!self->_interface->write(&transfer, &communication_fault))
+    {
+        return false;
+    }
+#endif
+
+    return true;
 }
