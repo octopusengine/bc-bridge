@@ -1,4 +1,26 @@
-cmake . && make all && ./Bridge
+
+install
+
+sudo apt-get install libudev-dev
+
+How build 
+
+cd bc-bridge
+
+cmake . 
+
+cmake --build .
+
+
+and run
+
+./bc-bridge -n --debug info
+
+
+for help
+
+./bc-bridge --help
+
 
 
 Initialize Clown.Talk
