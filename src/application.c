@@ -3,16 +3,20 @@
 #include "task_thermometer.h"
 #include "bc_tag.h"
 #include "bc_bridge.h"
+#include <jsmn.h>
 
 bc_bridge_t bridge;
 
-task_thermometer_t *thermometer_1=NULL;
 
+task_thermometer_t *thermometer_0=NULL;
+
+static void _application_wait_start_string(void);
 static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address);
+static bool _application_jsoneq(const char *json, jsmntok_t *tok, const char *s);
 
-void application_init(void)
+void application_init(bool wait_start_string, bc_log_level_t log_level)
 {
-    bc_log_init(BC_LOG_LEVEL_DUMP);
+    bc_log_init(log_level);
 
     bc_tick_init();
 
@@ -40,23 +44,101 @@ void application_init(void)
         bc_log_fatal("application_init: call failed: bc_bridge_open");
     }
 
+    if (wait_start_string == true)
+    {
+        _application_wait_start_string();
+    }
+
     if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48))
     {
-        thermometer_1 = task_thermometer_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48);
+        thermometer_0 = task_thermometer_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48);
     }
 
 }
 
 void application_loop(bool *quit)
 {
-    bc_log_debug("---");
+    char *line = NULL;
+    size_t size;
+    jsmn_parser parser;
+    jsmntok_t tokens[10];
+    int r;
 
-    if(thermometer_1!=NULL)
+    for(;;)
     {
-        bc_os_semaphore_put(&thermometer_1->semaphore);
+        if (getline(&line, &size, stdin) == -1)
+        {
+            printf("No line\n");
+        } else
+        {
+
+            jsmn_init(&parser);
+            r = jsmn_parse(&parser, line, size, tokens, 10 );
+            if (r < 0) {
+                bc_log_error("application_loop: talk parser: Failed to parse JSON: %d", r);
+                return;
+            }
+
+            if (r < 1 || tokens[0].type != JSMN_ARRAY) {
+                bc_log_error("application_loop: talk parser: Array expected");
+                return;
+            }
+
+            if (_application_jsoneq(line, &tokens[1], "$config/sensors/thermometer/update") && (r==5))
+            {
+                if (_application_jsoneq(line, &tokens[3], "publish-interval"))
+                {
+                    int number = strtol(line+tokens[4].start, NULL, 10);
+                    printf("number %d \n", number);
+                    bc_log_info("application_loop: thermometer new publish-interval %d", number);
+                    if(thermometer_0) //TODO v tuto chvily by nemel byt problem, bud je inicializovany nebo neni
+                    {
+                        task_thermometer_set_interval(thermometer_0, (bc_tick_t)number);
+                    }
+                }
+            }
+
+            //task_thermometer_set_interval(thermometer_0, 500);
+
+//            printf("%s\n", line);
+        }
+
     }
 
-    bc_os_task_sleep(1000);
+//    bc_log_debug("---");
+//
+//    if(thermometer_0!=NULL)
+//    {
+//        bc_os_semaphore_put(&thermometer_0->semaphore);
+//    }
+
+//    bc_os_task_sleep(1000);
+}
+
+static void _application_wait_start_string(void)
+{
+    char *line = NULL;
+    size_t size;
+    while (true)
+    {
+        if (getline(&line, &size, stdin) != -1)
+        {
+            if (strcmp(line, "[\"$config/clown-talk/create\", {}]\n")==0)
+            {
+                printf("[\"$config/clown-talk\", {\"ack\":false, \"device\":\"bridge\", \"capabilities\":1,  \"firmware-datetime\":\"%s\"]\n", VERSION);
+                return;
+            }
+        }
+    }
+}
+
+static bool _application_jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+    if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+        strncmp(json + tok->start, s, tok->end - tok->start) == 0)
+    {
+        return true;
+    }
+    return false;
 }
 
 static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address)

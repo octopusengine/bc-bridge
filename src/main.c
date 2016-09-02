@@ -27,7 +27,7 @@ static struct argp_option options[] = {
 
 struct arguments
 {
-    bool no_wait_start_string;
+    bool wait_start_string;
     bc_log_level_t log_level;
 };
 
@@ -39,7 +39,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
     switch (key)
     {
         case 'n':
-            arguments->no_wait_start_string = true;
+            arguments->wait_start_string = false;
             break;
         case 'd':
             if (strcmp(arg, "dump")==0)
@@ -79,13 +79,13 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
 
 static struct argp argp = { options, parse_opt, 0, doc };
 
+struct arguments arguments = {
+        .wait_start_string = true,
+        .log_level = BC_LOG_LEVEL_DUMP
+};
+
 void process_command_line(int argc, char **argv)
 {
-    struct arguments arguments;
-
-    arguments.no_wait_start_string = false;
-    arguments.log_level = BC_LOG_LEVEL_DUMP;
-
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
 }
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     // TODO Tzn CTRL+C apod neoverridovat...
     //signal(SIGINT, INThandler);
 
-    application_init();
+    application_init(arguments.wait_start_string, arguments.log_level);
 
     quit = false;
 

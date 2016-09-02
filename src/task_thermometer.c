@@ -13,6 +13,7 @@ task_thermometer_t *task_thermometer_spawn(bc_bridge_t *bridge, bc_bridge_i2c_ch
     self->_bridge = bridge;
     self->_i2c_channel = i2c_channel;
     self->_device_address = device_address;
+    self->tick_feed_interval = 1000;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);
@@ -21,10 +22,20 @@ task_thermometer_t *task_thermometer_spawn(bc_bridge_t *bridge, bc_bridge_i2c_ch
     return self;
 }
 
+void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval)
+{
+    bc_os_mutex_lock(&self->mutex);
+    self->tick_feed_interval = interval;
+    bc_os_mutex_unlock(&self->mutex);
+
+    bc_os_semaphore_put(&self->semaphore);
+}
+
 static void *task_thermometer_worker(void *parameter)
 {
     bool valid;
     float value;
+    bc_tick_t tick_feed_interval;
 
     task_thermometer_t *self = (task_thermometer_t *) parameter;
 
@@ -44,9 +55,15 @@ static void *task_thermometer_worker(void *parameter)
 
     while (true)
     {
-        bc_os_semaphore_get(&self->semaphore);
+        bc_os_mutex_lock(&self->mutex);
+        tick_feed_interval = self->tick_feed_interval;
+        bc_os_mutex_unlock(&self->mutex);
+
+        bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
 
         bc_log_debug("task_thermometer_worker: wake up signal");
+
+        self->_tick_last_feed = bc_tick_get();
 
         bc_tag_temperature_state_t state;
 

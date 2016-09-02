@@ -22,4 +22,6 @@ typedef struct
 
 task_thermometer_t *task_thermometer_spawn(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address);
 
+void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval);
+
 #endif /* _TASK_THERMOMETER_H */
