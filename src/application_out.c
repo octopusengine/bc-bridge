@@ -3,16 +3,10 @@
 #include "bc_os.h"
 
 static bc_os_mutex_t application_out_mutex;
-static bool application_out_is_init = false;
 
 void application_out_init(void)
 {
-    if (application_out_is_init)
-    {
-        return;
-    }
     bc_os_mutex_init(&application_out_mutex);
-    application_out_is_init = true;
 }
 
 void application_out_write(const char *format, ...)

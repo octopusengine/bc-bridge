@@ -2,6 +2,7 @@
 #include "application_out.h"
 #include "bc_log.h"
 #include "task_thermometer.h"
+#include "task_relay.h"
 #include "bc_tag.h"
 #include "bc_bridge.h"
 #include <jsmn.h>
@@ -10,6 +11,7 @@ bc_bridge_t bridge;
 
 
 task_thermometer_t *thermometer_0=NULL;
+task_relay_t *relay=NULL;
 
 static void _application_wait_start_string(void);
 static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address);
@@ -56,6 +58,11 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
         thermometer_0 = task_thermometer_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48);
     }
 
+    if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x3B))
+    {
+        relay = task_relay_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x3B);
+    }
+
 }
 
 void application_loop(bool *quit)
@@ -97,6 +104,21 @@ void application_loop(bool *quit)
                     {
                         task_thermometer_set_interval(thermometer_0, (bc_tick_t)number);
                     }
+                }
+            }
+            else if(_application_jsoneq(line, &tokens[1], "relay/set") && (r==5))
+            {
+                if (relay && _application_jsoneq(line, &tokens[3], "0/state"))
+                {
+                    if ( strncmp(line + tokens[4].start, "true", tokens[4].end - tokens[4].start) == 0)
+                    {
+                        task_relay_set_mode(relay, BC_MODULE_RELAY_MODE_NO);
+                    }
+                    else if ( strncmp(line + tokens[4].start, "false", tokens[4].end - tokens[4].start) == 0)
+                    {
+                        task_relay_set_mode(relay, BC_MODULE_RELAY_MODE_NC);
+                    }
+
                 }
             }
 
@@ -142,6 +164,7 @@ static bool _application_jsoneq(const char *json, jsmntok_t *tok, const char *s)
     }
     return false;
 }
+
 
 static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address)
 {
