@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <libudev.h>
+#include <fcntl.h>
 
 #define BC_BRIDGE_DEBUG 1
 
