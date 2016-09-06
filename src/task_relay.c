@@ -1,6 +1,6 @@
 #include "task_relay.h"
 #include "bc_log.h"
-#include "application_out.h"
+#include "bc_talk.h"
 #include "bc_tag.h"
 #include "bc_bridge.h"
 

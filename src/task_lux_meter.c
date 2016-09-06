@@ -1,7 +1,7 @@
 #include "task_lux_meter.h"
 #include "bc_log.h"
 #include "bc_tag_lux_meter.h"
-#include "application_out.h"
+#include "bc_talk.h"
 #include "bc_tag.h"
 #include "bc_bridge.h"
 
@@ -101,7 +101,10 @@ static void *task_lux_meter_worker(void *parameter)
                 }
 
                 bc_log_info("task_lux_meter_worker: temperature = %.1f C", value);
-                application_out_write("[\"lux-meter\", {\"0/illuminance\": [%0.2f, \"lux\"]}]", value);
+                bc_talk_publish_begin("lux-meter/i2c0-44");
+                bc_talk_publish_add_quantity_final("illuminance", "lux", "%0.2f", value);
+                bc_talk_publish_end();
+                //application_out_write("[\"lux-meter\", {\"0/illuminance\": [%0.2f, \"lux\"]}]", value);
                 break;
             }
             default:
