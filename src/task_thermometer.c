@@ -1,7 +1,7 @@
 #include "task_thermometer.h"
 #include "bc_log.h"
 #include "bc_tag_temperature.h"
-#include "application_out.h"
+#include "bc_talk.h"
 #include "bc_tag.h"
 #include "bc_bridge.h"
 
@@ -102,7 +102,9 @@ static void *task_thermometer_worker(void *parameter)
                 if (valid)
                 {
                     bc_log_info("task_thermometer_worker: temperature = %.1f C", value);
-                    application_out_write("[\"thermometer\", {\"0/temperature\": [%0.2f, \"\\u2103\"]}]", value);
+                    bc_talk_publish_begin("thermometer/i2c0-48");
+                    bc_talk_publish_add_quantity_final("temperature", "\\u2103", "%0.2f", value);
+                    bc_talk_publish_end();
                 }
                 else
                 {

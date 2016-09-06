@@ -1,5 +1,5 @@
 #include "application.h"
-#include "application_out.h"
+#include "bc_talk.h"
 #include "bc_log.h"
 #include "task_thermometer.h"
 #include "task_lux_meter.h"
@@ -24,7 +24,7 @@ static bool _application_jsoneq(const char *json, jsmntok_t *tok, const char *s)
 
 void application_init(bool wait_start_string, bc_log_level_t log_level)
 {
-    application_out_init();
+    bc_talk_init();
     bc_log_init(log_level);
 
     bc_tick_init();
