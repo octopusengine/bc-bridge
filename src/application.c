@@ -4,6 +4,8 @@
 #include "task_thermometer.h"
 #include "task_lux_meter.h"
 #include "task_relay.h"
+#include "task_co2.h"
+
 #include "bc_tag.h"
 #include "bc_bridge.h"
 #include <jsmn.h>
@@ -14,6 +16,7 @@ bc_bridge_t bridge;
 task_thermometer_t *thermometer_0=NULL;
 task_lux_meter_t *lux_meter_0=NULL;
 task_relay_t *relay=NULL;
+task_co2_t *co2=NULL;
 
 static void _application_wait_start_string(void);
 static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address);
@@ -55,20 +58,26 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
         _application_wait_start_string();
     }
 
-    if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48))
+    if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48))
     {
         thermometer_0 = task_thermometer_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48);
     }
 
-    if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44))
+    if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44))
     {
         lux_meter_0 = task_lux_meter_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44);
     }
 
-    if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x3B))
+    if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x3B))
     {
         relay = task_relay_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x3B);
     }
+
+    if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x38))
+    {
+        co2 = task_co2_spawn(&bridge);
+    }
+
 
 }
 

@@ -100,7 +100,7 @@ static void *task_lux_meter_worker(void *parameter)
                     continue;
                 }
 
-                bc_log_info("task_lux_meter_worker: temperature = %.1f C", value);
+                bc_log_info("task_lux_meter_worker: illuminance = %.1f C", value);
                 application_out_write("[\"lux-meter\", {\"0/illuminance\": [%0.2f, \"lux\"]}]", value);
                 break;
             }

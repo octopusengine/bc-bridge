@@ -46,5 +46,6 @@ bool bc_bridge_close(bc_bridge_t *self);
 bool bc_bridge_i2c_reset(bc_bridge_t *self);
 bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);
 bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);
+bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint8_t device_address);
 
 #endif /* _BC_BRIDGE_H */

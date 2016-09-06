@@ -36,10 +36,12 @@ set(SOURCE_FILES
         src/bc_i2c_tca9534a.c
         src/bc_log.c
         src/task_thermometer.c
+        src/task_lux_meter.c
+        src/task_co2.c
         src/task_relay.c
         src/application_out.c
         src/application.c
         )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES} -ludev -largp)
+target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES} -ludev)

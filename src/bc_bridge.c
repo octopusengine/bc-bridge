@@ -356,6 +356,76 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     return true;
 }
 
+bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint8_t device_address)
+{
+    uint8_t report[64];
+    uint8_t bus_status;
+    bc_tick_t tick_timeout;
+
+    int res;
+
+    _bc_bridge_i2c_set_channel(self, channel);
+
+    bc_log_info("bc_bridge_i2c_ping: device 0x%02X", device_address);
+
+    report[0] = (uint8_t) 0xD0; /* I2C write */
+    report[1] = device_address; /* Slave address */
+    report[2] = 0x06; /* Start and Stop */
+    report[3] = 1;
+    report[4] = 0x00;
+
+    tick_timeout = bc_tick_get() + 10;
+
+    //wait on i2c redy
+    do
+    {
+        if (bc_tick_get() >= tick_timeout)
+        {
+            return false;
+        }
+
+        if (!_bc_bridge_ft260_get_i2c_bus_status(self->_fd_i2c, &bus_status))
+        {
+            return false;
+        }
+
+    } while ((bus_status & 0x11) != 0);
+    //bit 0 = controller busy: all other status bits invalid
+    //bit 5 = controller idle
+
+    res = write(self->_fd_i2c, report, 5);
+
+    if (res == -1)
+    {
+        return false;
+    }
+
+    if (res != 5)
+    {
+        return false;
+    }
+
+    do
+    {
+        if (bc_tick_get() >= tick_timeout)
+        {
+            return false;
+        }
+        if (!_bc_bridge_ft260_get_i2c_bus_status(self->_fd_i2c, &bus_status))
+        {
+            return false;
+        }
+
+    } while ((bus_status & 0x01) != 0);
+
+    if ((bus_status & 0x1E) != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_t i2c_channel)
 {
     uint8_t buffer[1];
