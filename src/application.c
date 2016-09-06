@@ -57,7 +57,13 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 
     if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48))
     {
-        thermometer_0 = task_thermometer_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48);
+        task_thermometer_parameters_t parameters;
+
+        parameters.bridge = &bridge;
+        parameters.i2c_channel = BC_BRIDGE_I2C_CHANNEL_0;
+        parameters.device_address = 0x48;
+
+        thermometer_0 = task_thermometer_spawn(&parameters);
     }
 
     if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44))
