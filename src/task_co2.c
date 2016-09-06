@@ -1,7 +1,7 @@
 #include "task_co2.h"
 #include "bc_log.h"
 #include "bc_module_co2.h"
-#include "application_out.h"
+#include "bc_talk.h"
 #include "bc_tag.h"
 #include "bc_bridge.h"
 
@@ -66,8 +66,12 @@ static void *task_co2_worker(void *parameter)
 
         if (bc_module_co2_get_concentration(&module_co2, &value))
         {
-            bc_log_info("task_co2_worker: temperature = %.1f C", value);
-            application_out_write("[\"co2-sensor/0\", {\"concentration\": [%d, \"ppm\"]}]", value);
+
+            bc_log_info("task_co2_worker: concentration = %d ppm", value);
+            bc_talk_publish_begin("co2-sensor/i2c0-38");
+            bc_talk_publish_add_quantity_final("concentration", "ppm", "%d", value);
+            bc_talk_publish_end();
+
         }
 
     }
