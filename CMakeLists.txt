@@ -13,6 +13,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 find_package(Threads REQUIRED)
 add_definitions(-D_BSD_SOURCE -DTHREADSAFE -D_REENTRANT)
 find_package(Libudev REQUIRED)
+find_package(argp REQUIRED)
 
 include_directories(src)
 include_directories(jsmn)
@@ -37,10 +38,11 @@ set(SOURCE_FILES
         src/bc_log.c
         src/task_thermometer.c
         src/task_lux_meter.c
+        src/task_co2.c
         src/task_relay.c
         src/bc_talk.c
         src/application.c
         )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES} -ludev)
+target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES} ${ARGP_LIBRARIES} -ludev)

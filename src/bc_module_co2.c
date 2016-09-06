@@ -109,7 +109,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         {
             // TODO Adjust time to > 1min
             self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
-            self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);//TODO 180
+            self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
             bc_ic2_tca9534a_set_mode(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_OUTPUT);
             bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
