@@ -36,6 +36,8 @@ static void *task_thermometer_worker(void *parameter)
 {
     bool valid;
     float value;
+    char topic[20];
+
     bc_tick_t tick_feed_interval;
     bc_tag_temperature_state_t state;
 
@@ -43,6 +45,8 @@ static void *task_thermometer_worker(void *parameter)
 
     bc_log_info("task_thermometer_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_channel, self->_device_address);
+
+    sprintf(&topic, "thermometer/i2c%d-%02X", (uint8_t) self->_i2c_channel, self->_device_address);
 
     bc_tag_interface_t interface;
 
@@ -102,7 +106,7 @@ static void *task_thermometer_worker(void *parameter)
                 if (valid)
                 {
                     bc_log_info("task_thermometer_worker: temperature = %.1f C", value);
-                    bc_talk_publish_begin("thermometer/i2c0-48");
+                    bc_talk_publish_begin(&topic);
                     bc_talk_publish_add_quantity_final("temperature", "\\u2103", "%0.2f", value);
                     bc_talk_publish_end();
                 }
