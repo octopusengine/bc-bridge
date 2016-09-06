@@ -37,6 +37,7 @@ static void *task_thermometer_worker(void *parameter)
     bool valid;
     float value;
     bc_tick_t tick_feed_interval;
+    bc_tag_temperature_state_t state;
 
     task_thermometer_t *self = (task_thermometer_t *) parameter;
 
@@ -65,8 +66,6 @@ static void *task_thermometer_worker(void *parameter)
         bc_log_debug("task_thermometer_worker: wake up signal");
 
         self->_tick_last_feed = bc_tick_get();
-
-        bc_tag_temperature_state_t state;
 
         valid = true;
 

@@ -2,6 +2,7 @@
 #include "application_out.h"
 #include "bc_log.h"
 #include "task_thermometer.h"
+#include "task_lux_meter.h"
 #include "task_relay.h"
 #include "bc_tag.h"
 #include "bc_bridge.h"
@@ -11,6 +12,7 @@ bc_bridge_t bridge;
 
 
 task_thermometer_t *thermometer_0=NULL;
+task_lux_meter_t *lux_meter_0=NULL;
 task_relay_t *relay=NULL;
 
 static void _application_wait_start_string(void);
@@ -56,6 +58,11 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
     if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48))
     {
         thermometer_0 = task_thermometer_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48);
+    }
+
+    if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44))
+    {
+        lux_meter_0 = task_lux_meter_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44);
     }
 
     if(_application_is_device_exists(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x3B))
