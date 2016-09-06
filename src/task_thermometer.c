@@ -7,7 +7,7 @@
 
 static void *task_thermometer_worker(void *parameter);
 
-task_thermometer_t *task_thermometer_spawn(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address)
+task_thermometer_t *task_thermometer_spawn(task_thermometer_parameters_t *parameters)
 {
     task_thermometer_t *self = (task_thermometer_t *) malloc(sizeof(task_thermometer_t));
 
@@ -48,12 +48,8 @@ static void *task_thermometer_worker(void *parameter)
 
     sprintf(&topic, "thermometer/i2c%d-%02X", (uint8_t) self->_i2c_channel, self->_device_address);
 
-    bc_tag_interface_t interface;
-
     interface.bridge = self->_bridge;
     interface.channel = self->_i2c_channel;
-
-    bc_tag_temperature_t tag_temperature;
 
     bc_tag_temperature_init(&tag_temperature, &interface, self->_device_address);
 
