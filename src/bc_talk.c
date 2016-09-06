@@ -8,14 +8,14 @@ void bc_talk_init(void)
     bc_os_mutex_init(&bc_talk_mutex);
 }
 
-void bc_talk_publish_begin(const char *topic)
+void bc_talk_publish_begin(char *topic)
 {
     bc_os_mutex_lock(&bc_talk_mutex);
 
     printf("[\"%s\", {", topic);
 }
 
-void bc_talk_publish_add_quantity(const char *name, const char *unit, const char *value, ...)
+void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...)
 {
     va_list ap;
 
@@ -28,7 +28,7 @@ void bc_talk_publish_add_quantity(const char *name, const char *unit, const char
     printf(", \"%s\"], ", unit);
 }
 
-void bc_talk_publish_add_quantity_final(const char *name, const char *unit, const char *value, ...)
+void bc_talk_publish_add_quantity_final(char *name, char *unit, char *value, ...)
 {
     va_list ap;
 

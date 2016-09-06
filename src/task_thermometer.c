@@ -11,10 +11,12 @@ task_thermometer_t *task_thermometer_spawn(bc_bridge_t *bridge, bc_bridge_i2c_ch
 {
     task_thermometer_t *self = (task_thermometer_t *) malloc(sizeof(task_thermometer_t));
 
-    self->_bridge = bridge;
-    self->_i2c_channel = i2c_channel;
-    self->_device_address = device_address;
-    self->tick_feed_interval = 1000;
+    memset(self, 0, sizeof(task_thermometer_t));
+
+    self->_bridge = parameters->bridge;
+    self->_i2c_channel = parameters->i2c_channel;
+    self->_device_address = parameters->device_address;
+    self->_tick_feed_interval = 1000;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);
@@ -26,7 +28,7 @@ task_thermometer_t *task_thermometer_spawn(bc_bridge_t *bridge, bc_bridge_i2c_ch
 void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval)
 {
     bc_os_mutex_lock(&self->mutex);
-    self->tick_feed_interval = interval;
+    self->_tick_feed_interval = interval;
     bc_os_mutex_unlock(&self->mutex);
 
     bc_os_semaphore_put(&self->semaphore);
@@ -34,14 +36,12 @@ void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval)
 
 static void *task_thermometer_worker(void *parameter)
 {
-    bool valid;
-    float value;
+    task_thermometer_t *self;
+    bc_tag_interface_t interface;
+    bc_tag_temperature_t tag_temperature;
     char topic[20];
 
-    bc_tick_t tick_feed_interval;
-    bc_tag_temperature_state_t state;
-
-    task_thermometer_t *self = (task_thermometer_t *) parameter;
+    self = (task_thermometer_t *) parameter;
 
     bc_log_info("task_thermometer_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_channel, self->_device_address);
@@ -61,8 +61,14 @@ static void *task_thermometer_worker(void *parameter)
 
     while (true)
     {
+        bc_tag_temperature_state_t state;
+        bc_tick_t tick_feed_interval;
+
+        bool valid;
+        float value;
+
         bc_os_mutex_lock(&self->mutex);
-        tick_feed_interval = self->tick_feed_interval;
+        tick_feed_interval = self->_tick_feed_interval;
         bc_os_mutex_unlock(&self->mutex);
 
         bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
