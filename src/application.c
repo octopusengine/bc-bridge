@@ -5,6 +5,7 @@
 #include "task_lux_meter.h"
 #include "task_relay.h"
 #include "task_co2.h"
+#include "bc_i2c_pca9535.h"
 
 #include "bc_tag.h"
 #include "bc_bridge.h"
@@ -23,6 +24,7 @@ task_co2_t *co2=NULL;
 static void _application_wait_start_string(void);
 static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address);
 static bool _application_jsoneq(const char *json, jsmntok_t *tok, const char *s);
+static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel);
 
 void application_init(bool wait_start_string, bc_log_level_t log_level)
 {
@@ -59,6 +61,11 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
     {
         _application_wait_start_string();
     }
+
+//    _application_i2c_scan(&bridge, BC_BRIDGE_I2C_CHANNEL_0);
+
+
+
 
     if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x48))
     {
@@ -235,4 +242,37 @@ static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_cha
 #endif
 
     return true;
+}
+
+static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel)
+{
+    uint8_t address;
+    for (address = 1; address < 128; address++)
+    {
+        if (bc_bridge_i2c_ping(bridge, i2c_channel, address))
+        {
+            printf("address: %hhx %d \n", address, address);
+        }
+    }
+}
+
+static void _application_quad_test(bc_bridge_t *bridge)
+{
+    bc_i2c_pca9535_t pca;
+    bc_tag_interface_t interface = {
+            .bridge = bridge,
+            .channel = BC_BRIDGE_I2C_CHANNEL_0
+    };
+
+    bc_ic2_pca9535_init(&pca, &interface, 0x24);
+    bc_ic2_pca9535_set_modes(&pca, BC_I2C_pca9535_PORT1, BC_I2C_pca9535_ALL_OUTPUT);
+//    exit(1);
+
+    while (true)
+    {
+        bc_ic2_pca9535_write_pins(&pca, BC_I2C_pca9535_PORT1, 0x0f);
+        bc_os_task_sleep(100);
+        bc_ic2_pca9535_write_pins(&pca, BC_I2C_pca9535_PORT1, 0x00);
+        bc_os_task_sleep(100);
+    }
 }

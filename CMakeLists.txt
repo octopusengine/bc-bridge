@@ -35,6 +35,7 @@ set(SOURCE_FILES
         src/bc_i2c_sc16is740.c
         src/tags.c
         src/bc_i2c_tca9534a.c
+        src/bc_i2c_pca9535.c
         src/bc_log.c
         src/task_thermometer.c
         src/task_lux_meter.c
