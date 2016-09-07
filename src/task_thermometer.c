@@ -3,18 +3,23 @@
 #include "bc_tag_temperature.h"
 #include "bc_talk.h"
 #include "bc_i2c.h"
-#include "bc_bridge.h"
 
 static void *task_thermometer_worker(void *parameter);
+static bool task_thermometer_is_quit_request(task_thermometer_t *self);
 
 task_thermometer_t *task_thermometer_spawn(task_thermometer_parameters_t *parameters)
 {
-    task_thermometer_t *self = (task_thermometer_t *) malloc(sizeof(task_thermometer_t));
+    task_thermometer_t *self;
+
+    bc_log_info("task_thermometer_spawn: spawning instance for bus %d, address 0x%02X",
+                (uint8_t) parameters->i2c_channel, parameters->device_address);
+
+    self = (task_thermometer_t *) malloc(sizeof(task_thermometer_t));
 
     memset(self, 0, sizeof(task_thermometer_t));
 
-    self->_bridge = parameters->bridge;
-    self->_i2c_channel = parameters->i2c_channel;
+    self->_i2c_interface.bridge = parameters->bridge;
+    self->_i2c_interface.channel = parameters->i2c_channel;
     self->_device_address = parameters->device_address;
     self->_tick_feed_interval = 1000;
 
@@ -22,7 +27,37 @@ task_thermometer_t *task_thermometer_spawn(task_thermometer_parameters_t *parame
     bc_os_semaphore_init(&self->semaphore, 0);
     bc_os_task_init(&self->task, task_thermometer_worker, self);
 
+    bc_log_info("task_thermometer_spawn: spawned instance for bus %d, address 0x%02X",
+                (uint8_t) parameters->i2c_channel, parameters->device_address);
+
     return self;
+}
+
+void task_thermometer_terminate(task_thermometer_t *self)
+{
+    bc_bridge_i2c_channel_t i2c_channel;
+    uint8_t device_address;
+
+    i2c_channel = (uint8_t) self->_i2c_interface.channel;
+    device_address = self->_device_address;
+
+    bc_log_info("task_thermometer_terminate: terminating instance for bus %d, address 0x%02X",
+                i2c_channel, device_address);
+
+    bc_os_mutex_lock(&self->mutex);
+    self->_quit = true;
+    bc_os_mutex_unlock(&self->mutex);
+
+    bc_os_semaphore_put(&self->semaphore);
+
+    bc_os_task_destroy(&self->task);
+    bc_os_semaphore_destroy(&self->semaphore);
+    bc_os_mutex_destroy(&self->mutex);
+
+    free(self);
+
+    bc_log_info("task_thermometer_terminate: terminated instance for bus %d, address 0x%02X",
+                i2c_channel, device_address);
 }
 
 void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval)
@@ -37,21 +72,15 @@ void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval)
 static void *task_thermometer_worker(void *parameter)
 {
     task_thermometer_t *self;
-    bc_i2c_interface_t interface;
+
     bc_tag_temperature_t tag_temperature;
-    char topic[32];
 
     self = (task_thermometer_t *) parameter;
 
     bc_log_info("task_thermometer_worker: started instance for bus %d, address 0x%02X",
-                (uint8_t) self->_i2c_channel, self->_device_address);
+                (uint8_t) self->_i2c_interface.channel, self->_device_address);
 
-    snprintf(topic, sizeof(topic), "thermometer/i2c%d-%02x", (uint8_t) self->_i2c_channel, self->_device_address);
-
-    interface.bridge = self->_bridge;
-    interface.channel = self->_i2c_channel;
-
-    bc_tag_temperature_init(&tag_temperature, &interface, self->_device_address);
+    bc_tag_temperature_init(&tag_temperature, &self->_i2c_interface, self->_device_address);
 
     bc_tag_temperature_single_shot_conversion(&tag_temperature);
 
@@ -70,6 +99,11 @@ static void *task_thermometer_worker(void *parameter)
         bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
 
         bc_log_debug("task_thermometer_worker: wake up signal");
+
+        if (task_thermometer_is_quit_request(self))
+        {
+            break;
+        }
 
         self->_tick_last_feed = bc_tick_get();
 
@@ -107,7 +141,12 @@ static void *task_thermometer_worker(void *parameter)
 
                 if (valid)
                 {
+                    char topic[32];
+
                     bc_log_info("task_thermometer_worker: temperature = %.1f C", value);
+
+                    snprintf(topic, sizeof(topic), "thermometer/i2c%d-%02x", (uint8_t) self->_i2c_interface.channel, self->_device_address);
+
                     bc_talk_publish_begin(topic);
                     bc_talk_publish_add_quantity_final("temperature", "\\u2103", "%0.2f", value);
                     bc_talk_publish_end();
@@ -137,4 +176,20 @@ static void *task_thermometer_worker(void *parameter)
     }
 
     return NULL;
+}
+
+static bool task_thermometer_is_quit_request(task_thermometer_t *self)
+{
+    bc_os_mutex_lock(&self->mutex);
+
+    if (self->_quit)
+    {
+        bc_os_mutex_unlock(&self->mutex);
+
+        return true;
+    }
+
+    bc_os_mutex_unlock(&self->mutex);
+
+    return false;
 }
