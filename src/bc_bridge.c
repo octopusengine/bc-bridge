@@ -366,7 +366,7 @@ bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint
 
     _bc_bridge_i2c_set_channel(self, channel);
 
-    bc_log_info("bc_bridge_i2c_ping: device 0x%02X", device_address);
+    //bc_log_debug("bc_bridge_i2c_ping: device 0x%02X", device_address);
 
     report[0] = (uint8_t) 0xD0; /* I2C write */
     report[1] = device_address; /* Slave address */
@@ -437,7 +437,23 @@ static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_
 
     bc_log_debug("_bc_bridge_i2c_set_channel: switching to channel: %d", (uint8_t) i2c_channel);
 
-    buffer[0] = (uint8_t) i2c_channel;
+    switch (i2c_channel)
+    {
+        case BC_BRIDGE_I2C_CHANNEL_0:
+        {
+            buffer[0] = 1;
+            break;
+        }
+        case BC_BRIDGE_I2C_CHANNEL_1:
+        {
+            buffer[0] = 2;
+            break;
+        }
+        default:
+        {
+            return false;
+        }
+    }
 
     if (!_bc_bridge_ft260_i2c_write(self->_fd_i2c, 0x70, buffer, sizeof(buffer)))
     {

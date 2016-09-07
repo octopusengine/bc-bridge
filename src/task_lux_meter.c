@@ -37,11 +37,14 @@ static void *task_lux_meter_worker(void *parameter)
     float value;
     bc_tick_t tick_feed_interval;
     bc_tag_lux_meter_state_t state;
+    char topic[18];
 
     task_lux_meter_t *self = (task_lux_meter_t *) parameter;
 
     bc_log_info("task_lux_meter_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_channel, self->_device_address);
+
+    sprintf(&topic, "thermometer/i2c%d-%02X", (uint8_t) self->_i2c_channel, self->_device_address);
 
     bc_tag_interface_t interface;
 
@@ -101,7 +104,7 @@ static void *task_lux_meter_worker(void *parameter)
                 }
 
                 bc_log_info("task_lux_meter_worker: illuminance = %.1f lux", value);
-                bc_talk_publish_begin("lux-meter/i2c0-44");
+                bc_talk_publish_begin(&topic);
                 bc_talk_publish_add_quantity_final("illuminance", "lux", "%0.2f", value);
                 bc_talk_publish_end();
                 //application_out_write("[\"lux-meter\", {\"0/illuminance\": [%0.2f, \"lux\"]}]", value);

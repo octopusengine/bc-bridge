@@ -27,9 +27,9 @@ Initialize Clown.Talk
 
 Change Sensor interval for measurement and message transfer
 
-    ["$config/sensors/thermometer/update", {"publish-interval": 500}]
+    ["$config/sensors/thermometer/i2c0-48/update", {"publish-interval": 500}]
     
 Set Actor state  
     
-    ["relay/set", {"0/state": true}]
-    ["relay/set", {"0/state": false}]
+    ["relay/i2c0-3b/set", {"state": true}]
+    ["relay/i2c0-3b/set", {"state": false}]

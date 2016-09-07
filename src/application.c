@@ -13,8 +13,10 @@
 bc_bridge_t bridge;
 
 
-task_thermometer_t *thermometer_0=NULL;
-task_lux_meter_t *lux_meter_0=NULL;
+task_thermometer_t *thermometer_0_48=NULL;
+task_thermometer_t *thermometer_1_48=NULL;
+task_lux_meter_t *lux_meter_0_44=NULL;
+task_lux_meter_t *lux_meter_1_44=NULL;
 task_relay_t *relay=NULL;
 task_co2_t *co2=NULL;
 
@@ -66,14 +68,29 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
         parameters.i2c_channel = BC_BRIDGE_I2C_CHANNEL_0;
         parameters.device_address = 0x48;
 
-        thermometer_0 = task_thermometer_spawn(&parameters);
+        thermometer_0_48 = task_thermometer_spawn(&parameters);
+    }
+    if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_1, 0x48))
+    {
+        task_thermometer_parameters_t parameters;
+
+        parameters.bridge = &bridge;
+        parameters.i2c_channel = BC_BRIDGE_I2C_CHANNEL_1;
+        parameters.device_address = 0x48;
+
+        thermometer_1_48 = task_thermometer_spawn(&parameters);
     }
 
     if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44))
     {
-        lux_meter_0 = task_lux_meter_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44);
+        lux_meter_0_44 = task_lux_meter_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x44);
+    }
+    if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_1, 0x44))
+    {
+        lux_meter_1_44 = task_lux_meter_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_1, 0x44);
     }
 
+    // moduly
     if(bc_bridge_i2c_ping(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x3B))
     {
         relay = task_relay_spawn(&bridge, BC_BRIDGE_I2C_CHANNEL_0, 0x3B);
@@ -115,22 +132,22 @@ void application_loop(bool *quit)
                 return;
             }
 
-            if (_application_jsoneq(line, &tokens[1], "$config/sensors/thermometer/update") && (r==5))
+            if (_application_jsoneq(line, &tokens[1], "$config/sensors/thermometer/i2c0-48/update") && (r==5))
             {
                 if (_application_jsoneq(line, &tokens[3], "publish-interval"))
                 {
                     int number = strtol(line+tokens[4].start, NULL, 10);
                     printf("number %d \n", number);
                     bc_log_info("application_loop: thermometer new publish-interval %d", number);
-                    if(thermometer_0) //TODO v tuto chvily by nemel byt problem, bud je inicializovany nebo neni
+                    if(thermometer_0_48) //TODO v tuto chvily by nemel byt problem, bud je inicializovany nebo neni
                     {
-                        task_thermometer_set_interval(thermometer_0, (bc_tick_t)number);
+                        task_thermometer_set_interval(thermometer_0_48, (bc_tick_t)number);
                     }
                 }
             }
-            else if(_application_jsoneq(line, &tokens[1], "relay/set") && (r==5))
+            else if(_application_jsoneq(line, &tokens[1], "relay/i2c0-3b/set") && (r==5))
             {
-                if (relay && _application_jsoneq(line, &tokens[3], "0/state"))
+                if (relay && _application_jsoneq(line, &tokens[3], "state"))
                 {
                     if ( strncmp(line + tokens[4].start, "true", tokens[4].end - tokens[4].start) == 0)
                     {

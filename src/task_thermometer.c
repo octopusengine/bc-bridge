@@ -1,8 +1,9 @@
 #include "task_thermometer.h"
 #include "bc_log.h"
+#include "bc_tag_temperature.h"
 #include "bc_talk.h"
 #include "bc_tag.h"
-#include "bc_tag_temperature.h"
+#include "bc_bridge.h"
 
 static void *task_thermometer_worker(void *parameter);
 
@@ -38,16 +39,20 @@ static void *task_thermometer_worker(void *parameter)
     task_thermometer_t *self;
     bc_tag_interface_t interface;
     bc_tag_temperature_t tag_temperature;
+    char topic[20];
 
     self = (task_thermometer_t *) parameter;
 
     bc_log_info("task_thermometer_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_channel, self->_device_address);
 
+    sprintf(&topic, "thermometer/i2c%d-%02X", (uint8_t) self->_i2c_channel, self->_device_address);
+
     interface.bridge = self->_bridge;
     interface.channel = self->_i2c_channel;
 
     bc_tag_temperature_init(&tag_temperature, &interface, self->_device_address);
+
     bc_tag_temperature_single_shot_conversion(&tag_temperature);
 
     while (true)
@@ -103,7 +108,7 @@ static void *task_thermometer_worker(void *parameter)
                 if (valid)
                 {
                     bc_log_info("task_thermometer_worker: temperature = %.1f C", value);
-                    bc_talk_publish_begin("thermometer/i2c0-48");
+                    bc_talk_publish_begin(&topic);
                     bc_talk_publish_add_quantity_final("temperature", "\\u2103", "%0.2f", value);
                     bc_talk_publish_end();
                 }
