@@ -7,7 +7,7 @@
 #include "task_co2.h"
 #include "bc_i2c_pca9535.h"
 
-#include "bc_tag.h"
+#include "bc_i2c.h"
 #include "bc_bridge.h"
 #include <jsmn.h>
 
@@ -214,10 +214,10 @@ static bool _application_jsoneq(const char *json, jsmntok_t *tok, const char *s)
 
 static bool _application_is_device_exists(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address)
 {
-    bc_tag_transfer_t transfer;
+    bc_i2c_transfer_t transfer;
     uint8_t buffer[1];
 
-    bc_tag_transfer_init(&transfer);
+    bc_i2c_transfer_init(&transfer);
 
     transfer.device_address = device_address;
     transfer.buffer = buffer;

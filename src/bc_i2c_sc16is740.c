@@ -7,7 +7,7 @@ static bool _bc_ic2_sc16is740_write_register(bc_i2c_sc16is740_t *self, uint8_t a
 static bool _bc_ic2_sc16is740_read_register(bc_i2c_sc16is740_t *self, uint8_t address, uint8_t *value);
 static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self);
 
-bool bc_ic2_sc16is740_init(bc_i2c_sc16is740_t *self, bc_tag_interface_t *interface, uint8_t device_address)
+bool bc_ic2_sc16is740_init(bc_i2c_sc16is740_t *self, bc_i2c_interface_t *interface, uint8_t device_address)
 {
     memset(self, 0, sizeof(*self));
 
@@ -122,8 +122,8 @@ bool bc_ic2_sc16is740_write(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t len
     }
     while ( txfifo_spaces_available < length );
 
-    bc_tag_transfer_t transfer;
-    bc_tag_transfer_init(&transfer);
+    bc_i2c_transfer_t transfer;
+    bc_i2c_transfer_init(&transfer);
 
     transfer.device_address = self->_device_address;
     transfer.buffer = data;
@@ -250,12 +250,12 @@ static bool _bc_ic2_sc16is740_set_default(bc_i2c_sc16is740_t *self)
 
 static bool _bc_ic2_sc16is740_write_register(bc_i2c_sc16is740_t *self, uint8_t address, uint8_t value)
 {
-    bc_tag_transfer_t transfer;
+    bc_i2c_transfer_t transfer;
 
     uint8_t buffer[1];
     buffer[0] = (uint8_t) value;
 
-    bc_tag_transfer_init(&transfer);
+    bc_i2c_transfer_init(&transfer);
 
     transfer.device_address = self->_device_address;
     transfer.buffer = buffer;
@@ -283,11 +283,11 @@ static bool _bc_ic2_sc16is740_write_register(bc_i2c_sc16is740_t *self, uint8_t a
 
 static bool _bc_ic2_sc16is740_read_register(bc_i2c_sc16is740_t *self, uint8_t address, uint8_t *value)
 {
-    bc_tag_transfer_t transfer;
+    bc_i2c_transfer_t transfer;
 
     uint8_t buffer[1];
 
-    bc_tag_transfer_init(&transfer);
+    bc_i2c_transfer_init(&transfer);
 
     transfer.device_address = self->_device_address;
     transfer.buffer = buffer;

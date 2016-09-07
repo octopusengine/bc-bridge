@@ -3,7 +3,7 @@
 
 #include "bc_common.h"
 #include "bc_tick.h"
-#include "bc_tag.h"
+#include "bc_i2c.h"
 #include "bc_i2c_tca9534a.h"
 #include "bc_i2c_sc16is740.h"
 
@@ -37,7 +37,7 @@ typedef struct
 
 } bc_module_co2_t;
 
-bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface);
+bool bc_module_co2_init(bc_module_co2_t *self, bc_i2c_interface_t *interface);
 void bc_module_co2_task(bc_module_co2_t *self);
 bool bc_module_co2_get_concentration(bc_module_co2_t *self, int16_t *concentration);
 

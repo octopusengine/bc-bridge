@@ -3,6 +3,7 @@
 
 #include "bc_common.h"
 #include "bc_os.h"
+#include "bc_i2c.h"
 #include "bc_bridge.h"
 
 typedef struct
@@ -22,14 +23,15 @@ typedef struct
     bc_tick_t _tick_feed_interval;
     bc_tick_t _tick_last_feed;
 
-    bc_bridge_t *_bridge;
-    bc_bridge_i2c_channel_t _i2c_channel;
+    bc_i2c_interface_t _i2c_interface;
     uint8_t _device_address;
+
+    bool _quit;
 
 } task_thermometer_t;
 
 task_thermometer_t *task_thermometer_spawn(task_thermometer_parameters_t *parameters);
-
+void task_thermometer_terminate(task_thermometer_t *self);
 void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval);
 
 #endif /* _TASK_THERMOMETER_H */

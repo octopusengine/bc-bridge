@@ -1,7 +1,7 @@
 #include "task_relay.h"
 #include "bc_log.h"
 #include "bc_talk.h"
-#include "bc_tag.h"
+#include "bc_i2c.h"
 #include "bc_bridge.h"
 
 static void *task_relay_worker(void *parameter);
@@ -41,7 +41,7 @@ static void *task_relay_worker(void *parameter)
     bc_log_info("task_relay_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_channel, self->_device_address);
 
-    bc_tag_interface_t interface;
+    bc_i2c_interface_t interface;
 
     interface.bridge = self->_bridge;
     interface.channel = self->_i2c_channel;

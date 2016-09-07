@@ -1,7 +1,7 @@
 #ifndef _BC_TAG_HUMIDITY_H
 #define _BC_TAG_HUMIDITY_H
 
-#include "bc_tag.h"
+#include "bc_i2c.h"
 
 #define BC_TAG_HUMIDITY_DEVICE_ADDRESS 0x5F
 
@@ -17,7 +17,7 @@ typedef enum
 
 typedef struct
 {
-	bc_tag_interface_t *_interface;
+	bc_i2c_interface_t *_interface;
 	bool _communication_fault;
 	bool _calibration_not_read;
 	uint8_t _calibration[16];
@@ -26,7 +26,7 @@ typedef struct
 
 } bc_tag_humidity_t;
 
-bool bc_tag_humidity_init(bc_tag_humidity_t *self, bc_tag_interface_t *interface);
+bool bc_tag_humidity_init(bc_tag_humidity_t *self, bc_i2c_interface_t *interface);
 bool bc_tag_humidity_is_communication_fault(bc_tag_humidity_t *self);
 bool bc_tag_humidity_get_state(bc_tag_humidity_t *self, bc_tag_humidity_state_t *state);
 bool bc_tag_humidity_read_calibration(bc_tag_humidity_t *self);

@@ -12,38 +12,38 @@ void bc_talk_publish_begin(char *topic)
 {
     bc_os_mutex_lock(&bc_talk_mutex);
 
-    printf("[\"%s\", {", topic);
+    fprintf(stdout, "[\"%s\", {", topic);
 }
 
 void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...)
 {
     va_list ap;
 
-    printf("\"%s\": [", name);
+    fprintf(stdout, "\"%s\": [", name);
 
     va_start(ap, value);
     vfprintf(stdout, value, ap);
     va_end(ap);
 
-    printf(", \"%s\"], ", unit);
+    fprintf(stdout, ", \"%s\"], ", unit);
 }
 
 void bc_talk_publish_add_quantity_final(char *name, char *unit, char *value, ...)
 {
     va_list ap;
 
-    printf("\"%s\": [", name);
+    fprintf(stdout, "\"%s\": [", name);
 
     va_start(ap, value);
     vfprintf(stdout, value, ap);
     va_end(ap);
 
-    printf(", \"%s\"]", unit);
+    fprintf(stdout, ", \"%s\"]", unit);
 }
 
 void bc_talk_publish_end(void)
 {
-    printf("}]\n");
+    fprintf(stdout, "}]\n");
 
     bc_os_mutex_unlock(&bc_talk_mutex);
 }

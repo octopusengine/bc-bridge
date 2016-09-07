@@ -15,6 +15,16 @@ void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *p
     }
 }
 
+void bc_os_task_destroy(bc_os_task_t *task)
+{
+    if (pthread_join(*((pthread_t *) task->_task), NULL) != 0)
+    {
+        bc_log_fatal("bc_os_task_destroy: call failed: pthread_join");
+    }
+
+    free(task->_task);
+}
+
 void bc_os_task_sleep(bc_tick_t timeout)
 {
     if (usleep(timeout * 1000UL) != 0)
@@ -31,6 +41,16 @@ void bc_os_mutex_init(bc_os_mutex_t *mutex)
     {
         bc_log_fatal("bc_os_mutex_init: call failed: pthread_mutex_init");
     }
+}
+
+void bc_os_mutex_destroy(bc_os_mutex_t *mutex)
+{
+    if (pthread_mutex_destroy((pthread_mutex_t *) mutex->_mutex) != 0)
+    {
+        bc_log_fatal("bc_os_mutex_destroy: call failed: pthread_mutex_destroy");
+    }
+
+    free(mutex->_mutex);
 }
 
 void bc_os_mutex_lock(bc_os_mutex_t *mutex)
@@ -57,6 +77,16 @@ void bc_os_semaphore_init(bc_os_semaphore_t *semaphore, uint32_t value)
     {
         bc_log_fatal("bc_os_semaphore_init: call failed: sem_init");
     }
+}
+
+void bc_os_semaphore_destroy(bc_os_semaphore_t *semaphore)
+{
+    if (sem_destroy((sem_t *) semaphore->_semaphore) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_destroy: call failed: sem_destroy");
+    }
+
+    free(semaphore->_semaphore);
 }
 
 void bc_os_semaphore_put(bc_os_semaphore_t *semaphore)
@@ -93,6 +123,7 @@ bool bc_os_semaphore_timed_get(bc_os_semaphore_t *semaphore, bc_tick_t timeout)
     {
         struct timespec ts;
 
+        // TODO Problem je, ze Linux pravdepodobne nepodporuje MONOTONIC clock na semaphore
         if (clock_gettime(CLOCK_REALTIME, &ts) != 0)
         {
             bc_log_fatal("bc_os_semaphore_timed_get: call failed: clock_gettime");

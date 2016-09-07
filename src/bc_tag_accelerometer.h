@@ -1,7 +1,7 @@
 #ifndef _BC_TAG_ACCELEROMETER_H
 #define _BC_TAG_ACCELEROMETER_H
 
-#include "bc_tag.h"
+#include "bc_i2c.h"
 
 #define BC_TAG_ACCELEROMETER_ADDRESS_DEFAULT 0x18
 #define BC_TAG_ACCELEROMETER_ADDRESS_ALTERNATE 0x19

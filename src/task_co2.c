@@ -2,7 +2,7 @@
 #include "bc_log.h"
 #include "bc_module_co2.h"
 #include "bc_talk.h"
-#include "bc_tag.h"
+#include "bc_i2c.h"
 #include "bc_bridge.h"
 
 static void *task_co2_worker(void *parameter);
@@ -43,7 +43,7 @@ static void *task_co2_worker(void *parameter)
 
     bc_log_info("task_co2_worker: ");
 
-    bc_tag_interface_t interface;
+    bc_i2c_interface_t interface;
 
     interface.bridge = self->_bridge;
     interface.channel = BC_BRIDGE_I2C_CHANNEL_0;
