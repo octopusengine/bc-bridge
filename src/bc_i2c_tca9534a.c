@@ -4,7 +4,7 @@
 static bool _bc_i2c_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t value);
 static bool _bc_i2c_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t *value);
 
-bool bc_i2c_tca9534a_init(bc_i2c_tca9534a_t *self, bc_tag_interface_t *interface, uint8_t device_address)
+bool bc_i2c_tca9534a_init(bc_i2c_tca9534a_t *self, bc_i2c_interface_t *interface, uint8_t device_address)
 {
 	memset(self, 0, sizeof(*self));
 
@@ -169,11 +169,11 @@ bool bc_i2c_tca9534a_set_pin_direction(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_
 
 static bool _bc_i2c_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t value)
 {
-	bc_tag_transfer_t transfer;
+	bc_i2c_transfer_t transfer;
 
 	uint8_t buffer[1];
 
-	bc_tag_transfer_init(&transfer);
+    bc_i2c_transfer_init(&transfer);
 
 	transfer.device_address = self->_device_address;
 	transfer.buffer = buffer;
@@ -211,11 +211,11 @@ static bool _bc_i2c_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t add
 
 static bool _bc_i2c_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t *value)
 {
-	bc_tag_transfer_t transfer;
+	bc_i2c_transfer_t transfer;
 
 	uint8_t buffer[1];
 
-	bc_tag_transfer_init(&transfer);
+    bc_i2c_transfer_init(&transfer);
 
 	transfer.device_address = self->_device_address;
 	transfer.buffer = buffer;

@@ -40,4 +40,4 @@ typedef struct
 
 void bc_i2c_transfer_init(bc_i2c_transfer_t *transfer);
 
-#endif
+#endif /* _BC_I2C_H */

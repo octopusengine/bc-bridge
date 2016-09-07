@@ -2,7 +2,7 @@
 #define _BC_I2C_TCA9534A_H
 
 #include "bc_common.h"
-#include "bc_tag.h"
+#include "bc_i2c.h"
 
 #define BC_I2C_TCA9534A_DIRECTION_ALL_OUTPUT 0x00
 #define BC_I2C_TCA9534A_DIRECTION_ALL_INPUT 0xFF
@@ -36,13 +36,13 @@ typedef enum
 
 typedef struct
 {
-	bc_tag_interface_t *_interface;
+	bc_i2c_interface_t *_interface;
 	uint8_t _device_address;
 	bool _communication_fault;
 
 } bc_i2c_tca9534a_t;
 
-bool bc_i2c_tca9534a_init(bc_i2c_tca9534a_t *self, bc_tag_interface_t *interface, uint8_t device_address);
+bool bc_i2c_tca9534a_init(bc_i2c_tca9534a_t *self, bc_i2c_interface_t *interface, uint8_t device_address);
 bool bc_i2c_tca9534a_read_port(bc_i2c_tca9534a_t *self, uint8_t *value);
 bool bc_i2c_tca9534a_write_port(bc_i2c_tca9534a_t *self, uint8_t value);
 bool bc_i2c_tca9534a_read_pin(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_pin_t pin, bc_i2c_tca9534a_value_t *value);

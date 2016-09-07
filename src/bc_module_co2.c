@@ -16,7 +16,7 @@
 
 static uint16_t _bc_module_co2_calculate_crc16(uint8_t *buffer, uint8_t length);
 
-bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
+bool bc_module_co2_init(bc_module_co2_t *self, bc_i2c_interface_t *interface)
 {
     memset(self, 0, sizeof(*self));
 

@@ -10,11 +10,13 @@
 
 static bool _bc_module_relay_set_mode(bc_module_relay_t *self, uint8_t pins);
 
-void bc_module_relay_init(bc_module_relay_t *self, bc_tag_interface_t *interface, uint8_t device_address)
+void bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface, uint8_t device_address)
 {
 	memset(self, 0, sizeof(*self));
+
     bc_i2c_tca9534a_init(&self->_tca9534a, interface, device_address);
-	_bc_module_relay_set_mode(self, 0x50);
+
+    _bc_module_relay_set_mode(self, 0x50);
 }
 
 bool bc_module_relay_set_mode(bc_module_relay_t *self, bc_module_relay_mode_t relay_mode)

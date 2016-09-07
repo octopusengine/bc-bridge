@@ -1,14 +1,14 @@
 #ifndef _BC_TAG_LUX_METER_H
 #define _BC_TAG_LUX_METER_H
 
-#include "bc_tag.h"
+#include "bc_i2c.h"
 
 #define BC_TAG_LUX_METER_ADDRESS_DEFAULT 0x44
 #define BC_TAG_LUX_METER_ADDRESS_ALTERNATE 0x45
 
 typedef struct
 {
-	bc_tag_interface_t *_interface;
+	bc_i2c_interface_t *_interface;
 	uint8_t _device_address;
 	bool _communication_fault;
 	uint16_t _configuration;
@@ -24,7 +24,7 @@ typedef enum
 
 } bc_tag_lux_meter_state_t;
 
-bool bc_tag_lux_meter_init(bc_tag_lux_meter_t *self, bc_tag_interface_t *interface, uint8_t device_address);
+bool bc_tag_lux_meter_init(bc_tag_lux_meter_t *self, bc_i2c_interface_t *interface, uint8_t device_address);
 bool bc_tag_lux_meter_is_communication_fault(bc_tag_lux_meter_t *self);
 bool bc_tag_lux_meter_get_state(bc_tag_lux_meter_t *self, bc_tag_lux_meter_state_t *state);
 bool bc_tag_lux_meter_power_down(bc_tag_lux_meter_t *self);

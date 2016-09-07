@@ -3,7 +3,7 @@
 static bool _bc_tag_barometer_write_register(bc_tag_barometer_t *self, uint8_t address, uint8_t value);
 static bool _bc_tag_barometer_read_register(bc_tag_barometer_t *self, uint8_t address, uint8_t *value);
 
-bool bc_tag_barometer_init(bc_tag_barometer_t *self, bc_tag_interface_t *interface)
+bool bc_tag_barometer_init(bc_tag_barometer_t *self, bc_i2c_interface_t *interface)
 {
     memset(self, 0, sizeof(*self));
 
@@ -209,11 +209,11 @@ bool bc_tag_barometer_read_result(bc_tag_barometer_t *self)
 
 static bool _bc_tag_barometer_write_register(bc_tag_barometer_t *self, uint8_t address, uint8_t value)
 {
-    bc_tag_transfer_t transfer;
+    bc_i2c_transfer_t transfer;
 
     uint8_t buffer[1];
 
-    bc_tag_transfer_init(&transfer);
+    bc_i2c_transfer_init(&transfer);
 
     transfer.device_address = 0x60;
     transfer.buffer = buffer;
@@ -244,11 +244,11 @@ static bool _bc_tag_barometer_write_register(bc_tag_barometer_t *self, uint8_t a
 
 static bool _bc_tag_barometer_read_register(bc_tag_barometer_t *self, uint8_t address, uint8_t *value)
 {
-    bc_tag_transfer_t transfer;
+    bc_i2c_transfer_t transfer;
 
     uint8_t buffer[1];
 
-    bc_tag_transfer_init(&transfer);
+    bc_i2c_transfer_init(&transfer);
 
     transfer.device_address = 0x60;
     transfer.buffer = buffer;

@@ -26,7 +26,7 @@ set(SOURCE_FILES
         src/bc_os.c
         #src/bc_tag_accelerometer.c
         src/bc_tag_barometer.c
-        src/bc_tag.c
+        src/bc_i2c.c
         src/bc_tag_humidity.c
         src/bc_tag_lux_meter.c
         src/bc_tag_temperature.c
