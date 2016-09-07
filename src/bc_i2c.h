@@ -1,5 +1,5 @@
-#ifndef _BC_TAG_H
-#define _BC_TAG_H
+#ifndef _BC_I2C_H
+#define _BC_I2C_H
 
 #include "bc_common.h"
 #ifdef BRIDGE
@@ -8,14 +8,14 @@
 
 #ifdef BRIDGE
 
-typedef bc_bridge_i2c_transfer_t bc_tag_transfer_t;
+typedef bc_bridge_i2c_transfer_t bc_i2c_transfer_t;
 
 typedef struct
 {
     bc_bridge_t *bridge;
     bc_bridge_i2c_channel_t channel;
 
-} bc_tag_interface_t;
+} bc_i2c_interface_t;
 
 #else
 
@@ -27,17 +27,17 @@ typedef struct
     uint8_t *buffer;
     uint16_t length;
 
-} bc_tag_transfer_t;
+} bc_i2c_interface_t;
 
 typedef struct
 {
-    bool (*write)(bc_tag_transfer_t *transfer, bool *communication_fault);
-    bool (*read)(bc_tag_transfer_t *transfer, bool *communication_fault);
+    bool (*write)(bc_i2c_transfer_t *transfer, bool *communication_fault);
+    bool (*read)(bc_i2c_transfer_t *transfer, bool *communication_fault);
 
-} bc_tag_interface_t;
+} bc_i2c_interface_t;
 
 #endif
 
-void bc_tag_transfer_init(bc_tag_transfer_t *transfer);
+void bc_i2c_transfer_init(bc_i2c_transfer_t *transfer);
 
 #endif
