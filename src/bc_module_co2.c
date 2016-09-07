@@ -6,12 +6,12 @@
 // TODO Extract all constants to the macros in the beginning
 // TODO Implement possibility to add own interface
 
-#define BOOST_Pin BC_I2C_TCA9534A_PIN1
-#define VDD2_PIN BC_I2C_TCA9534A_PIN2
-#define EN_Pin BC_I2C_TCA9534A_PIN3
-#define RDY_Pin BC_I2C_TCA9534A_PIN7
+#define BOOST_Pin BC_I2C_TCA9534A_PIN_P1
+#define VDD2_PIN BC_I2C_TCA9534A_PIN_P2
+#define EN_Pin BC_I2C_TCA9534A_PIN_P3
+#define RDY_Pin BC_I2C_TCA9534A_PIN_P7
 
-#define UART_RESET_Pin BC_I2C_TCA9534A_PIN6
+#define UART_RESET_Pin BC_I2C_TCA9534A_PIN_P6
 
 
 static uint16_t _bc_module_co2_calculate_crc16(uint8_t *buffer, uint8_t length);
@@ -25,7 +25,7 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 
     bc_log_debug("bc_module_co2_init: initialization start");
 
-    if (!bc_ic2_tca9534a_init(&self->_tca9534a, interface, 0x38))
+    if (!bc_i2c_tca9534a_init(&self->_tca9534a, interface, 0x38))
     {
         bc_log_error("bc_module_co2_init: call failed: bc_ic2_tca9534a_init");
 
@@ -34,14 +34,14 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
 
     bc_log_debug("bc_module_co2_init: bc_ic2_tca9534a_set_modes");
 
-    if (!bc_ic2_tca9534a_set_modes(&self->_tca9534a, BC_I2C_TCA9534A_ALL_INPUT))
+    if (!bc_i2c_tca9534a_set_port_direction(&self->_tca9534a, BC_I2C_TCA9534A_DIRECTION_ALL_INPUT))
     {
         bc_log_error("bc_module_co2_init: call failed: bc_ic2_tca9534a_set_modes");
 
         return false;
     }
 
-    if (!bc_ic2_tca9534a_write_pins(&self->_tca9534a, 0x00))
+    if (!bc_i2c_tca9534a_write_port(&self->_tca9534a, 0x00))
     {
         bc_log_error("bc_module_co2_init: call failed: bc_ic2_tca9534a_write_pins");
 
@@ -49,9 +49,9 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_tag_interface_t *interface)
     }
 
     //reset uart
-    bc_ic2_tca9534a_set_mode(&self->_tca9534a, UART_RESET_Pin, BC_I2C_TCA9534A_OUTPUT);
+    bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, UART_RESET_Pin, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
     bc_os_task_sleep(1);
-    bc_ic2_tca9534a_set_mode(&self->_tca9534a, UART_RESET_Pin, BC_I2C_TCA9534A_INPUT);
+    bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, UART_RESET_Pin, BC_I2C_TCA9534A_DIRECTION_INPUT);
     bc_os_task_sleep(1);
 
     if (!bc_ic2_sc16is740_init(&self->_sc16is740, interface, 0x4d))
@@ -111,8 +111,8 @@ void bc_module_co2_task(bc_module_co2_t *self)
             self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
             self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_OUTPUT);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
             break;
         }
         case BC_MODULE_CO2_STATE_PRECHARGE:
@@ -125,8 +125,8 @@ void bc_module_co2_task(bc_module_co2_t *self)
                 self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
                 //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
-                bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_INPUT);
-                bc_ic2_tca9534a_set_mode(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_INPUT);
+                bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_DIRECTION_INPUT);
+                bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_DIRECTION_INPUT);
             }
 
             break;
@@ -146,8 +146,8 @@ void bc_module_co2_task(bc_module_co2_t *self)
             self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_OUTPUT);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_OUTPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
 
 
             break;
@@ -160,7 +160,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
                 self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
 
                 //bc_ic2_tca9534a_write_pin(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_HIGH);
-                bc_ic2_tca9534a_set_mode(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_OUTPUT);
+                bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
             }
 
             break;
@@ -169,8 +169,8 @@ void bc_module_co2_task(bc_module_co2_t *self)
         {
             bc_ic2_sc16is740_reset_fifo(&self->_sc16is740, BC_I2C_SC16IS740_FIFO_RX);
 
-            if ( bc_ic2_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) &&
-            (rdy_pin_value == BC_I2C_TCA9534A_LOW ))
+            if (bc_i2c_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) &&
+            (rdy_pin_value == BC_I2C_TCA9534A_VALUE_LOW ))
             {
                 if (!self->_first_measurement_done)
                 {
@@ -256,8 +256,8 @@ void bc_module_co2_task(bc_module_co2_t *self)
         {
             bc_ic2_sc16is740_reset_fifo(&self->_sc16is740, BC_I2C_SC16IS740_FIFO_RX);
 
-            if ( bc_ic2_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) &&
-            (rdy_pin_value == BC_I2C_TCA9534A_HIGH) )
+            if (bc_i2c_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) &&
+            (rdy_pin_value == BC_I2C_TCA9534A_VALUE_HIGH) )
             {
                 memset(self->_tx_buffer, 0, sizeof(self->_tx_buffer));
 
@@ -321,11 +321,11 @@ void bc_module_co2_task(bc_module_co2_t *self)
 
             // TODO Split these two operations
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_INPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_DIRECTION_INPUT);
 
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_INPUT);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_INPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_DIRECTION_INPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_DIRECTION_INPUT);
 
             break;
         }
@@ -334,9 +334,9 @@ void bc_module_co2_task(bc_module_co2_t *self)
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
 
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_INPUT);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_INPUT);
-            bc_ic2_tca9534a_set_mode(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_INPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_DIRECTION_INPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_DIRECTION_INPUT);
+            bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_DIRECTION_INPUT);
 
             self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
             self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);
