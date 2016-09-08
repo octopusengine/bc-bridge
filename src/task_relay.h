@@ -5,6 +5,7 @@
 #include "bc_os.h"
 #include "bc_bridge.h"
 #include "bc_module_relay.h"
+#include "task.h"
 
 typedef struct
 {
@@ -20,7 +21,7 @@ typedef struct
 
 } task_relay_t;
 
-task_relay_t *task_relay_spawn(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address);
+void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 void task_relay_set_mode(task_relay_t *self, bc_module_relay_mode_t relay_mode);
 
 #endif /* _TASK_RELAY_H */

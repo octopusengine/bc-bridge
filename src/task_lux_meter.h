@@ -4,6 +4,7 @@
 #include "bc_common.h"
 #include "bc_os.h"
 #include "bc_bridge.h"
+#include "task.h"
 
 typedef struct
 {
@@ -20,7 +21,7 @@ typedef struct
 
 } task_lux_meter_t;
 
-task_lux_meter_t *task_lux_meter_spawn(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address);
+void task_lux_meter_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 
 void task_lux_meter_set_interval(task_lux_meter_t *self, bc_tick_t interval);
 

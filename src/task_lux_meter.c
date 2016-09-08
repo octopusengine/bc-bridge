@@ -4,23 +4,25 @@
 #include "bc_talk.h"
 #include "bc_i2c.h"
 #include "bc_bridge.h"
+#include "task.h"
 
 static void *task_lux_meter_worker(void *parameter);
 
-task_lux_meter_t *task_lux_meter_spawn(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address)
+void task_lux_meter_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
     task_lux_meter_t *self = (task_lux_meter_t *) malloc(sizeof(task_lux_meter_t));
 
     self->_bridge = bridge;
-    self->_i2c_channel = i2c_channel;
-    self->_device_address = device_address;
+    self->_i2c_channel = task_info->i2c_channel;
+    self->_device_address = task_info->device_address;
     self->tick_feed_interval = 1000;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);
     bc_os_task_init(&self->task, task_lux_meter_worker, self);
 
-    return self;
+    task_info->task = self;
+    task_info->enabled = true;
 }
 
 void task_lux_meter_set_interval(task_lux_meter_t *self, bc_tick_t interval)

@@ -3,24 +3,25 @@
 #include "bc_tag_temperature.h"
 #include "bc_talk.h"
 #include "bc_i2c.h"
+#include "task.h"
 
 static void *task_thermometer_worker(void *parameter);
 static bool task_thermometer_is_quit_request(task_thermometer_t *self);
 
-task_thermometer_t *task_thermometer_spawn(task_thermometer_parameters_t *parameters)
+task_thermometer_t *task_thermometer_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
     task_thermometer_t *self;
 
     bc_log_info("task_thermometer_spawn: spawning instance for bus %d, address 0x%02X",
-                (uint8_t) parameters->i2c_channel, parameters->device_address);
+                (uint8_t) task_info->i2c_channel, task_info->device_address);
 
     self = (task_thermometer_t *) malloc(sizeof(task_thermometer_t));
 
     memset(self, 0, sizeof(task_thermometer_t));
 
-    self->_i2c_interface.bridge = parameters->bridge;
-    self->_i2c_interface.channel = parameters->i2c_channel;
-    self->_device_address = parameters->device_address;
+    self->_i2c_interface.bridge = bridge;
+    self->_i2c_interface.channel = task_info->i2c_channel;
+    self->_device_address = task_info->device_address;
     self->_tick_feed_interval = 1000;
 
     bc_os_mutex_init(&self->mutex);
@@ -28,9 +29,10 @@ task_thermometer_t *task_thermometer_spawn(task_thermometer_parameters_t *parame
     bc_os_task_init(&self->task, task_thermometer_worker, self);
 
     bc_log_info("task_thermometer_spawn: spawned instance for bus %d, address 0x%02X",
-                (uint8_t) parameters->i2c_channel, parameters->device_address);
+                (uint8_t) task_info->i2c_channel, task_info->device_address);
 
-    return self;
+    task_info->task = self;
+    task_info->enabled = true;
 }
 
 void task_thermometer_terminate(task_thermometer_t *self)

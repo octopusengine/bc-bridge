@@ -4,6 +4,7 @@
 #include "bc_common.h"
 #include "bc_os.h"
 #include "bc_bridge.h"
+#include "task.h"
 
 typedef struct
 {
@@ -18,7 +19,7 @@ typedef struct
 
 } task_co2_t;
 
-task_co2_t *task_co2_spawn(bc_bridge_t *bridge);
+void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 
 void task_co2_set_interval(task_co2_t *self, bc_tick_t interval);
 

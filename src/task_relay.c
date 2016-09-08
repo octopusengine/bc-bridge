@@ -3,22 +3,24 @@
 #include "bc_talk.h"
 #include "bc_i2c.h"
 #include "bc_bridge.h"
+#include "task.h"
 
 static void *task_relay_worker(void *parameter);
 
-task_relay_t *task_relay_spawn(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel, uint8_t device_address)
+void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
     task_relay_t *self = (task_relay_t *) malloc(sizeof(task_relay_t));
 
     self->_bridge = bridge;
-    self->_i2c_channel = i2c_channel;
-    self->_device_address = device_address;
+    self->_i2c_channel = task_info->i2c_channel;
+    self->_device_address = task_info->device_address;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);
     bc_os_task_init(&self->task, task_relay_worker, self);
 
-    return self;
+    task_info->task = self;
+    task_info->enabled;
 }
 
 

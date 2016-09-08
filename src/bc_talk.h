@@ -9,4 +9,6 @@ void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...);
 void bc_talk_publish_add_quantity_final(char *name, char *unit, char *value, ...);
 void bc_talk_publish_end(void);
 
+bool bc_talk_parse(char *line, size_t length);
+
 #endif /* _BC_TALK_H */

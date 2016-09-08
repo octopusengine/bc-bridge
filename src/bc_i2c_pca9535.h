@@ -2,7 +2,7 @@
 #define _BC_I2C_pca9535_H
 
 #include "bc_common.h"
-#include "bc_tag.h"
+#include "bc_i2c.h"
 
 typedef enum
 {
@@ -43,13 +43,13 @@ typedef enum
 
 typedef struct
 {
-	bc_tag_interface_t *_interface;
+	bc_i2c_interface_t *_interface;
 	uint8_t _device_address;
 	bool _communication_fault;
 
 } bc_i2c_pca9535_t;
 
-bool bc_ic2_pca9535_init(bc_i2c_pca9535_t *self, bc_tag_interface_t *interface, uint8_t device_address);
+bool bc_ic2_pca9535_init(bc_i2c_pca9535_t *self, bc_i2c_interface_t *interface, uint8_t device_address);
 bool bc_ic2_pca9535_read_pins(bc_i2c_pca9535_t *self, bc_i2c_pca9535_port_t port, uint8_t *pins);
 bool bc_ic2_pca9535_write_pins(bc_i2c_pca9535_t *self, bc_i2c_pca9535_port_t port, uint8_t pins);
 

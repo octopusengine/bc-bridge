@@ -4,10 +4,11 @@
 #include "bc_talk.h"
 #include "bc_i2c.h"
 #include "bc_bridge.h"
+#include "task.h"
 
 static void *task_co2_worker(void *parameter);
 
-task_co2_t *task_co2_spawn(bc_bridge_t *bridge)
+void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
     bc_log_info("task_co2_spawn: ");
 
@@ -21,7 +22,8 @@ task_co2_t *task_co2_spawn(bc_bridge_t *bridge)
     bc_os_semaphore_init(&self->semaphore, 0);
     bc_os_task_init(&self->task, task_co2_worker, self);
 
-    return self;
+    task_info->task = self;
+    task_info->enabled = true;
 }
 
 void task_co2_set_interval(task_co2_t *self, bc_tick_t interval)
