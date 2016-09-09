@@ -24,15 +24,18 @@ task_info_t task_info_list[] = {
         {SENSOR, MODULE_CO2, BC_BRIDGE_I2C_CHANNEL_0, 0x38, NULL, false},
         {ACTUATOR, MODULE_RELAY, BC_BRIDGE_I2C_CHANNEL_0, 0x3B, NULL, false},
 };
+size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);
 
 static void _application_wait_start_string(void);
 static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel);
+static void _application_bc_talk_callback(bc_talk_event_t *event);
 
 void application_init(bool wait_start_string, bc_log_level_t log_level)
 {
     bc_talk_init();
     bc_log_init(log_level);
     bc_tick_init();
+
 
     bc_log_info("application_init: build %s", VERSION);
 
@@ -65,7 +68,14 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 
 //    _application_i2c_scan(&bridge, BC_BRIDGE_I2C_CHANNEL_0);
 
-    task_init(&bridge, &task_info_list, sizeof(task_info_list) / sizeof(task_info_t) );
+    task_init(&bridge, &task_info_list, task_info_list_length );
+
+//    char test[] = "[\"$config/sensors/thermometer/i2c0-48/update\", {\"publish-interval\": 500, \"aaa\": true}]";
+//    char test[] = "[\"$config/sensors/lux-meter/i2c1-44/update\", {\"publish-interval\": 100}]";
+//    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
+//    char testb[] = "[\"$config/sensors/lux-meter/i2c0-44/update\", {\"publish-interval\": 100}]";
+//    bc_talk_parse(testb, sizeof(testb), _application_bc_talk_callback);
+//    exit(0);
 }
 
 void application_loop(bool *quit)
@@ -77,7 +87,7 @@ void application_loop(bool *quit)
     {
         if (getline(&line, &length, stdin) != -1)
         {
-            bc_talk_parse(&line, length);
+            bc_talk_parse(line, length, _application_bc_talk_callback);
         }
     }
 }
@@ -97,6 +107,40 @@ static void _application_wait_start_string(void)
             }
         }
     }
+}
+
+static void _application_bc_talk_callback(bc_talk_event_t *event)
+{
+    bc_log_info("_application_bc_talk_callback: i2c_channel=%d device_address=%02X", event->i2c_channel, event->device_address);
+
+    task_info_t task_info;
+    bc_bridge_i2c_channel_t channel = event->i2c_channel == 0 ? BC_BRIDGE_I2C_CHANNEL_0 : BC_BRIDGE_I2C_CHANNEL_1;
+
+    int i;
+    bool find=false;
+    for (i = 0; i < task_info_list_length; ++i)
+    {
+        if ( (task_info_list[i].i2c_channel == channel) && (task_info_list[i].device_address == event->device_address) )
+        {
+            task_info = task_info_list[i];
+            find = true;
+        }
+    }
+    if (!find)
+    {
+        return;
+    }
+
+    switch (event->operation)
+    {
+        case BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL:
+        {
+            bc_log_info("_application_bc_talk_callback: UPDATE_PUBLISH_INTERVAL %d", (bc_tick_t) event->value);
+            task_set_interval(&task_info, (bc_tick_t) event->value );
+            break;
+        }
+    }
+
 }
 
 static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel)
@@ -132,3 +176,4 @@ static void _application_quad_test(bc_bridge_t *bridge)
         bc_os_task_sleep(100);
     }
 }
+

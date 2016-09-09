@@ -3,12 +3,29 @@
 
 #include "bc_common.h"
 
+typedef enum
+{
+    BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL,
+    BC_TALK_OPERATION_SET,
+    BC_TALK_OPERATION_GET
+
+} bc_talk_event_operation_t;
+
+typedef struct
+{
+    bc_talk_event_operation_t operation;
+    int value;
+    uint8_t i2c_channel;
+    uint8_t device_address;
+
+} bc_talk_event_t;
+
 void bc_talk_init(void);
 void bc_talk_publish_begin(char *topic);
 void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...);
 void bc_talk_publish_add_quantity_final(char *name, char *unit, char *value, ...);
 void bc_talk_publish_end(void);
 
-bool bc_talk_parse(char *line, size_t length);
+bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *event));
 
 #endif /* _BC_TALK_H */

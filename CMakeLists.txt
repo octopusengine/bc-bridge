@@ -31,7 +31,6 @@ set(SOURCE_FILES
         src/bc_tag_lux_meter.c
         src/bc_tag_temperature.c
         src/bc_tick.c
-        src/main.c
         src/bc_i2c_sc16is740.c
         src/tags.c
         src/bc_i2c_tca9534a.c
@@ -41,9 +40,10 @@ set(SOURCE_FILES
         src/task_lux_meter.c
         src/task_co2.c
         src/task_relay.c
+        src/task.c
         src/bc_talk.c
         src/application.c
         )
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} src/main.c)
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES} ${ARGP_LIBRARIES} -ludev)

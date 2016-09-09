@@ -17,33 +17,58 @@ void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
     int i;
     for (i = 0; i < length; i++)
     {
-        task_info_t task_info = task_info_list[i];
 
-        if (bc_bridge_i2c_ping(bridge, task_info.i2c_channel, task_info.device_address))
+        if (bc_bridge_i2c_ping(bridge, task_info_list[i].i2c_channel, task_info_list[i].device_address))
         {
-            switch (task_info.type)
+            switch (task_info_list[i].type)
             {
                 case TAG_THERMOMETHER:
                 {
-                    task_thermometer_spawn(bridge, &task_info);
+                    task_thermometer_spawn(bridge, &task_info_list[i]);
                     break;
                 }
                 case TAG_LUX_METER:
                 {
-                    task_lux_meter_spawn(bridge, &task_info);
+                    task_lux_meter_spawn(bridge, &task_info_list[i]);
                     break;
                 }
                 case MODULE_RELAY:
                 {
-                    task_relay_spawn(bridge, &task_info);
+                    task_relay_spawn(bridge, &task_info_list[i]);
                     break;
                 }
                 case MODULE_CO2:
                 {
-                    task_co2_spawn(bridge, &task_info);
+                    task_co2_spawn(bridge, &task_info_list[i]);
                     break;
                 }
             }
+        }
+    }
+}
+
+void task_set_interval(task_info_t *task_info, bc_tick_t interval)
+{
+    if (!task_info->enabled)
+    {
+        return;
+    }
+    switch (task_info->type)
+    {
+        case TAG_THERMOMETHER:
+        {
+            task_thermometer_set_interval((task_thermometer_t *)task_info->task, interval );
+            break;
+        }
+        case TAG_LUX_METER:
+        {
+            task_lux_meter_set_interval((task_lux_meter_t*)task_info->task, interval );
+            break;
+        }
+        case MODULE_CO2:
+        {
+            task_co2_set_interval((task_co2_t*)task_info->task, interval );
+            break;
         }
     }
 }
