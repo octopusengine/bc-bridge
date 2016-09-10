@@ -4,6 +4,7 @@
 #include "bc_log.h"
 
 static bc_os_mutex_t bc_talk_mutex;
+static bool bc_talk_add_comma;
 static bool _bc_talk_token_cmp(char *json, jsmntok_t *tok, const char *s);
 static int _bc_talk_token_get_int(char *line, jsmntok_t *tok);
 static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event);
@@ -16,7 +17,7 @@ void bc_talk_init(void)
 void bc_talk_publish_begin(char *topic)
 {
     bc_os_mutex_lock(&bc_talk_mutex);
-
+    bc_talk_add_comma = false;
     fprintf(stdout, "[\"%s\", {", topic);
 }
 
@@ -24,18 +25,10 @@ void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...)
 {
     va_list ap;
 
-    fprintf(stdout, "\"%s\": [", name);
-
-    va_start(ap, value);
-    vfprintf(stdout, value, ap);
-    va_end(ap);
-
-    fprintf(stdout, ", \"%s\"], ", unit);
-}
-
-void bc_talk_publish_add_quantity_final(char *name, char *unit, char *value, ...)
-{
-    va_list ap;
+    if(bc_talk_add_comma)
+    {
+        fprintf(stdout, ", ");
+    }
 
     fprintf(stdout, "\"%s\": [", name);
 
@@ -44,6 +37,27 @@ void bc_talk_publish_add_quantity_final(char *name, char *unit, char *value, ...
     va_end(ap);
 
     fprintf(stdout, ", \"%s\"]", unit);
+
+    bc_talk_add_comma = true;
+}
+
+void bc_talk_publish_add_value(char *name, char *value, ...)
+{
+    va_list ap;
+
+    if(bc_talk_add_comma)
+    {
+        fprintf(stdout, ", ");
+    }
+
+    fprintf(stdout, "\"%s\": ", name);
+
+    va_start(ap, value);
+    vfprintf(stdout, value, ap);
+    va_end(ap);
+
+    bc_talk_add_comma = true;
+
 }
 
 void bc_talk_publish_end(void)
@@ -131,7 +145,21 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
             }
         }
     }
-
+    else if ((strcmp(payload[0], "led") == 0) && (payload_length > 2) )
+    {
+        event.i2c_channel = 0;
+        event.device_address = 0;
+        if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
+        {
+            event.operation = BC_TALK_OPERATION_LED_SET;
+            printf("aaa");
+        }
+        else if ((strcmp(payload[2], "get") == 0) )
+        {
+            event.operation = BC_TALK_OPERATION_LED_GET;
+            callback(&event);
+        }
+    }
 
     //                    temp_length = tokens[i+1].end-tokens[i+1].start;
 //                    strncpy(temp, line+tokens[i+1].start, temp_length );
