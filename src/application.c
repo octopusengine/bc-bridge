@@ -70,12 +70,20 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 
     task_init(&bridge, &task_info_list, task_info_list_length );
 
+//
+
+
+//    char testc[] = "[\"led/-/set\",{\"state\":\"off\"}]";
+//    bc_talk_parse(testc, sizeof(testc), _application_bc_talk_callback);
+//    char testd[] = "[\"led/-/get\",{\"state\":null}]";
+//    bc_talk_parse(testd, sizeof(testd), _application_bc_talk_callback);
+//    exit(0);
 //    char test[] = "[\"$config/sensors/thermometer/i2c0-48/update\", {\"publish-interval\": 500, \"aaa\": true}]";
-//    char test[] = "[\"$config/sensors/lux-meter/i2c1-44/update\", {\"publish-interval\": 100}]";
 //    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
 //    char testb[] = "[\"$config/sensors/lux-meter/i2c0-44/update\", {\"publish-interval\": 100}]";
 //    bc_talk_parse(testb, sizeof(testb), _application_bc_talk_callback);
-//    exit(0);
+
+
 }
 
 void application_loop(bool *quit)
@@ -116,20 +124,24 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
     task_info_t task_info;
     bc_bridge_i2c_channel_t channel = event->i2c_channel == 0 ? BC_BRIDGE_I2C_CHANNEL_0 : BC_BRIDGE_I2C_CHANNEL_1;
 
-    int i;
-    bool find=false;
-    for (i = 0; i < task_info_list_length; ++i)
+    if (event->device_address!=0)
     {
-        if ( (task_info_list[i].i2c_channel == channel) && (task_info_list[i].device_address == event->device_address) )
+        int i;
+        bool find=false;
+        for (i = 0; i < task_info_list_length; ++i)
         {
-            task_info = task_info_list[i];
-            find = true;
+            if ( (task_info_list[i].i2c_channel == channel) && (task_info_list[i].device_address == event->device_address) )
+            {
+                task_info = task_info_list[i];
+                find = true;
+            }
+        }
+        if (!find)
+        {
+            return;
         }
     }
-    if (!find)
-    {
-        return;
-    }
+
 
     switch (event->operation)
     {
@@ -137,6 +149,20 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             bc_log_info("_application_bc_talk_callback: UPDATE_PUBLISH_INTERVAL %d", (bc_tick_t) event->value);
             task_set_interval(&task_info, (bc_tick_t) event->value );
+            break;
+        }
+        case BC_TALK_OPERATION_LED_SET:
+        {
+            bc_bridge_led_set(&bridge, event->value == 1 ? BC_BRIDGE_LED_ON : BC_BRIDGE_LED_OFF);
+            break;
+        }
+        case BC_TALK_OPERATION_LED_GET:
+        {
+            bc_bridge_led_t value;
+            bc_bridge_led_get(&bridge, &value);
+            bc_talk_publish_begin("led/-");
+            bc_talk_publish_add_value("state", "\"%s\"", (value==BC_BRIDGE_LED_ON ? "on" : "off") );
+            bc_talk_publish_end();
             break;
         }
     }

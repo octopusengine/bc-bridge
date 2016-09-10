@@ -152,7 +152,15 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
         {
             event.operation = BC_TALK_OPERATION_LED_SET;
-            printf("aaa");
+            if (_bc_talk_token_cmp(line, &tokens[4], "on"))
+            {
+                event.value = 1;
+            }
+            else
+            {
+                event.value = 0;
+            }
+            callback(&event);
         }
         else if ((strcmp(payload[2], "get") == 0) )
         {

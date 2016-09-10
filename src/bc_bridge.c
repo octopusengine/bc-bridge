@@ -16,6 +16,10 @@
 #define REPORT_ID_I2C_STATUS 0xC0
 #define REPORT_ID_UART_STATUS 0xE0
 
+//
+//BOOT  GPIO5 DIO11   pin 18
+//RESET GPIO4 DIO10   pin 17
+
 typedef enum
 {
     BC_BRIDGE_I2C_CLOCK_SPEED_100KHZ = 0,
@@ -422,6 +426,54 @@ bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint
     {
         return false;
     }
+
+    return true;
+}
+
+
+bool bc_bridge_led_set(bc_bridge_t *self, bc_bridge_led_t value)
+{
+    //LED   GPIOH DIO13   pin 28
+    uint8_t buffer[5];
+
+    buffer[0] = REPORT_ID_GPIO;
+
+    if (!_bc_bridge_ft260_get_feature(self->_fd_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
+    }
+
+    if (value == BC_BRIDGE_LED_ON)
+    {
+        buffer[3] |= 0x80;
+    }
+    else
+    {
+        buffer[3] &= 0x7F;
+    }
+
+    buffer[4] |= 0x80; //set output direction
+
+    if (!_bc_bridge_ft260_set_feature(self->_fd_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool bc_bridge_led_get(bc_bridge_t *self, bc_bridge_led_t *value)
+{
+    uint8_t buffer[5];
+
+    buffer[0] = REPORT_ID_GPIO;
+
+    if (!_bc_bridge_ft260_get_feature(self->_fd_i2c, buffer, sizeof(buffer)))
+    {
+        return false;
+    }
+
+    *value = (buffer[3] & 0x80) == 0x80 ? BC_BRIDGE_LED_ON : BC_BRIDGE_LED_OFF;
 
     return true;
 }

@@ -150,7 +150,7 @@ static void *task_thermometer_worker(void *parameter)
                     snprintf(topic, sizeof(topic), "thermometer/i2c%d-%02x", (uint8_t) self->_i2c_interface.channel, self->_device_address);
 
                     bc_talk_publish_begin(topic);
-                    bc_talk_publish_add_quantity_final("temperature", "\\u2103", "%0.2f", value);
+                    bc_talk_publish_add_quantity("temperature", "\\u2103", "%0.2f", value);
                     bc_talk_publish_end();
                 }
                 else
