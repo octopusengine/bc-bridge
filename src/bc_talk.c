@@ -8,6 +8,7 @@ static bool bc_talk_add_comma;
 static bool _bc_talk_token_cmp(char *json, jsmntok_t *tok, const char *s);
 static int _bc_talk_token_get_int(char *line, jsmntok_t *tok);
 static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event);
+static int _bc_talk_token_get_enum(char *line, jsmntok_t *tok, ...);
 
 void bc_talk_init(void)
 {
@@ -66,7 +67,6 @@ void bc_talk_publish_end(void)
 
     bc_os_mutex_unlock(&bc_talk_mutex);
 }
-
 
 bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *event))
 {
@@ -152,14 +152,7 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
         {
             event.operation = BC_TALK_OPERATION_LED_SET;
-            if (_bc_talk_token_cmp(line, &tokens[4], "on"))
-            {
-                event.value = 1;
-            }
-            else
-            {
-                event.value = 0;
-            }
+            event.value = _bc_talk_token_get_enum(line, &tokens[4], "off", "on", "1-dot", "2-dot", "3-dot", NULL);
             callback(&event);
         }
         else if ((strcmp(payload[2], "get") == 0) )
@@ -231,6 +224,31 @@ static int _bc_talk_token_get_int(char *line, jsmntok_t *tok)
     memset(temp, 0x00, sizeof(temp));
     strncpy(&temp, line+tok->start, tok->end - tok->start < sizeof(temp) ? tok->end - tok->start : sizeof(temp) - 1 );
     return (int) strtol(temp, NULL, 10);
+}
+
+static int _bc_talk_token_get_enum(char *line, jsmntok_t *tok, ...){
+
+    char temp[10];
+    char *str;
+    int i;
+    memset(temp, 0x00, sizeof(temp));
+    strncpy(&temp, line+tok->start, tok->end - tok->start < sizeof(temp) ? tok->end - tok->start : sizeof(temp) - 1 );
+
+    va_list vl;
+    va_start(vl,tok);
+    str=va_arg(vl,char*);
+    while (str!=NULL)
+    {
+        if (strcmp(str, temp) == 0)
+        {
+            return i;
+        }
+        str=va_arg(vl,char*);
+        i++;
+    }
+    va_end(vl);
+
+    return -1;
 }
 
 static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event)
