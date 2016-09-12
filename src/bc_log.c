@@ -1,6 +1,7 @@
 #include "bc_log.h"
 #include "bc_os.h"
 #include <sys/time.h>
+#include <sys/syscall.h>
 #include <time.h>
 
 #define BC_LOG_DUMP_WIDTH 8
@@ -237,7 +238,6 @@ void bc_log_fatal(const char *format, ...)
 static void bc_log_head(bc_log_level_t level)
 {
     struct timeval tv;
-    uint64_t thread_id = bc_os_task_get_id();
 
     if (gettimeofday(&tv, NULL) == 0)
     {
@@ -253,6 +253,8 @@ static void bc_log_head(bc_log_level_t level)
             }
         }
     }
+
+    fprintf(stderr, "<%*d> ", 5, syscall(SYS_gettid));
 
     switch (level)
     {
@@ -278,9 +280,6 @@ static void bc_log_head(bc_log_level_t level)
             fprintf(stderr, "[ ????? ] ");
             break;
     }
-
-    fprintf(stderr, "[ %lX ] ", thread_id);
-
 }
 
 static void bc_log_message(const char *format, va_list ap)

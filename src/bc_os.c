@@ -2,6 +2,7 @@
 #include "bc_log.h"
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
 
 // TODO Budeme resit kdyz se nepovede malloc ? To uz je stejne konec sveta...
 
@@ -23,11 +24,6 @@ void bc_os_task_destroy(bc_os_task_t *task)
     }
 
     free(task->_task);
-}
-
-uint64_t bc_os_task_get_id(void)
-{
-    return (uint64_t) pthread_self();
 }
 
 void bc_os_task_sleep(bc_tick_t timeout)
