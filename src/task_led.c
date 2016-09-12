@@ -90,7 +90,7 @@ static void *task_led_worker(void *parameter)
         state = self->state;
         bc_os_mutex_unlock(&self->mutex);
 
-        bc_log_debug("task_led_worker: wake up signal %d %d %d", blink_cnt, state, last_state);
+        bc_log_debug("task_led_worker: wake up signal");
 
         if (last_state != state)
         {
