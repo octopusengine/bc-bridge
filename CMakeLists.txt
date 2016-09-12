@@ -40,6 +40,7 @@ set(SOURCE_FILES
         src/task_lux_meter.c
         src/task_co2.c
         src/task_relay.c
+        src/task_led.c
         src/task.c
         src/bc_talk.c
         src/application.c

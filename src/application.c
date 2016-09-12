@@ -5,6 +5,7 @@
 #include "task_lux_meter.h"
 #include "task_relay.h"
 #include "task_co2.h"
+#include "task_led.h"
 #include "bc_i2c_pca9535.h"
 #include "bc_tag_temperature.h"
 #include "bc_tag_lux_meter.h"
@@ -17,14 +18,18 @@
 bc_bridge_t bridge;
 
 task_info_t task_info_list[] = {
-        {SENSOR, TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT, NULL, false},
-        {SENSOR, TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT, NULL, false},
-        {SENSOR, TAG_LUX_METER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_DEFAULT, NULL, false},
-        {SENSOR, TAG_LUX_METER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_DEFAULT, NULL, false},
-        {SENSOR, MODULE_CO2, BC_BRIDGE_I2C_CHANNEL_0, 0x38, NULL, false},
-        {ACTUATOR, MODULE_RELAY, BC_BRIDGE_I2C_CHANNEL_0, 0x3B, NULL, false},
+        {TASK_CLASS_BRIDGE, TASK_TYPE_LED, BC_BRIDGE_I2C_CHANNEL_0, 0x00, NULL, false},
+
+        {TASK_CLASS_SENSOR, TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT, NULL, false},
+        {TASK_CLASS_SENSOR, TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT, NULL, false},
+        {TASK_CLASS_SENSOR, TAG_LUX_METER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_DEFAULT, NULL, false},
+        {TASK_CLASS_SENSOR, TAG_LUX_METER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_DEFAULT, NULL, false},
+        {TASK_CLASS_SENSOR, MODULE_CO2, BC_BRIDGE_I2C_CHANNEL_0, 0x38, NULL, false},
+        {TASK_CLASS_ACTUATOR, MODULE_RELAY, BC_BRIDGE_I2C_CHANNEL_0, 0x3B, NULL, false},
+
 };
 size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);
+
 
 static void _application_wait_start_string(void);
 static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel);
@@ -73,11 +78,11 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 //
 
 
-    char testc[] = "[\"led/-/set\",{\"state\":\"2-dott\"}]";
-    bc_talk_parse(testc, sizeof(testc), _application_bc_talk_callback);
-    char testd[] = "[\"led/-/get\",{\"state\":null}]";
-    bc_talk_parse(testd, sizeof(testd), _application_bc_talk_callback);
-    exit(0);
+//    char testc[] = "[\"led/-/set\",{\"state\":\"3-dot\"}]";
+//    bc_talk_parse(testc, sizeof(testc), _application_bc_talk_callback);
+//    char testd[] = "[\"led/-/get\",{\"state\":null}]";
+//    bc_talk_parse(testd, sizeof(testd), _application_bc_talk_callback);
+//    exit(0);
 //    char test[] = "[\"$config/sensors/thermometer/i2c0-48/update\", {\"publish-interval\": 500, \"aaa\": true}]";
 //    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
 //    char testb[] = "[\"$config/sensors/lux-meter/i2c0-44/update\", {\"publish-interval\": 100}]";
@@ -125,23 +130,21 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
     task_info_t task_info;
     bc_bridge_i2c_channel_t channel = event->i2c_channel == 0 ? BC_BRIDGE_I2C_CHANNEL_0 : BC_BRIDGE_I2C_CHANNEL_1;
 
-    if (event->device_address!=0)
+    int i;
+    bool find=false;
+    for (i = 0; i < task_info_list_length; ++i)
     {
-        int i;
-        bool find=false;
-        for (i = 0; i < task_info_list_length; ++i)
+        if ( (task_info_list[i].i2c_channel == channel) && (task_info_list[i].device_address == event->device_address) )
         {
-            if ( (task_info_list[i].i2c_channel == channel) && (task_info_list[i].device_address == event->device_address) )
-            {
-                task_info = task_info_list[i];
-                find = true;
-            }
-        }
-        if (!find)
-        {
-            return;
+            task_info = task_info_list[i];
+            find = true;
         }
     }
+    if (!find)
+    {
+        return;
+    }
+
 
 
     switch (event->operation)
@@ -154,14 +157,18 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         }
         case BC_TALK_OPERATION_LED_SET:
         {
-            bc_bridge_led_set(&bridge, event->value == 1 ? BC_BRIDGE_LED_ON : BC_BRIDGE_LED_OFF);
+            if ( event->value == -1)
+            {
+                bc_log_info("_application_bc_talk_callback: BC_TALK_OPERATION_LED_SET bad value");
+                return;
+            }
+            task_led_set_state((task_led_t *)task_info.task, (task_led_state_t)event->value);
             break;
         }
         case BC_TALK_OPERATION_LED_GET:
         {
-            bc_bridge_led_t value;
-            bc_bridge_led_get(&bridge, &value);
-            bc_talk_publish_led_state(value);
+
+            //bc_talk_publish_led_state(value);
             break;
         }
     }
