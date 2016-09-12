@@ -93,9 +93,9 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 //    bc_talk_parse(teste, sizeof(teste), _application_bc_talk_callback);
 
 
-//    char testq[] = "[\"$config/devices/lux-meter/i2c1-44/read\", {}]";
+//    char testq[] = "[\"$config/devices/-/-/list\",{}]";
 //    bc_talk_parse(testq, sizeof(testq), _application_bc_talk_callback);
-
+//
 //    exit(0);
 }
 
@@ -138,25 +138,30 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
     bc_bridge_i2c_channel_t channel = event->i2c_channel == 0 ? BC_BRIDGE_I2C_CHANNEL_0 : BC_BRIDGE_I2C_CHANNEL_1;
 
     int i;
-    bool find=false;
-    for (i = 0; i < task_info_list_length; ++i)
-    {
-        if ( (task_info_list[i].i2c_channel == channel) && (task_info_list[i].device_address == event->device_address) )
-        {
-            task_info = task_info_list[i];
-            find = true;
-        }
-    }
-    if (!find)
-    {
-        bc_log_error("_application_bc_talk_callback: tag or module not found");
-        return;
-    }
 
-    if (!task_info.enabled)
+    if (event->operation!=BC_TALK_OPERATION_CONFIG_LIST)
     {
-        bc_log_error("_application_bc_talk_callback: tag or module not enabled");
-        return;
+        bool find=false;
+        for (i = 0; i < task_info_list_length; ++i)
+        {
+            if ( (task_info_list[i].i2c_channel == channel) && (task_info_list[i].device_address == event->device_address) )
+            {
+                task_info = task_info_list[i];
+                find = true;
+            }
+        }
+        if (!find)
+        {
+            bc_log_error("_application_bc_talk_callback: tag or module not found");
+            return;
+        }
+
+        if (!task_info.enabled)
+        {
+            bc_log_error("_application_bc_talk_callback: tag or module not enabled");
+            return;
+        }
+
     }
 
     char topic[64];
@@ -232,6 +237,71 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
             task_led_get_state((task_led_t *)task_info.task, &led_state);
             bc_talk_publish_led_state((int)led_state);
             break;
+        }
+        case BC_TALK_OPERATION_CONFIG_LIST:
+        {
+            char sensors[1024];
+            char actuators[1024];
+
+            bool sensors_empty = true;
+            bool actuators_empty = true;
+
+            memset(sensors, 0, sizeof(sensors));
+            memset(actuators, 0, sizeof(actuators));
+
+
+            for (i = 0; i < task_info_list_length; ++i)
+            {
+                if (task_info_list[i].enabled)
+                {
+                    if (task_info_list[i].class == TASK_CLASS_SENSOR)
+                    {
+                        bc_talk_make_topic(task_info_list[i].i2c_channel, task_info_list[i].device_address, topic, sizeof(topic));
+                        if (sensors_empty)
+                        {
+                            strcat(sensors, "\"");
+                            sensors_empty = false;
+                        }
+                        else
+                        {
+                            strcat(sensors, "\", \"");
+                        }
+                        strcat(sensors, topic);
+                    }
+                    else if (task_info_list[i].class == TASK_CLASS_ACTUATOR)
+                    {
+                        bc_talk_make_topic(task_info_list[i].i2c_channel, task_info_list[i].device_address, topic, sizeof(topic));
+                        if (actuators_empty)
+                        {
+                            strcat(actuators, "\"");
+                            actuators_empty = false;
+                        }
+                        else
+                        {
+                            strcat(actuators, "\", \"");
+                        }
+                        strcat(actuators, topic);
+                    }
+
+                }
+
+
+            }
+
+            if (!sensors_empty)
+            {
+                strcat(sensors, "\"");
+            }
+
+            if (!actuators_empty)
+            {
+                strcat(actuators, "\"");
+            }
+
+            bc_talk_publish_begin("$config/devices/-/-");
+            bc_talk_publish_add_value("sensors", "[%s]", sensors);
+            bc_talk_publish_add_value("actuators", "[%s]", actuators);
+            bc_talk_publish_end();
         }
     }
 

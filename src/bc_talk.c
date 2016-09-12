@@ -171,6 +171,13 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
     if ((strcmp(payload[0], "$config") == 0) && (payload_length == 5) && (strcmp(payload[1], "devices") == 0) )
     {
 
+        if ((strcmp(payload[payload_length-1], "list") == 0) && (r==3) && (strcmp(payload[2], "-") == 0) && (strcmp(payload[3], "-") == 0) )
+        {
+            event.operation = BC_TALK_OPERATION_CONFIG_LIST;
+            callback(&event);
+            return true;
+        }
+
         if (!_bc_talk_set_i2c(payload[payload_length-2], &event))
         {
             bc_log_error("bc_talk_parse: bad i2c address");
@@ -201,7 +208,8 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
             callback(&event);
         }
     }
-    else if ((strcmp(payload[0], "led") == 0) && (payload_length > 2) )
+
+    else if ((strcmp(payload[0], "led") == 0) && (payload_length == 3) )
     {
         event.i2c_channel = 0;
         event.device_address = 0;
@@ -216,7 +224,8 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
             event.operation = BC_TALK_OPERATION_LED_GET;
             callback(&event);
         }
-    }else if ((strcmp(payload[0], "relay") == 0) && (payload_length > 2) )
+
+    }else if ((strcmp(payload[0], "relay") == 0) && (payload_length == 3) )
     {
         if (!_bc_talk_set_i2c(payload[payload_length-2], &event))
         {
