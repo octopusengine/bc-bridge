@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(bc-bridge C)
 
 # set(CMAKE_VERBOSE_MAKEFILE on)
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-Wall -pedantic -std=c99")
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=199309L")
 
 string(TIMESTAMP VERSION "%Y-%m-%dT%H:%M:%S")
 add_definitions(-DVERSION="${VERSION}")
