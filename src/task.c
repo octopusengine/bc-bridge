@@ -7,6 +7,7 @@
 #include "task_relay.h"
 #include "task_co2.h"
 #include "task_led.h"
+#include "task_barometer.h"
 #include "bc_i2c_pca9535.h"
 #include "bc_tag_temperature.h"
 #include "bc_tag_lux_meter.h"
@@ -35,6 +36,11 @@ void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
                 case TAG_LUX_METER:
                 {
                     task_lux_meter_spawn(bridge, &task_info_list[i]);
+                    break;
+                }
+                case TAG_BAROMETER:
+                {
+                    task_barometer_spawn(bridge, &task_info_list[i]);
                     break;
                 }
                 case MODULE_RELAY:
@@ -72,6 +78,10 @@ bool task_set_interval(task_info_t *task_info, bc_tick_t interval)
             task_lux_meter_set_interval((task_lux_meter_t*)task_info->task, interval );
             return true;
         }
+        case TAG_BAROMETER:
+        {
+            task_barometer_set_interval((task_barometer_t*)task_info->task, interval );
+        }
         case MODULE_CO2:
         {
             task_co2_set_interval((task_co2_t*)task_info->task, interval );
@@ -100,6 +110,10 @@ bool task_get_interval(task_info_t *task_info, bc_tick_t *interval)
         {
             task_lux_meter_get_interval((task_lux_meter_t*)task_info->task, interval );
             return true;
+        }
+        case TAG_BAROMETER:
+        {
+            task_barometer_get_interval((task_barometer_t*)task_info->task, interval );
         }
         case MODULE_CO2:
         {

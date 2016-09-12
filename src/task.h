@@ -9,11 +9,12 @@ typedef enum {
 } task_class_t;
 
 typedef enum {
-    TASK_TYPE_LED = 0,
-    TAG_THERMOMETHER = 1,
-    TAG_LUX_METER = 2,
-    MODULE_RELAY = 3,
-    MODULE_CO2 = 4,
+    TASK_TYPE_LED,
+    TAG_THERMOMETHER,
+    TAG_LUX_METER,
+    TAG_BAROMETER,
+    MODULE_RELAY,
+    MODULE_CO2,
 
 } task_type_t;
 

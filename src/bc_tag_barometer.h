@@ -3,6 +3,8 @@
 
 #include "bc_i2c.h"
 
+#define BC_TAG_BAROMETER_ADDRESS_DEFAULT 0x60
+
 typedef enum
 {
 	BC_TAG_BAROMETER_STATE_POWER_DOWN = 0,
