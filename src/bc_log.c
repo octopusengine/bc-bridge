@@ -254,7 +254,7 @@ static void bc_log_head(bc_log_level_t level)
         }
     }
 
-    fprintf(stderr, "<%*d> ", 5, syscall(SYS_gettid));
+    fprintf(stderr, "<%*ld> ", 5, syscall(SYS_gettid));
 
     switch (level)
     {
