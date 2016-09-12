@@ -171,7 +171,27 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
             event.operation = BC_TALK_OPERATION_LED_GET;
             callback(&event);
         }
+    }else if ((strcmp(payload[0], "relay") == 0) && (payload_length > 2) )
+    {
+        if (!_bc_talk_set_i2c(payload[payload_length-2], &event))
+        {
+            bc_log_error("bc_talk_parse: bad i2c address");
+            return false;
+        }
+        if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
+        {
+            event.operation = BC_TALK_OPERATION_SET;
+            event.value = _bc_talk_token_find_index(line, &tokens[4], &bc_talk_bool,  sizeof(bc_talk_bool)/sizeof(*bc_talk_bool) );
+            callback(&event);
+        }
+        else if ((strcmp(payload[2], "get") == 0) )
+        {
+            event.operation = BC_TALK_OPERATION_GET;
+            callback(&event);
+        }
+
     }
+
 
     //                    temp_length = tokens[i+1].end-tokens[i+1].start;
 //                    strncpy(temp, line+tokens[i+1].start, temp_length );

@@ -85,7 +85,8 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 //    exit(0);
 //    char test[] = "[\"$config/sensors/thermometer/i2c0-48/update\", {\"publish-interval\": 500, \"aaa\": true}]";
 //    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
-//    char testb[] = "[\"$config/sensors/lux-meter/i2c0-44/update\", {\"publish-interval\": 100}]";
+
+//    char testb[] = "[\"relay/i2c0-3b/set\",{\"state\":true}]";
 //    bc_talk_parse(testb, sizeof(testb), _application_bc_talk_callback);
 
 
@@ -145,14 +146,22 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         return;
     }
 
-
-
     switch (event->operation)
     {
         case BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL:
         {
             bc_log_info("_application_bc_talk_callback: UPDATE_PUBLISH_INTERVAL %d", (bc_tick_t) event->value);
             task_set_interval(&task_info, (bc_tick_t) event->value );
+            break;
+        }
+        case BC_TALK_OPERATION_SET :
+        {
+            if ( event->value == -1)
+            {
+                bc_log_info("_application_bc_talk_callback: BC_TALK_OPERATION_SET bad value");
+                return;
+            }
+            task_relay_set_mode((task_relay_t *)task_info.task, event->value==1 ? BC_MODULE_RELAY_MODE_NC : BC_MODULE_RELAY_MODE_NO);
             break;
         }
         case BC_TALK_OPERATION_LED_SET:
@@ -167,7 +176,6 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         }
         case BC_TALK_OPERATION_LED_GET:
         {
-
             //bc_talk_publish_led_state(value);
             break;
         }
