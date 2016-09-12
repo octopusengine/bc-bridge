@@ -75,7 +75,7 @@ static void *task_led_worker(void *parameter)
         state = self->state;
         bc_os_mutex_unlock(&self->mutex);
 
-        if ( state==BC_BRIDGE_LED_OFF || state==BC_BRIDGE_LED_ON )
+        if ((state==TASK_LED_OFF) || (state==TASK_LED_ON))
         {
             bc_os_semaphore_get(&self->semaphore);
         }
