@@ -9,11 +9,11 @@ typedef enum {
 } task_class_t;
 
 typedef enum {
-    TAG_THERMOMETHER,
-    TAG_LUX_METER,
-    MODULE_RELAY,
-    MODULE_CO2,
-    TASK_TYPE_LED
+    TASK_TYPE_LED = 0,
+    TAG_THERMOMETHER = 1,
+    TAG_LUX_METER = 2,
+    MODULE_RELAY = 3,
+    MODULE_CO2 = 4,
 
 } task_type_t;
 
@@ -28,6 +28,7 @@ typedef struct {
 } task_info_t;
 
 void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length);
-void task_set_interval(task_info_t *task_info, bc_tick_t interval);
+bool task_set_interval(task_info_t *task_info, bc_tick_t interval);
+bool task_get_interval(task_info_t *task_info, bc_tick_t *interval);
 
 #endif //BC_BRIDGE_TASK_H

@@ -24,5 +24,6 @@ typedef struct
 void task_lux_meter_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 
 void task_lux_meter_set_interval(task_lux_meter_t *self, bc_tick_t interval);
+void task_lux_meter_get_interval(task_lux_meter_t *self, bc_tick_t *interval);
 
 #endif /* _TASK_LUX_METER_H */

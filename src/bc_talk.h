@@ -6,6 +6,7 @@
 typedef enum
 {
     BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL,
+    BC_TALK_OPERATION_CONFIG_READ,
     BC_TALK_OPERATION_LED_SET,
     BC_TALK_OPERATION_LED_GET,
     BC_TALK_OPERATION_RELAY_SET,
@@ -27,6 +28,8 @@ void bc_talk_publish_begin(char *topic);
 void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...);
 void bc_talk_publish_add_value(char *name, char *value, ...);
 void bc_talk_publish_end(void);
+
+const char *bc_talk_make_topic(int task_type, uint8_t i2c_channel, uint8_t device_address);
 
 void bc_talk_publish_led_state(int state);
 

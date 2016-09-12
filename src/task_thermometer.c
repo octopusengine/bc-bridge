@@ -71,6 +71,13 @@ void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval)
     bc_os_semaphore_put(&self->semaphore);
 }
 
+void task_thermometer_get_interval(task_thermometer_t *self, bc_tick_t *interval)
+{
+    bc_os_mutex_lock(&self->mutex);
+    *interval = self->_tick_feed_interval;
+    bc_os_mutex_unlock(&self->mutex);
+}
+
 static void *task_thermometer_worker(void *parameter)
 {
     task_thermometer_t *self;
@@ -94,9 +101,7 @@ static void *task_thermometer_worker(void *parameter)
         bool valid;
         float value;
 
-        bc_os_mutex_lock(&self->mutex);
-        tick_feed_interval = self->_tick_feed_interval;
-        bc_os_mutex_unlock(&self->mutex);
+        task_thermometer_get_interval(self, &tick_feed_interval);
 
         bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
 

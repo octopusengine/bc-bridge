@@ -34,5 +34,6 @@ typedef struct
 void task_thermometer_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 void task_thermometer_terminate(task_thermometer_t *self);
 void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval);
+void task_thermometer_get_interval(task_thermometer_t *self, bc_tick_t *interval);
 
 #endif /* _TASK_THERMOMETER_H */

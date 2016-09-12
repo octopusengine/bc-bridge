@@ -54,30 +54,62 @@ void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
     }
 }
 
-void task_set_interval(task_info_t *task_info, bc_tick_t interval)
+bool task_set_interval(task_info_t *task_info, bc_tick_t interval)
 {
     if (!task_info->enabled)
     {
-        return;
+        return false;
     }
     switch (task_info->type)
     {
         case TAG_THERMOMETHER:
         {
             task_thermometer_set_interval((task_thermometer_t *)task_info->task, interval );
-            break;
+            return true;
         }
         case TAG_LUX_METER:
         {
             task_lux_meter_set_interval((task_lux_meter_t*)task_info->task, interval );
-            break;
+            return true;
         }
         case MODULE_CO2:
         {
             task_co2_set_interval((task_co2_t*)task_info->task, interval );
-            break;
+            return true;
         }
         default:
-            break;
+            return false;
     }
+    return false;
 }
+
+bool task_get_interval(task_info_t *task_info, bc_tick_t *interval)
+{
+    if (!task_info->enabled)
+    {
+        return false;
+    }
+    switch (task_info->type)
+    {
+        case TAG_THERMOMETHER:
+        {
+            task_thermometer_get_interval((task_thermometer_t *)task_info->task, interval );
+            return true;
+        }
+        case TAG_LUX_METER:
+        {
+            task_lux_meter_get_interval((task_lux_meter_t*)task_info->task, interval );
+            return true;
+        }
+        case MODULE_CO2:
+        {
+            task_co2_get_interval((task_co2_t*)task_info->task, interval );
+            return true;
+        }
+        default:
+            return false;
+    }
+    return false;
+}
+
+

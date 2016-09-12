@@ -5,6 +5,8 @@
 
 const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
 const char *bc_talk_bool[] = { "false", "true" };
+const char *bc_talk_name[] = {"led", "thermometer", "lux-meter", "relay", "co2-sensor" };
+
 
 static bc_os_mutex_t bc_talk_mutex;
 static bool bc_talk_add_comma=false;
@@ -72,6 +74,20 @@ void bc_talk_publish_end(void)
     bc_os_mutex_unlock(&bc_talk_mutex);
 }
 
+const char *bc_talk_make_topic(int task_type, uint8_t i2c_channel, uint8_t device_address)
+{
+    static char topic[64];
+    if (task_type==0)
+    {
+        snprintf(topic, sizeof(topic), "%s/-", bc_talk_name[task_type]);
+    }
+    else
+    {
+        snprintf(topic, sizeof(topic), "%s/i2c%d-%02x", bc_talk_name[task_type], (uint8_t) i2c_channel, device_address);
+    }
+    return topic;
+}
+
 void bc_talk_publish_led_state(int state)
 {
     bc_talk_publish_begin("led/-");
@@ -91,6 +107,7 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
     char *split;
     char *saveptr;
     bc_talk_event_t event;
+
 
     jsmn_init(&parser);
     r = jsmn_parse(&parser, line, length, tokens, sizeof(tokens) );
@@ -152,6 +169,11 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
                     callback(&event);
                 }
             }
+        }
+        else if (strcmp(payload[payload_length-1], "read") == 0)
+        {
+            event.operation = BC_TALK_OPERATION_CONFIG_READ;
+            callback(&event);
         }
     }
     else if ((strcmp(payload[0], "led") == 0) && (payload_length > 2) )

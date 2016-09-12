@@ -93,7 +93,10 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 //    bc_talk_parse(teste, sizeof(teste), _application_bc_talk_callback);
 
 
-
+//    char test[] = "[\"$config/sensors/lux-meter/i2c1-44/read\", {}]";
+//    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
+//
+//    exit(0);
 }
 
 void application_loop(bool *quit)
@@ -157,12 +160,25 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         return;
     }
 
+    char topic[64];
+
     switch (event->operation)
     {
         case BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL:
         {
             bc_log_info("_application_bc_talk_callback: UPDATE_PUBLISH_INTERVAL %d", (bc_tick_t) event->value);
             task_set_interval(&task_info, (bc_tick_t) event->value );
+            //break;
+        }
+        case BC_TALK_OPERATION_CONFIG_READ:
+        {
+            bc_tick_t publish_interval;
+            if (task_get_interval(&task_info, &publish_interval)){
+                snprintf(topic, sizeof(topic), "$config/devices/%s", bc_talk_make_topic( task_info.type, task_info.i2c_channel, task_info.device_address ) );
+                bc_talk_publish_begin(topic);
+                bc_talk_publish_add_value("publish-interval", "%d", publish_interval );
+                bc_talk_publish_end();
+            }
             break;
         }
         case BC_TALK_OPERATION_RELAY_SET :
@@ -173,14 +189,13 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
                 return;
             }
             task_relay_set_mode((task_relay_t *)task_info.task, event->value==1 ? TASK_RELAY_MODE_TRUE : TASK_RELAY_MODE_FALSE);
-            break;
+            //break;
         }
         case BC_TALK_OPERATION_RELAY_GET:
         {
             task_relay_mode_t relay_mode;
             task_relay_get_mode((task_relay_t *)task_info.task, &relay_mode);
 
-            char topic[32];
             snprintf(topic, sizeof(topic), "relay/i2c%d-%02x", (uint8_t) task_info.i2c_channel, task_info.device_address);
 
             bc_talk_publish_begin(topic);
@@ -210,7 +225,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
                 return;
             }
             task_led_set_state((task_led_t *)task_info.task, (task_led_state_t)event->value);
-            break;
+            //break;
         }
         case BC_TALK_OPERATION_LED_GET:
         {
@@ -256,4 +271,3 @@ static void _application_quad_test(bc_bridge_t *bridge)
         bc_os_task_sleep(100);
     }
 }
-
