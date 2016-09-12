@@ -7,13 +7,23 @@
 #include "bc_module_relay.h"
 #include "task.h"
 
+
+typedef enum
+{
+    TASK_RELAY_MODE_FALSE = BC_MODULE_RELAY_MODE_NO, //red led
+    TASK_RELAY_MODE_TRUE = BC_MODULE_RELAY_MODE_NC,  //green led
+    TASK_RELAY_MODE_NULL = -1
+
+} task_relay_mode_t;
+
+
 typedef struct
 {
     bc_os_task_t task;
     bc_os_mutex_t mutex;
     bc_os_semaphore_t semaphore;
 
-    bc_module_relay_mode_t _relay_mode;
+    task_relay_mode_t _relay_mode;
 
     bc_bridge_t *_bridge;
     bc_bridge_i2c_channel_t _i2c_channel;
@@ -22,6 +32,7 @@ typedef struct
 } task_relay_t;
 
 void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info);
-void task_relay_set_mode(task_relay_t *self, bc_module_relay_mode_t relay_mode);
+void task_relay_set_mode(task_relay_t *self, task_relay_mode_t relay_mode);
+void task_relay_get_mode(task_relay_t *self, task_relay_mode_t *relay_mode);
 
 #endif /* _TASK_RELAY_H */

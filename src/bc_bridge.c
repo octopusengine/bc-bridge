@@ -378,24 +378,24 @@ bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint
     report[3] = 1;
     report[4] = 0x00;
 
-    tick_timeout = bc_tick_get() + 10;
+    tick_timeout = bc_tick_get() + 100;
 
-    //wait on i2c redy
-    do
-    {
-        if (bc_tick_get() >= tick_timeout)
-        {
-            return false;
-        }
-
-        if (!_bc_bridge_ft260_get_i2c_bus_status(self->_fd_i2c, &bus_status))
-        {
-            return false;
-        }
-
-    } while ((bus_status & 0x11) != 0);
-    //bit 0 = controller busy: all other status bits invalid
-    //bit 5 = controller idle
+//    //wait on i2c redy
+//    do
+//    {
+//        if (bc_tick_get() >= tick_timeout)
+//        {
+//            return false;
+//        }
+//
+//        if (!_bc_bridge_ft260_get_i2c_bus_status(self->_fd_i2c, &bus_status))
+//        {
+//            return false;
+//        }
+//
+//    } while ((bus_status & 0x11) != 0);
+//    //bit 0 = controller busy: all other status bits invalid
+//    //bit 5 = controller idle
 
     res = write(self->_fd_i2c, report, 5);
 
@@ -481,13 +481,14 @@ bool bc_bridge_led_get(bc_bridge_t *self, bc_bridge_led_t *value)
 static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_t i2c_channel)
 {
     uint8_t buffer[1];
+    int i;
+
+    bc_log_debug("_bc_bridge_i2c_set_channel: switching to channel: %d", (uint8_t) i2c_channel);
 
     if (self->_i2c_channel == i2c_channel)
     {
         return true;
     }
-
-    bc_log_debug("_bc_bridge_i2c_set_channel: switching to channel: %d", (uint8_t) i2c_channel);
 
     switch (i2c_channel)
     {
@@ -507,16 +508,18 @@ static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_
         }
     }
 
-    if (!_bc_bridge_ft260_i2c_write(self->_fd_i2c, 0x70, buffer, sizeof(buffer)))
+    for (i=0; i<3; i++)
     {
-        bc_log_error("_bc_bridge_i2c_set_channel: call failed: _bc_bridge_ft260_i2c_write");
-
-        return false;
+        if (_bc_bridge_ft260_i2c_write(self->_fd_i2c, 0x70, buffer, sizeof(buffer)))
+        {
+            self->_i2c_channel = i2c_channel;
+            return true;
+        }
+        bc_os_task_sleep(10);
     }
 
-    self->_i2c_channel = i2c_channel;
-
-    return true;
+    bc_log_error("_bc_bridge_i2c_set_channel: call failed: _bc_bridge_ft260_i2c_write");
+    return false;
 }
 
 static bool _bc_bridge_ft260_i2c_reset(int fd_hid)

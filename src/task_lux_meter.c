@@ -37,6 +37,7 @@ void task_lux_meter_set_interval(task_lux_meter_t *self, bc_tick_t interval)
 static void *task_lux_meter_worker(void *parameter)
 {
     float value;
+    bool init_ok;
     bc_tick_t tick_feed_interval;
     bc_tag_lux_meter_state_t state;
     char topic[32];
@@ -55,10 +56,7 @@ static void *task_lux_meter_worker(void *parameter)
 
     bc_tag_lux_meter_t tag_lux_meter;
 
-    if (!bc_tag_lux_meter_init(&tag_lux_meter, &interface, self->_device_address))
-    {
-        bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_init");
-    }
+
 
     while (true)
     {
@@ -69,6 +67,17 @@ static void *task_lux_meter_worker(void *parameter)
         bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
 
         bc_log_debug("task_lux_meter_worker: wake up signal");
+
+        if (init_ok==false) //TODO predelat do task manageru
+        {
+            if (!bc_tag_lux_meter_init(&tag_lux_meter, &interface, self->_device_address))
+            {
+                bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_init");
+                continue;
+            }
+            init_ok = true;
+        }
+
 
         self->_tick_last_feed = bc_tick_get();
 

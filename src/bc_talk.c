@@ -7,11 +7,12 @@ const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
 const char *bc_talk_bool[] = { "false", "true" };
 
 static bc_os_mutex_t bc_talk_mutex;
-static bool bc_talk_add_comma;
-static bool _bc_talk_token_cmp(char *json, jsmntok_t *tok, const char *s);
+static bool bc_talk_add_comma=false;
+
+static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s);
 static int _bc_talk_token_get_int(char *line, jsmntok_t *tok);
 static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event);
-static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, char *list[], size_t length);
+static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, const char *list[], size_t length);
 
 void bc_talk_init(void)
 {
@@ -89,8 +90,6 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
     int payload_length = 0;
     char *split;
     char *saveptr;
-    char temp[100];
-    int temp_length;
     bc_talk_event_t event;
 
     jsmn_init(&parser);
@@ -162,7 +161,7 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
         {
             event.operation = BC_TALK_OPERATION_LED_SET;
-            event.value = _bc_talk_token_find_index(line, &tokens[4], &bc_talk_led_state,  sizeof(bc_talk_led_state)/sizeof(*bc_talk_led_state) );
+            event.value = _bc_talk_token_find_index(line, &tokens[4], bc_talk_led_state,  sizeof(bc_talk_led_state)/sizeof(*bc_talk_led_state) );
             callback(&event);
         }
         else if ((strcmp(payload[2], "get") == 0) )
@@ -179,68 +178,25 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         }
         if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
         {
-            event.operation = BC_TALK_OPERATION_SET;
-            event.value = _bc_talk_token_find_index(line, &tokens[4], &bc_talk_bool,  sizeof(bc_talk_bool)/sizeof(*bc_talk_bool) );
+            event.operation = BC_TALK_OPERATION_RELAY_SET;
+            event.value = _bc_talk_token_find_index(line, &tokens[4], bc_talk_bool,  sizeof(bc_talk_bool)/sizeof(*bc_talk_bool) );
             callback(&event);
         }
         else if ((strcmp(payload[2], "get") == 0) )
         {
-            event.operation = BC_TALK_OPERATION_GET;
+            event.operation = BC_TALK_OPERATION_RELAY_GET;
             callback(&event);
         }
 
     }
 
-
-    //                    temp_length = tokens[i+1].end-tokens[i+1].start;
-//                    strncpy(temp, line+tokens[i+1].start, temp_length );
-//                    temp[temp_length] = 0;
-//                    printf("%s \n", temp);
-
-
-//    if (strncmp(line + tokens[1].start, "$config/sensors/", 16) == 0)
-//    {
-//        char tmp[100];
-//        memset(tmp, 0, sizeof(tmp));
-//        strncpy(tmp, line+tokens[1].start, tokens[1].end-tokens[1].start );
-//        bc_log_debug("bc_talk_parse: payload: %s", tmp );
-//    }
-
-//    if (_bc_talk_jsoneq(line, &tokens[1], "$config/sensors/thermometer/i2c0-48/update") && (r==5))
-//    {
-//        if (_bc_talk_jsoneq(line, &tokens[3], "publish-interval"))
-//        {
-//            int number = strtol(line+tokens[4].start, NULL, 10);
-//            printf("number %d \n", number);
-//            bc_log_info("application_loop: thermometer new publish-interval %d", number);
-////            if(thermometer_0_48) //TODO v tuto chvily by nemel byt problem, bud je inicializovany nebo neni
-////            {
-////                task_thermometer_set_interval(thermometer_0_48, (bc_tick_t)number);
-////            }
-//        }
-//    }
-//    else if(_bc_talk_jsoneq(line, &tokens[1], "relay/i2c0-3b/set") && (r==5))
-//    {
-////        if (relay && _bc_talk_jsoneq(line, &tokens[3], "state"))
-////        {
-////            if ( strncmp(line + tokens[4].start, "true", tokens[4].end - tokens[4].start) == 0)
-////            {
-////                task_relay_set_mode(relay, BC_MODULE_RELAY_MODE_NO);
-////            }
-////            else if ( strncmp(line + tokens[4].start, "false", tokens[4].end - tokens[4].start) == 0)
-////            {
-////                task_relay_set_mode(relay, BC_MODULE_RELAY_MODE_NC);
-////            }
-//
-////        }
-//    }
-
     free(payload_string);
+    return true;
 }
 
 static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s) {
-    if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-        strncmp(line + tok->start, s, tok->end - tok->start) == 0)
+    if ((tok->type == JSMN_STRING) && ((int) strlen(s) == tok->end - tok->start) &&
+            (strncmp(line + tok->start, s, tok->end - tok->start) == 0))
     {
         return true;
     }
@@ -252,11 +208,11 @@ static int _bc_talk_token_get_int(char *line, jsmntok_t *tok)
 {
     char temp[10];
     memset(temp, 0x00, sizeof(temp));
-    strncpy(&temp, line+tok->start, tok->end - tok->start < sizeof(temp) ? tok->end - tok->start : sizeof(temp) - 1 );
+    strncpy(temp, line+tok->start, tok->end - tok->start < sizeof(temp) ? tok->end - tok->start : sizeof(temp) - 1 );
     return (int) strtol(temp, NULL, 10);
 }
 
-static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, char *list[], size_t length){
+static int _bc_talk_token_find_index(char *line, jsmntok_t *tok,const char *list[], size_t length){
     char *temp;
     int i;
     int temp_length = tok->end - tok->start;
@@ -304,7 +260,6 @@ static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, char *list[], s
 static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event)
 {
     char * pEnd;
-    int i2c_channel;
     if (strlen(str) != 7)
     {
         return false;

@@ -31,7 +31,7 @@ typedef struct
 
 } task_thermometer_t;
 
-task_thermometer_t *task_thermometer_spawn(bc_bridge_t *bridge, task_info_t *task_info);
+void task_thermometer_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 void task_thermometer_terminate(task_thermometer_t *self);
 void task_thermometer_set_interval(task_thermometer_t *self, bc_tick_t interval);
 

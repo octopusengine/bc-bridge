@@ -40,5 +40,6 @@ void task_led_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 
 void task_led_set_interval(task_led_t *self, bc_tick_t interval);
 void task_led_set_state(task_led_t *self, task_led_state_t state);
+void task_led_get_state(task_led_t *self, task_led_state_t *state);
 
 #endif /* _TASK_LED_H */

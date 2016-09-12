@@ -38,6 +38,7 @@ void task_co2_set_interval(task_co2_t *self, bc_tick_t interval)
 static void *task_co2_worker(void *parameter)
 {
     int16_t value;
+    bool init_ok;
     bc_tick_t tick_feed_interval;
     bc_module_co2_t module_co2;
 
@@ -50,11 +51,6 @@ static void *task_co2_worker(void *parameter)
     interface.bridge = self->_bridge;
     interface.channel = BC_BRIDGE_I2C_CHANNEL_0;
 
-    if (!bc_module_co2_init(&module_co2, &interface))
-    {
-        bc_log_error("task_co2_worker: bc_module_co2_init");
-    }
-
     while (true)
     {
         bc_os_mutex_lock(&self->mutex);
@@ -64,6 +60,16 @@ static void *task_co2_worker(void *parameter)
         bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
 
         bc_log_debug("task_co2_worker: wake up signal");
+
+        if (init_ok==false) //TODO predelat do task manageru
+        {
+            if (!bc_module_co2_init(&module_co2, &interface))
+            {
+                bc_log_error("task_co2_worker: bc_module_co2_init");
+                continue;
+            }
+            init_ok = true;
+        }
 
         self->_tick_last_feed = bc_tick_get();
 

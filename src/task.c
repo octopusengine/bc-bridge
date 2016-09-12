@@ -24,6 +24,7 @@ void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
         }
         else if (bc_bridge_i2c_ping(bridge, task_info_list[i].i2c_channel, task_info_list[i].device_address))
         {
+
             switch (task_info_list[i].type)
             {
                 case TAG_THERMOMETHER:
@@ -46,6 +47,8 @@ void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
                     task_co2_spawn(bridge, &task_info_list[i]);
                     break;
                 }
+                default:
+                    break;
             }
         }
     }
@@ -74,5 +77,7 @@ void task_set_interval(task_info_t *task_info, bc_tick_t interval)
             task_co2_set_interval((task_co2_t*)task_info->task, interval );
             break;
         }
+        default:
+            break;
     }
 }
