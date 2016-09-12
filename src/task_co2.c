@@ -71,7 +71,7 @@ static void *task_co2_worker(void *parameter)
 
             bc_log_info("task_co2_worker: concentration = %d ppm", value);
             bc_talk_publish_begin("co2-sensor/i2c0-38");
-            bc_talk_publish_add_quantity_final("concentration", "ppm", "%d", value);
+            bc_talk_publish_add_quantity("concentration", "ppm", "%d", value);
             bc_talk_publish_end();
 
         }

@@ -2,8 +2,9 @@
 #define BC_BRIDGE_TASK_H
 
 typedef enum {
-    SENSOR,
-    ACTUATOR
+    TASK_CLASS_SENSOR,
+    TASK_CLASS_ACTUATOR,
+    TASK_CLASS_BRIDGE
 
 } task_class_t;
 
@@ -11,7 +12,8 @@ typedef enum {
     TAG_THERMOMETHER,
     TAG_LUX_METER,
     MODULE_RELAY,
-    MODULE_CO2
+    MODULE_CO2,
+    TASK_TYPE_LED
 
 } task_type_t;
 

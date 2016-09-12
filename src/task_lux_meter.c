@@ -107,7 +107,7 @@ static void *task_lux_meter_worker(void *parameter)
 
                 bc_log_info("task_lux_meter_worker: illuminance = %.1f lux", value);
                 bc_talk_publish_begin(topic);
-                bc_talk_publish_add_quantity_final("illuminance", "lux", "%0.2f", value);
+                bc_talk_publish_add_quantity("illuminance", "lux", "%0.2f", value);
                 bc_talk_publish_end();
                 //application_out_write("[\"lux-meter\", {\"0/illuminance\": [%0.2f, \"lux\"]}]", value);
                 break;

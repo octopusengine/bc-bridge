@@ -6,6 +6,8 @@
 typedef enum
 {
     BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL,
+    BC_TALK_OPERATION_LED_SET,
+    BC_TALK_OPERATION_LED_GET,
     BC_TALK_OPERATION_SET,
     BC_TALK_OPERATION_GET
 
@@ -23,8 +25,10 @@ typedef struct
 void bc_talk_init(void);
 void bc_talk_publish_begin(char *topic);
 void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...);
-void bc_talk_publish_add_quantity_final(char *name, char *unit, char *value, ...);
+void bc_talk_publish_add_value(char *name, char *value, ...);
 void bc_talk_publish_end(void);
+
+void bc_talk_publish_led_state(int state);
 
 bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *event));
 
