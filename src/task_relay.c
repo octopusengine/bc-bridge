@@ -19,12 +19,14 @@ void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info)
     bc_os_semaphore_init(&self->semaphore, 0);
     bc_os_task_init(&self->task, task_relay_worker, self);
 
+    self->_relay_mode = TASK_RELAY_MODE_NULL;
+
     task_info->task = self;
-    task_info->enabled;
+    task_info->enabled = true;
 }
 
 
-void task_relay_set_mode(task_relay_t *self, bc_module_relay_mode_t relay_mode)
+void task_relay_set_mode(task_relay_t *self, task_relay_mode_t relay_mode)
 {
     bc_os_mutex_lock(&self->mutex);
     self->_relay_mode = relay_mode;
@@ -33,10 +35,19 @@ void task_relay_set_mode(task_relay_t *self, bc_module_relay_mode_t relay_mode)
     bc_os_semaphore_put(&self->semaphore);
 }
 
+void task_relay_get_mode(task_relay_t *self, task_relay_mode_t *relay_mode)
+{
+    bc_os_mutex_lock(&self->mutex);
+    *relay_mode =  self->_relay_mode;
+    bc_os_mutex_unlock(&self->mutex);
+
+}
+
 static void *task_relay_worker(void *parameter)
 {
 
     task_relay_t *self = (task_relay_t *) parameter;
+
     bool init_ok;
 
     bc_module_relay_mode_t relay_mode;

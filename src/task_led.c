@@ -43,6 +43,14 @@ void task_led_set_state(task_led_t *self, task_led_state_t state)
     bc_os_semaphore_put(&self->semaphore);
 }
 
+void task_led_get_state(task_led_t *self, task_led_state_t *state)
+{
+    bc_os_mutex_lock(&self->mutex);
+    *state = self->state;
+    bc_os_mutex_unlock(&self->mutex);
+
+}
+
 static void *task_led_worker(void *parameter)
 {
     bc_tick_t tick_feed_interval;

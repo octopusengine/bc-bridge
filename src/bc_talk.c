@@ -179,13 +179,13 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         }
         if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
         {
-            event.operation = BC_TALK_OPERATION_SET;
+            event.operation = BC_TALK_OPERATION_RELAY_SET;
             event.value = _bc_talk_token_find_index(line, &tokens[4], &bc_talk_bool,  sizeof(bc_talk_bool)/sizeof(*bc_talk_bool) );
             callback(&event);
         }
         else if ((strcmp(payload[2], "get") == 0) )
         {
-            event.operation = BC_TALK_OPERATION_GET;
+            event.operation = BC_TALK_OPERATION_RELAY_GET;
             callback(&event);
         }
 

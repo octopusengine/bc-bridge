@@ -82,12 +82,16 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 //    bc_talk_parse(testc, sizeof(testc), _application_bc_talk_callback);
 //    char testd[] = "[\"led/-/get\",{\"state\":null}]";
 //    bc_talk_parse(testd, sizeof(testd), _application_bc_talk_callback);
-//    exit(0);
+
 //    char test[] = "[\"$config/sensors/thermometer/i2c0-48/update\", {\"publish-interval\": 500, \"aaa\": true}]";
 //    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
 
 //    char testb[] = "[\"relay/i2c0-3b/set\",{\"state\":true}]";
 //    bc_talk_parse(testb, sizeof(testb), _application_bc_talk_callback);
+//
+//    char teste[] = "[\"relay/i2c0-3b/get\",{\"state\":null}]";
+//    bc_talk_parse(teste, sizeof(teste), _application_bc_talk_callback);
+
 
 
 }
@@ -143,6 +147,13 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
     }
     if (!find)
     {
+        bc_log_error("_application_bc_talk_callback: tag or module not found");
+        return;
+    }
+
+    if (!task_info.enabled)
+    {
+        bc_log_error("_application_bc_talk_callback: tag or module not enabled");
         return;
     }
 
@@ -154,14 +165,41 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
             task_set_interval(&task_info, (bc_tick_t) event->value );
             break;
         }
-        case BC_TALK_OPERATION_SET :
+        case BC_TALK_OPERATION_RELAY_SET :
         {
             if ( event->value == -1)
             {
-                bc_log_info("_application_bc_talk_callback: BC_TALK_OPERATION_SET bad value");
+                bc_log_info("_application_bc_talk_callback: BC_TALK_OPERATION_RELAY_SET bad value");
                 return;
             }
-            task_relay_set_mode((task_relay_t *)task_info.task, event->value==1 ? BC_MODULE_RELAY_MODE_NC : BC_MODULE_RELAY_MODE_NO);
+            task_relay_set_mode((task_relay_t *)task_info.task, event->value==1 ? TASK_RELAY_MODE_TRUE : TASK_RELAY_MODE_FALSE);
+            break;
+        }
+        case BC_TALK_OPERATION_RELAY_GET:
+        {
+            task_relay_mode_t relay_mode;
+            task_relay_get_mode((task_relay_t *)task_info.task, &relay_mode);
+
+            char topic[32];
+            snprintf(topic, sizeof(topic), "relay/i2c%d-%02x", (uint8_t) task_info.i2c_channel, task_info.device_address);
+
+            bc_talk_publish_begin(topic);
+            switch (relay_mode)
+            {
+                case TASK_RELAY_MODE_TRUE :
+                {
+                    bc_talk_publish_add_value("state", "%s", "true" );
+                    break;
+                }
+                case TASK_RELAY_MODE_FALSE :
+                {
+                    bc_talk_publish_add_value("state", "%s", "false" );
+                    break;
+                }
+                default:
+                    bc_talk_publish_add_value("state", "%s", "null" );
+            }
+            bc_talk_publish_end();
             break;
         }
         case BC_TALK_OPERATION_LED_SET:
@@ -176,7 +214,9 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         }
         case BC_TALK_OPERATION_LED_GET:
         {
-            //bc_talk_publish_led_state(value);
+            task_led_state_t led_state;
+            task_led_get_state((task_led_t *)task_info.task, &led_state);
+            bc_talk_publish_led_state((int)led_state);
             break;
         }
     }
