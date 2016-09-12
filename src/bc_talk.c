@@ -3,12 +3,15 @@
 #include <jsmn.h>
 #include "bc_log.h"
 
+const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
+const char *bc_talk_bool[] = { "false", "true" };
+
 static bc_os_mutex_t bc_talk_mutex;
 static bool bc_talk_add_comma;
 static bool _bc_talk_token_cmp(char *json, jsmntok_t *tok, const char *s);
 static int _bc_talk_token_get_int(char *line, jsmntok_t *tok);
 static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event);
-static int _bc_talk_token_get_enum(char *line, jsmntok_t *tok, ...);
+static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, char *list[], size_t length);
 
 void bc_talk_init(void)
 {
@@ -67,6 +70,14 @@ void bc_talk_publish_end(void)
 
     bc_os_mutex_unlock(&bc_talk_mutex);
 }
+
+void bc_talk_publish_led_state(int state)
+{
+    bc_talk_publish_begin("led/-");
+    bc_talk_publish_add_value("state", "\"%s\"", ((state > -1) && (state < sizeof(bc_talk_led_state))) ? bc_talk_led_state[state] : "null" );
+    bc_talk_publish_end();
+}
+
 
 bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *event))
 {
@@ -152,7 +163,7 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
         {
             event.operation = BC_TALK_OPERATION_LED_SET;
-            event.value = _bc_talk_token_get_enum(line, &tokens[4], "off", "on", "1-dot", "2-dot", "3-dot", NULL);
+            event.value = _bc_talk_token_find_index(line, &tokens[4], &bc_talk_led_state,  sizeof(bc_talk_led_state)/sizeof(*bc_talk_led_state) );
             callback(&event);
         }
         else if ((strcmp(payload[2], "get") == 0) )
@@ -226,30 +237,50 @@ static int _bc_talk_token_get_int(char *line, jsmntok_t *tok)
     return (int) strtol(temp, NULL, 10);
 }
 
-static int _bc_talk_token_get_enum(char *line, jsmntok_t *tok, ...){
-
-    char temp[10];
-    char *str;
+static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, char *list[], size_t length){
+    char *temp;
     int i;
-    memset(temp, 0x00, sizeof(temp));
-    strncpy(&temp, line+tok->start, tok->end - tok->start < sizeof(temp) ? tok->end - tok->start : sizeof(temp) - 1 );
+    int temp_length = tok->end - tok->start;
+    temp = malloc(sizeof(char) * (temp_length + 1) );
+    temp[ temp_length ] = 0x00;
+    strncpy(temp, line+tok->start, temp_length);
 
-    va_list vl;
-    va_start(vl,tok);
-    str=va_arg(vl,char*);
-    while (str!=NULL)
+    for (i=0; i<length; i++)
     {
-        if (strcmp(str, temp) == 0)
+        if (strcmp(list[i], temp) == 0)
         {
+            free(temp);
             return i;
         }
-        str=va_arg(vl,char*);
-        i++;
     }
-    va_end(vl);
-
+    free(temp);
     return -1;
 }
+
+//static int _bc_talk_token_get_enum(char *line, jsmntok_t *tok, ...){
+//
+//    char temp[10];
+//    char *str;
+//    int i;
+//    memset(temp, 0x00, sizeof(temp));
+//    strncpy(&temp, line+tok->start, tok->end - tok->start < sizeof(temp) ? tok->end - tok->start : sizeof(temp) - 1 );
+//
+//    va_list vl;
+//    va_start(vl,tok);
+//    str=va_arg(vl,char*);
+//    while (str!=NULL)
+//    {
+//        if (strcmp(str, temp) == 0)
+//        {
+//            return i;
+//        }
+//        str=va_arg(vl,char*);
+//        i++;
+//    }
+//    va_end(vl);
+//
+//    return -1;
+//}
 
 static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event)
 {

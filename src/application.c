@@ -73,11 +73,11 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 //
 
 
-//    char testc[] = "[\"led/-/set\",{\"state\":\"off\"}]";
-//    bc_talk_parse(testc, sizeof(testc), _application_bc_talk_callback);
-//    char testd[] = "[\"led/-/get\",{\"state\":null}]";
-//    bc_talk_parse(testd, sizeof(testd), _application_bc_talk_callback);
-//    exit(0);
+    char testc[] = "[\"led/-/set\",{\"state\":\"2-dott\"}]";
+    bc_talk_parse(testc, sizeof(testc), _application_bc_talk_callback);
+    char testd[] = "[\"led/-/get\",{\"state\":null}]";
+    bc_talk_parse(testd, sizeof(testd), _application_bc_talk_callback);
+    exit(0);
 //    char test[] = "[\"$config/sensors/thermometer/i2c0-48/update\", {\"publish-interval\": 500, \"aaa\": true}]";
 //    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
 //    char testb[] = "[\"$config/sensors/lux-meter/i2c0-44/update\", {\"publish-interval\": 100}]";
@@ -102,15 +102,16 @@ void application_loop(bool *quit)
 
 static void _application_wait_start_string(void)
 {
+    //TODO predelat
     char *line = NULL;
     size_t size;
     while (true)
     {
         if (getline(&line, &size, stdin) != -1)
         {
-            if (strcmp(line, "[\"$config/clown-talk/create\", {}]\n")==0)
+            if (strcmp(line, "[\"$config/clown.talk/-/create\", {}]\n")==0)
             {
-                printf("[\"$config/clown-talk\", {\"ack\":false, \"device\":\"bridge\", \"capabilities\":1,  \"firmware-datetime\":\"%s\"]\n", VERSION);
+                printf("[\"$config/clown.talk/-\", {\"ack\":false, \"device\":\"bridge\", \"capabilities\":1,  \"firmware-datetime\":\"%s\"]\n", VERSION);
                 return;
             }
         }
@@ -160,9 +161,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             bc_bridge_led_t value;
             bc_bridge_led_get(&bridge, &value);
-            bc_talk_publish_begin("led/-");
-            bc_talk_publish_add_value("state", "\"%s\"", (value==BC_BRIDGE_LED_ON ? "on" : "off") );
-            bc_talk_publish_end();
+            bc_talk_publish_led_state(value);
             break;
         }
     }
