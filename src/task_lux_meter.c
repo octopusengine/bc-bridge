@@ -55,7 +55,10 @@ static void *task_lux_meter_worker(void *parameter)
 
     bc_tag_lux_meter_t tag_lux_meter;
 
-    bc_tag_lux_meter_init(&tag_lux_meter, &interface, self->_device_address);
+    if (!bc_tag_lux_meter_init(&tag_lux_meter, &interface, self->_device_address))
+    {
+        bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_init");
+    }
 
     while (true)
     {
@@ -71,6 +74,7 @@ static void *task_lux_meter_worker(void *parameter)
 
         if (!bc_tag_lux_meter_get_state(&tag_lux_meter, &state))
         {
+            bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_get_state");
             continue;
         }
 
@@ -80,6 +84,7 @@ static void *task_lux_meter_worker(void *parameter)
             {
                 if (!bc_tag_lux_meter_single_shot_conversion(&tag_lux_meter))
                 {
+                    bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_single_shot_conversion");
                     continue;
                 }
                 break;
@@ -92,16 +97,19 @@ static void *task_lux_meter_worker(void *parameter)
             {
                 if (!bc_tag_lux_meter_read_result(&tag_lux_meter))
                 {
+                    bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_read_result");
                     continue;
                 }
 
                 if (!bc_tag_lux_meter_get_result_lux(&tag_lux_meter, &value))
                 {
+                    bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_get_result_lux");
                     continue;
                 }
 
                 if (!bc_tag_lux_meter_single_shot_conversion(&tag_lux_meter))
                 {
+                    bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_single_shot_conversion");
                     continue;
                 }
 

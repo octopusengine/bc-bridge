@@ -50,7 +50,10 @@ static void *task_co2_worker(void *parameter)
     interface.bridge = self->_bridge;
     interface.channel = BC_BRIDGE_I2C_CHANNEL_0;
 
-    bc_module_co2_init(&module_co2, &interface);
+    if (!bc_module_co2_init(&module_co2, &interface))
+    {
+        bc_log_error("task_co2_worker: bc_module_co2_init");
+    }
 
     while (true)
     {

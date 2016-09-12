@@ -68,6 +68,7 @@ static void *task_led_worker(void *parameter)
     last_state = self->state;
     bc_os_mutex_unlock(&self->mutex);
 
+    //TODO udelat lepe
     while (true)
     {
         bc_os_mutex_lock(&self->mutex);

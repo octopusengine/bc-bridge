@@ -78,7 +78,6 @@ void bc_talk_publish_led_state(int state)
     bc_talk_publish_end();
 }
 
-
 bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *event))
 {
     jsmn_parser parser;

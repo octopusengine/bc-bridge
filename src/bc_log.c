@@ -237,6 +237,7 @@ void bc_log_fatal(const char *format, ...)
 static void bc_log_head(bc_log_level_t level)
 {
     struct timeval tv;
+    uint64_t thread_id = bc_os_task_get_id();
 
     if (gettimeofday(&tv, NULL) == 0)
     {
@@ -277,6 +278,9 @@ static void bc_log_head(bc_log_level_t level)
             fprintf(stderr, "[ ????? ] ");
             break;
     }
+
+    fprintf(stderr, "[ %lX ] ", thread_id);
+
 }
 
 static void bc_log_message(const char *format, va_list ap)

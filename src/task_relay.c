@@ -50,7 +50,10 @@ static void *task_relay_worker(void *parameter)
 
     bc_module_relay_t module_relay;
 
-    bc_module_relay_init(&module_relay, &interface, self->_device_address);
+    if (!bc_module_relay_init(&module_relay, &interface, self->_device_address))
+    {
+        bc_log_error("task_relay_worker: bc_module_relay_init");
+    }
 
     while (true)
     {
@@ -62,7 +65,10 @@ static void *task_relay_worker(void *parameter)
         relay_mode = self->_relay_mode;
         bc_os_mutex_unlock(&self->mutex);
 
-        bc_module_relay_set_mode(&module_relay, relay_mode);
+        if (!bc_module_relay_set_mode(&module_relay, relay_mode))
+        {
+            bc_log_error("task_relay_worker: bc_module_relay_set_mode");
+        }
     }
 
     return NULL;

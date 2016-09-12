@@ -25,6 +25,11 @@ void bc_os_task_destroy(bc_os_task_t *task)
     free(task->_task);
 }
 
+uint64_t bc_os_task_get_id(void)
+{
+    return (uint64_t) pthread_self();
+}
+
 void bc_os_task_sleep(bc_tick_t timeout)
 {
     if (usleep(timeout * 1000UL) != 0)

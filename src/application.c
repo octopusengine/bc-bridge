@@ -25,7 +25,7 @@ task_info_t task_info_list[] = {
         {TASK_CLASS_SENSOR, TAG_LUX_METER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_DEFAULT, NULL, false},
         {TASK_CLASS_SENSOR, TAG_LUX_METER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_DEFAULT, NULL, false},
         {TASK_CLASS_SENSOR, MODULE_CO2, BC_BRIDGE_I2C_CHANNEL_0, 0x38, NULL, false},
-        {TASK_CLASS_ACTUATOR, MODULE_RELAY, BC_BRIDGE_I2C_CHANNEL_0, 0x3B, NULL, false},
+        {TASK_CLASS_ACTUATOR, MODULE_RELAY, BC_BRIDGE_I2C_CHANNEL_0, 0x3B, NULL, false}
 
 };
 size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);

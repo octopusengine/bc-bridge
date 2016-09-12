@@ -82,9 +82,15 @@ static void *task_thermometer_worker(void *parameter)
     bc_log_info("task_thermometer_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_interface.channel, self->_device_address);
 
-    bc_tag_temperature_init(&tag_temperature, &self->_i2c_interface, self->_device_address);
+    if (!bc_tag_temperature_init(&tag_temperature, &self->_i2c_interface, self->_device_address))
+    {
+        bc_log_error("task_thermometer_worker: bc_tag_temperature_init");
+    }
 
-    bc_tag_temperature_single_shot_conversion(&tag_temperature);
+    if (!bc_tag_temperature_single_shot_conversion(&tag_temperature))
+    {
+        bc_log_error("task_thermometer_worker: bc_tag_temperature_single_shot_conversion");
+    }
 
     while (true)
     {
@@ -113,6 +119,7 @@ static void *task_thermometer_worker(void *parameter)
 
         if (!bc_tag_temperature_get_state(&tag_temperature, &state))
         {
+            bc_log_error("task_thermometer_worker: bc_tag_temperature_get_state");
             continue;
         }
 
@@ -164,13 +171,21 @@ static void *task_thermometer_worker(void *parameter)
             }
             case BC_TAG_TEMPERATURE_STATE_CONVERSION:
             {
-                bc_tag_temperature_power_down(&tag_temperature);
+                if (!bc_tag_temperature_power_down(&tag_temperature))
+                {
+                    bc_log_error("task_thermometer_worker: bc_tag_temperature_power_down");
+                    continue;
+                }
 
                 break;
             }
             default:
             {
-                bc_tag_temperature_power_down(&tag_temperature);
+                if (!bc_tag_temperature_power_down(&tag_temperature))
+                {
+                    bc_log_error("task_thermometer_worker: bc_tag_temperature_power_down");
+                    continue;
+                }
 
                 break;
             }

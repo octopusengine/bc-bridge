@@ -21,7 +21,7 @@ typedef struct
 
 } bc_module_relay_t;
 
-void bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface, uint8_t device_address);
+bool bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface, uint8_t device_address);
 bool bc_module_relay_set_mode(bc_module_relay_t *self, bc_module_relay_mode_t relay_mode);
 
 #endif /* _BC_MODULE_RELAY_H */
