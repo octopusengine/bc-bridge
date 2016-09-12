@@ -73,7 +73,7 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 
 //    _application_i2c_scan(&bridge, BC_BRIDGE_I2C_CHANNEL_0);
 
-    task_init(&bridge, &task_info_list, task_info_list_length );
+    task_init(&bridge, task_info_list, task_info_list_length );
 
 //
 
