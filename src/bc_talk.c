@@ -30,7 +30,7 @@ void bc_talk_publish_begin(char *topic)
 void bc_talk_publish_begin_auto(uint8_t i2c_channel, uint8_t device_address)
 {
     char topic[64];
-    bc_talk_make_topic(i2c_channel, device_address, &topic, sizeof(topic));
+    bc_talk_make_topic(i2c_channel, device_address, topic, sizeof(topic));
     bc_talk_publish_begin(topic);
 }
 
@@ -125,7 +125,7 @@ bool bc_talk_parse_start(char *line, size_t length)
     jsmn_init(&parser);
     r = jsmn_parse(&parser, line, length, tokens, sizeof(tokens));
 
-    if (!_bc_talk_schema_check(r, &tokens))
+    if (!_bc_talk_schema_check(r, tokens))
     {
         return false;
     }
@@ -150,7 +150,7 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
     jsmn_init(&parser);
     r = jsmn_parse(&parser, line, length, tokens, sizeof(tokens) );
 
-    if (!_bc_talk_schema_check(r, &tokens))
+    if (!_bc_talk_schema_check(r, tokens))
     {
         return false;
     }
