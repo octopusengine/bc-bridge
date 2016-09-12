@@ -168,13 +168,10 @@ static void *task_thermometer_worker(void *parameter)
 
                 if (valid)
                 {
-                    char topic[32];
 
                     bc_log_info("task_thermometer_worker: temperature = %.1f C", value);
 
-                    snprintf(topic, sizeof(topic), "thermometer/i2c%d-%02x", (uint8_t) self->_i2c_interface.channel, self->_device_address);
-
-                    bc_talk_publish_begin(topic);
+                    bc_talk_publish_begin_auto((uint8_t) self->_i2c_interface.channel, self->_device_address);
                     bc_talk_publish_add_quantity("temperature", "\\u2103", "%0.2f", value);
                     bc_talk_publish_end();
                 }
