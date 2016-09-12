@@ -37,6 +37,7 @@ static void *task_relay_worker(void *parameter)
 {
 
     task_relay_t *self = (task_relay_t *) parameter;
+    bool init_ok;
 
     bc_module_relay_mode_t relay_mode;
 
@@ -50,13 +51,21 @@ static void *task_relay_worker(void *parameter)
 
     bc_module_relay_t module_relay;
 
-    if (!bc_module_relay_init(&module_relay, &interface, self->_device_address))
-    {
-        bc_log_error("task_relay_worker: bc_module_relay_init");
-    }
+
 
     while (true)
     {
+
+        if (init_ok==false) //TODO predelat do task manageru
+        {
+            if (!bc_module_relay_init(&module_relay, &interface, self->_device_address))
+            {
+                bc_log_error("task_relay_worker: bc_module_relay_init");
+                bc_os_task_sleep(1000);
+                continue;
+            }
+            init_ok = true;
+        }
 
         bc_os_semaphore_get(&self->semaphore);
         bc_log_debug("task_relay_worker: wake up signal");

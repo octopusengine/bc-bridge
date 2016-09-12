@@ -193,7 +193,7 @@ static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i
             printf("address: %hhx %d \n", address, address);
         }
     }
-    exit(1);
+
 }
 
 static void _application_quad_test(bc_bridge_t *bridge)
