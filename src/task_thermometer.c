@@ -90,8 +90,6 @@ static void *task_thermometer_worker(void *parameter)
     bc_log_info("task_thermometer_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_interface.channel, self->_device_address);
 
-
-
     while (true)
     {
 

@@ -179,7 +179,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             bc_log_info("_application_bc_talk_callback: UPDATE_PUBLISH_INTERVAL %d", (bc_tick_t) event->value);
             task_set_interval(&task_info, (bc_tick_t) event->value );
-            //break;
+            //break; //necham propadnout at se vypise potvrzeni o nastaveni
         }
         case BC_TALK_OPERATION_CONFIG_READ:
         {
@@ -202,30 +202,14 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
                 return;
             }
             task_relay_set_mode((task_relay_t *)task_info.task, event->value==1 ? TASK_RELAY_MODE_TRUE : TASK_RELAY_MODE_FALSE);
-            //break;
+            break;
         }
         case BC_TALK_OPERATION_RELAY_GET:
         {
             task_relay_mode_t relay_mode;
             task_relay_get_mode((task_relay_t *)task_info.task, &relay_mode);
 
-            bc_talk_publish_begin_auto((uint8_t) task_info.i2c_channel, task_info.device_address);
-            switch (relay_mode)
-            {
-                case TASK_RELAY_MODE_TRUE :
-                {
-                    bc_talk_publish_add_value("state", "%s", "true" );
-                    break;
-                }
-                case TASK_RELAY_MODE_FALSE :
-                {
-                    bc_talk_publish_add_value("state", "%s", "false" );
-                    break;
-                }
-                default:
-                    bc_talk_publish_add_value("state", "%s", "null" );
-            }
-            bc_talk_publish_end();
+            bc_talk_publish_relay((int)relay_mode, task_info.device_address);
             break;
         }
         case BC_TALK_OPERATION_LED_SET:
@@ -236,7 +220,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
                 return;
             }
             task_led_set_state((task_led_t *)task_info.task, (task_led_state_t)event->value);
-            //break;
+            //break; //necham propadnout at se vypise potvrzeni o nastaveni
         }
         case BC_TALK_OPERATION_LED_GET:
         {

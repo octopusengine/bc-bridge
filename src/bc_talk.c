@@ -116,6 +116,27 @@ void bc_talk_publish_led_state(int state)
     bc_talk_publish_end();
 }
 
+void bc_talk_publish_relay(int state, uint8_t device_address)
+{
+    bc_talk_publish_begin_auto(0, device_address);
+    switch (state)
+    {
+        case 1 :
+        {
+            bc_talk_publish_add_value("state", "%s", "true" );
+            break;
+        }
+        case 0 :
+        {
+            bc_talk_publish_add_value("state", "%s", "false" );
+            break;
+        }
+        default:
+            bc_talk_publish_add_value("state", "%s", "null" );
+    }
+    bc_talk_publish_end();
+}
+
 bool bc_talk_parse_start(char *line, size_t length)
 {
     jsmn_parser parser;

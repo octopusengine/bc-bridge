@@ -89,6 +89,8 @@ static void *task_relay_worker(void *parameter)
         {
             bc_log_error("task_relay_worker: bc_module_relay_set_mode");
         }
+
+        bc_talk_publish_relay((int)relay_mode, self->_device_address);
     }
 
     return NULL;
