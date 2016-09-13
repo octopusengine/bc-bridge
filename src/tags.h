@@ -1,3 +1,5 @@
+
+#if 0
 #ifndef _BC_BRIDGE_TAGS_H
 #define _BC_BRIDGE_TAGS_H
 
@@ -29,3 +31,5 @@ void tags_barometer_init(bc_tag_barometer_t *tag_barometer, bc_i2c_interface_t *
 void tags_barometer_task(bc_tag_barometer_t *tag_barometer, tags_data_t *absolute_pressure, tags_data_t *altitude);
 
 #endif /* _BC_BRIDGE_TAGS_H */
+
+#endif

@@ -1,3 +1,5 @@
+
+#if 0
 #include "tags.h"
 
 void tags_humidity_init(bc_tag_humidity_t *tag_humidity, bc_i2c_interface_t *interface)
@@ -283,3 +285,5 @@ void tags_barometer_task(bc_tag_barometer_t *tag_barometer, tags_data_t *absolut
         }
     }
 }
+
+#endif
