@@ -15,6 +15,7 @@ void task_led_spawn(bc_bridge_t *bridge, task_info_t *task_info)
     self->_i2c_channel = task_info->i2c_channel;
     self->_device_address = task_info->device_address;
     self->tick_feed_interval = 1000;
+    self->blink_interval = 100;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);
@@ -31,6 +32,29 @@ void task_led_set_interval(task_led_t *self, bc_tick_t interval)
     bc_os_mutex_unlock(&self->mutex);
 
     bc_os_semaphore_put(&self->semaphore);
+}
+
+void task_led_get_interval(task_led_t *self, bc_tick_t *interval)
+{
+    bc_os_mutex_lock(&self->mutex);
+    *interval = self->tick_feed_interval;
+    bc_os_mutex_unlock(&self->mutex);
+}
+
+void task_led_set_blink_interval(task_led_t *self, bc_tick_t interval)
+{
+    bc_os_mutex_lock(&self->mutex);
+    self->blink_interval = interval;
+    bc_os_mutex_unlock(&self->mutex);
+
+    bc_os_semaphore_put(&self->semaphore);
+}
+
+void task_led_get_blink_interval(task_led_t *self, bc_tick_t *interval)
+{
+    bc_os_mutex_lock(&self->mutex);
+    *interval = self->blink_interval;
+    bc_os_mutex_unlock(&self->mutex);
 }
 
 
@@ -54,6 +78,7 @@ void task_led_get_state(task_led_t *self, task_led_state_t *state)
 static void *task_led_worker(void *parameter)
 {
     bc_tick_t tick_feed_interval;
+    bc_tick_t blink_interval;
     task_led_state_t last_state;
     task_led_state_t state;
     bc_bridge_led_t bridge_led_state;
@@ -76,27 +101,28 @@ static void *task_led_worker(void *parameter)
     last_state = self->state;
     bc_os_mutex_unlock(&self->mutex);
 
-    //TODO udelat lepe
     while (true)
     {
+        int i;
+
         bc_os_mutex_lock(&self->mutex);
         tick_feed_interval = self->tick_feed_interval;
-        state = self->state;
         bc_os_mutex_unlock(&self->mutex);
 
-        if ((state==TASK_LED_OFF) || (state==TASK_LED_ON))
+        if (blink_cnt>0)
         {
-            bc_os_semaphore_get(&self->semaphore);
+            bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
         else
         {
-            bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
+            bc_os_semaphore_get(&self->semaphore);
         }
 
         self->_tick_last_feed = bc_tick_get();
 
         bc_os_mutex_lock(&self->mutex);
         state = self->state;
+        blink_interval = self->blink_interval;
         bc_os_mutex_unlock(&self->mutex);
 
         bc_log_debug("task_led_worker: wake up signal");
@@ -108,28 +134,28 @@ static void *task_led_worker(void *parameter)
                 case TASK_LED_OFF :
                 {
                     bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_OFF);
-                    last_state = state;
-                    continue;
+                    blink_cnt = 0;
+                    break;
                 }
                 case TASK_LED_ON :
                 {
                     bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_ON);
-                    last_state = state;
-                    continue;
+                    blink_cnt = 0;
+                    break;
                 }
                 case TASK_LED_1DOT :
                 {
-                    blink_cnt = 2;
+                    blink_cnt = 1;
                     break;
                 }
                 case TASK_LED_2DOT :
                 {
-                    blink_cnt = 4;
+                    blink_cnt = 2;
                     break;
                 }
                 case TASK_LED_3DOT :
                 {
-                    blink_cnt = 6;
+                    blink_cnt = 3;
                     break;
                 }
                 default:
@@ -142,22 +168,14 @@ static void *task_led_worker(void *parameter)
             last_state = state;
         }
 
-        if (blink_cnt <= 0)
-        {
-            bc_os_mutex_lock(&self->mutex);
-            self->state = TASK_LED_OFF;
-            last_state = TASK_LED_OFF;
-            bc_os_mutex_unlock(&self->mutex);
-            continue;
-        }
 
-        if ((blink_cnt-- % 2) == 0)
+        for (i=0; i<blink_cnt; i++)
         {
+
             bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_ON);
-        }
-        else
-        {
+            bc_os_task_sleep(blink_interval);
             bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_OFF);
+            bc_os_task_sleep(blink_interval);
         }
 
     }

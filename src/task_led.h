@@ -25,6 +25,7 @@ typedef struct
 
     bc_tick_t tick_feed_interval;
     bc_tick_t _tick_last_feed;
+    bc_tick_t blink_interval;
     task_led_state_t state;
 
     bc_bridge_t *_bridge;
@@ -39,7 +40,10 @@ typedef struct
 void task_led_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 
 void task_led_set_interval(task_led_t *self, bc_tick_t interval);
+void task_led_get_interval(task_led_t *self, bc_tick_t *interval);
 void task_led_set_state(task_led_t *self, task_led_state_t state);
 void task_led_get_state(task_led_t *self, task_led_state_t *state);
+void task_led_set_blink_interval(task_led_t *self, bc_tick_t interval);
+void task_led_get_blink_interval(task_led_t *self, bc_tick_t *interval);
 
 #endif /* _TASK_LED_H */

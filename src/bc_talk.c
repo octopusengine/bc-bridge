@@ -369,6 +369,12 @@ static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event)
     char * pEnd;
     if (strlen(str) != 7)
     {
+        if (strcmp(str, "-") == 0)
+        {
+            event->i2c_channel = 0;
+            event->device_address = 0;
+            return true;
+        }
         return false;
     }
     event->i2c_channel = (uint8_t)strtol(str+3, &pEnd, 10);

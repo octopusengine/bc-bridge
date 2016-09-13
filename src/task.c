@@ -74,6 +74,11 @@ bool task_set_interval(task_info_t *task_info, bc_tick_t interval)
     }
     switch (task_info->type)
     {
+        case TASK_TYPE_LED:
+        {
+            task_led_set_interval((task_thermometer_t *)task_info->task, interval );
+            return true;
+        }
         case TAG_THERMOMETHER:
         {
             task_thermometer_set_interval((task_thermometer_t *)task_info->task, interval );
@@ -87,10 +92,12 @@ bool task_set_interval(task_info_t *task_info, bc_tick_t interval)
         case TAG_BAROMETER:
         {
             task_barometer_set_interval((task_barometer_t*)task_info->task, interval );
+            return true;
         }
         case TAG_HUMIDITY:
         {
             task_humidity_set_interval((task_humidity_t*)task_info->task, interval );
+            return true;
         }
         case MODULE_CO2:
         {
@@ -98,6 +105,7 @@ bool task_set_interval(task_info_t *task_info, bc_tick_t interval)
             return true;
         }
         default:
+            bc_log_error("task_set_interval: unknown task_info->type=%d", task_info->type);
             return false;
     }
     return false;
@@ -111,6 +119,11 @@ bool task_get_interval(task_info_t *task_info, bc_tick_t *interval)
     }
     switch (task_info->type)
     {
+        case TASK_TYPE_LED:
+        {
+            task_led_get_interval((task_thermometer_t *)task_info->task, interval );
+            return true;
+        }
         case TAG_THERMOMETHER:
         {
             task_thermometer_get_interval((task_thermometer_t *)task_info->task, interval );
@@ -124,10 +137,12 @@ bool task_get_interval(task_info_t *task_info, bc_tick_t *interval)
         case TAG_BAROMETER:
         {
             task_barometer_get_interval((task_barometer_t*)task_info->task, interval );
+            return true;
         }
         case TAG_HUMIDITY:
         {
             task_humidity_get_interval((task_humidity_t*)task_info->task, interval );
+            return true;
         }
         case MODULE_CO2:
         {
@@ -135,6 +150,7 @@ bool task_get_interval(task_info_t *task_info, bc_tick_t *interval)
             return true;
         }
         default:
+            bc_log_error("task_get_interval: unknown task_info->type=%d", task_info->type);
             return false;
     }
     return false;
