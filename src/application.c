@@ -42,10 +42,10 @@ static void _application_wait_start_string(void);
 static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel);
 static void _application_bc_talk_callback(bc_talk_event_t *event);
 
-void application_init(bool wait_start_string, bc_log_level_t log_level)
+void application_init(application_parameters_t *parameters)
 {
     bc_talk_init();
-    bc_log_init(log_level);
+    bc_log_init(parameters->log_level);
     bc_tick_init();
 
 
@@ -73,7 +73,7 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
         bc_log_fatal("application_init: call failed: bc_bridge_open");
     }
 
-    if (wait_start_string == true)
+    if (!parameters->furious_mode)
     {
         _application_wait_start_string();
     }
@@ -108,11 +108,13 @@ void application_init(bool wait_start_string, bc_log_level_t log_level)
 
 void application_loop(bool *quit)
 {
-    char *line = NULL;
+    char *line;
     size_t length;
 
     for(;;)
     {
+        line = NULL;
+
         if (getline(&line, &length, stdin) != -1)
         {
             bc_talk_parse(line, length, _application_bc_talk_callback);
