@@ -13,6 +13,7 @@ typedef enum {
     TAG_THERMOMETHER,
     TAG_LUX_METER,
     TAG_BAROMETER,
+    TAG_HUMIDITY,
     MODULE_RELAY,
     MODULE_CO2,
 

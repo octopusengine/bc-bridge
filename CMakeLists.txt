@@ -42,6 +42,7 @@ set(SOURCE_FILES
         src/task_relay.c
         src/task_led.c
         src/task_barometer.c
+        src/task_humidity.c
         src/task.c
         src/bc_talk.c
         src/application.c

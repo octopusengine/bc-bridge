@@ -49,7 +49,7 @@ static void *task_barometer_worker(void *parameter)
     bool altitude_valid = false;
     bool absolute_pressure_valid = false;
 
-    bool init_ok;
+    bool init_ok = false;
     bc_tick_t tick_feed_interval;
     bc_tag_barometer_state_t state;
 

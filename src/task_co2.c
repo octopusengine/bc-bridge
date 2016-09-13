@@ -46,7 +46,7 @@ void task_co2_get_interval(task_co2_t *self, bc_tick_t *interval)
 static void *task_co2_worker(void *parameter)
 {
     int16_t value;
-    bool init_ok;
+    bool init_ok = false;
     bc_tick_t tick_feed_interval;
     bc_module_co2_t module_co2;
 

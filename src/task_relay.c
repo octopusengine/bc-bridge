@@ -48,7 +48,7 @@ static void *task_relay_worker(void *parameter)
 
     task_relay_t *self = (task_relay_t *) parameter;
 
-    bool init_ok;
+    bool init_ok = false;
 
     bc_module_relay_mode_t relay_mode;
 

@@ -45,7 +45,7 @@ void task_lux_meter_get_interval(task_lux_meter_t *self, bc_tick_t *interval)
 static void *task_lux_meter_worker(void *parameter)
 {
     float value;
-    bool init_ok;
+    bool init_ok = false;
     bc_tick_t tick_feed_interval;
     bc_tag_lux_meter_state_t state;
 
