@@ -1,35 +1,29 @@
+How to build
 
-How build 
-
-
-    apt-get install cmake
-    apt-get install libudev-dev
-    apt-get install git
+    apt-get install cmake libudev-dev git
     git clone git@bitbucket.org:BigClown/bc-bridge.git
     cd bc-bridge
     cmake .
     cmake --build .
 
-and run
+How to run
 
     ./bc-bridge -n --debug info
 
-
-for help
+Print command line help
 
     ./bc-bridge --help
 
-
-
 Initialize Clown.Talk
 
-    ["$config/clown-talk/create", {}]
+    ["$config/clown.talk/-/create", {}]
 
-Change Sensor interval for measurement and message transfer
+Change sensor measurement interval
 
     ["$config/sensors/thermometer/i2c0-48/update", {"publish-interval": 500}]
     
-Set Actor state  
+Set actuator state
     
     ["relay/i2c0-3b/set", {"state": true}]
     ["relay/i2c0-3b/set", {"state": false}]
+
