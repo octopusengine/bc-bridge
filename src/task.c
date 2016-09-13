@@ -76,7 +76,7 @@ bool task_set_interval(task_info_t *task_info, bc_tick_t interval)
     {
         case TASK_TYPE_LED:
         {
-            task_led_set_interval((task_thermometer_t *)task_info->task, interval );
+            task_led_set_interval((task_led_t *)task_info->task, interval );
             return true;
         }
         case TAG_THERMOMETHER:
@@ -121,7 +121,7 @@ bool task_get_interval(task_info_t *task_info, bc_tick_t *interval)
     {
         case TASK_TYPE_LED:
         {
-            task_led_get_interval((task_thermometer_t *)task_info->task, interval );
+            task_led_get_interval((task_led_t *)task_info->task, interval );
             return true;
         }
         case TAG_THERMOMETHER:
