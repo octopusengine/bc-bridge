@@ -20,49 +20,97 @@ void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
     int i;
     for (i = 0; i < length; i++)
     {
-        if (task_info_list[i].device_address == 0x00) //bridge led
+        switch (task_info_list[i].type)
         {
-            task_led_spawn(bridge, &task_info_list[i]);
-        }
-        else if (bc_bridge_i2c_ping(bridge, task_info_list[i].i2c_channel, task_info_list[i].device_address))
-        {
-
-            switch (task_info_list[i].type)
+            case TASK_TYPE_LED:
             {
-                case TAG_THERMOMETHER:
-                {
-                    task_thermometer_spawn(bridge, &task_info_list[i]);
-                    break;
-                }
-                case TAG_LUX_METER:
-                {
-                    task_lux_meter_spawn(bridge, &task_info_list[i]);
-                    break;
-                }
-                case TAG_BAROMETER:
-                {
-                    task_barometer_spawn(bridge, &task_info_list[i]);
-                    break;
-                }
-                case TAG_HUMIDITY:
-                {
-                    task_humidity_spawn(bridge, &task_info_list[i]);
-                    break;
-                }
-                case MODULE_RELAY:
-                {
-                    task_relay_spawn(bridge, &task_info_list[i]);
-                    break;
-                }
-                case MODULE_CO2:
-                {
-                    task_co2_spawn(bridge, &task_info_list[i]);
-                    break;
-                }
-                default:
-                    break;
+                task_led_spawn(bridge, &task_info_list[i]);
+                break;
             }
+            case TAG_THERMOMETHER:
+            {
+                task_thermometer_spawn(bridge, &task_info_list[i]);
+                break;
+            }
+            case TAG_LUX_METER:
+            {
+                task_lux_meter_spawn(bridge, &task_info_list[i]);
+                break;
+            }
+            case TAG_BAROMETER:
+            {
+                task_barometer_spawn(bridge, &task_info_list[i]);
+                break;
+            }
+            case TAG_HUMIDITY:
+            {
+                task_humidity_spawn(bridge, &task_info_list[i]);
+                break;
+            }
+            case MODULE_RELAY:
+            {
+                task_relay_spawn(bridge, &task_info_list[i]);
+                break;
+            }
+            case MODULE_CO2:
+            {
+                task_co2_spawn(bridge, &task_info_list[i]);
+                break;
+            }
+            default:
+                break;
         }
+
+    }
+}
+
+void task_destroy(task_info_t *task_info_list, size_t length)
+{
+    int i;
+    for (i = 0; i < length; i++)
+    {
+        switch (task_info_list[i].type)
+        {
+            case TASK_TYPE_LED:
+            {
+                task_led_terminate((task_led_t *) task_info_list[i].task);
+                break;
+            }
+            case TAG_THERMOMETHER:
+            {
+                task_thermometer_terminate((task_thermometer_t *)task_info_list[i].task);
+                break;
+            }
+            case TAG_LUX_METER:
+            {
+                task_lux_meter_terminate((task_lux_meter_t *)task_info_list[i].task);
+                break;
+            }
+            case TAG_BAROMETER:
+            {
+                task_barometer_terminate((task_barometer_t *)task_info_list[i].task);
+                break;
+            }
+            case TAG_HUMIDITY:
+            {
+                task_humidity_terminate((task_humidity_t *)task_info_list[i].task);
+                break;
+            }
+            case MODULE_RELAY:
+            {
+                task_relay_terminate((task_relay_t *)task_info_list[i].task);
+                break;
+            }
+            case MODULE_CO2:
+            {
+                task_co2_terminate((task_co2_t *)task_info_list[i].task);
+                break;
+            }
+            default:
+                break;
+        }
+        task_info_list[i].task = NULL;
+        task_info_list[i].enabled = false;
     }
 }
 

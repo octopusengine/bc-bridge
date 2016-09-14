@@ -27,7 +27,9 @@ typedef struct
 
 } bc_talk_event_t;
 
-void bc_talk_init(void);
+typedef void (*bc_talk_parse_callback)(bc_talk_event_t *event);
+
+void bc_talk_init(bc_talk_parse_callback callback);
 void bc_talk_publish_begin(char *topic);
 void bc_talk_publish_begin_auto(uint8_t i2c_channel, uint8_t device_address);
 void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...);

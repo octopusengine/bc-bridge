@@ -6,6 +6,7 @@
 #include "task.h"
 
 static void *task_relay_worker(void *parameter);
+static bool task_relay_is_quit_request(task_relay_t *self);
 
 void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
@@ -48,12 +49,31 @@ void task_relay_get_mode(task_relay_t *self, task_relay_mode_t *relay_mode)
 
 }
 
+void task_relay_terminate(task_relay_t *self)
+{
+
+    bc_log_info("task_relay_terminate: terminating instance ");
+
+    bc_os_mutex_lock(&self->mutex);
+    self->_quit = true;
+    bc_os_mutex_unlock(&self->mutex);
+
+    bc_os_semaphore_put(&self->semaphore);
+
+    bc_os_task_destroy(&self->task);
+    bc_os_semaphore_destroy(&self->semaphore);
+    bc_os_mutex_destroy(&self->mutex);
+
+    free(self);
+
+    bc_log_info("task_relay_terminate: terminated instance ");
+}
+
 static void *task_relay_worker(void *parameter)
 {
 
     task_relay_t *self = (task_relay_t *) parameter;
 
-    bool init_ok = false;
     task_relay_mode_t last_mode = TASK_RELAY_MODE_NULL;
     task_relay_mode_t relay_mode;
 
@@ -67,22 +87,25 @@ static void *task_relay_worker(void *parameter)
 
     bc_module_relay_t module_relay;
 
+    if (!bc_module_relay_init(&module_relay, &interface, self->_device_address))
+    {
+        bc_log_error("task_relay_worker: bc_module_relay_init false");
+        bc_os_mutex_lock(&self->mutex);
+        self->_quit = true;
+        bc_os_mutex_unlock(&self->mutex);
+        return NULL;
+    }
 
     while (true)
     {
 
-        if (init_ok==false) //TODO predelat do task manageru
+        bc_os_semaphore_get(&self->semaphore);
+
+        if (task_relay_is_quit_request(self))
         {
-            if (!bc_module_relay_init(&module_relay, &interface, self->_device_address))
-            {
-                bc_log_error("task_relay_worker: bc_module_relay_init");
-                bc_os_task_sleep(1000);
-                continue;
-            }
-            init_ok = true;
+            break;
         }
 
-        bc_os_semaphore_get(&self->semaphore);
         self->_tick_last_feed = bc_tick_get();
 
         bc_log_debug("task_relay_worker: wake up signal");
@@ -114,4 +137,21 @@ static void *task_relay_worker(void *parameter)
     }
 
     return NULL;
+}
+
+
+static bool task_relay_is_quit_request(task_relay_t *self)
+{
+    bc_os_mutex_lock(&self->mutex);
+
+    if (self->_quit)
+    {
+        bc_os_mutex_unlock(&self->mutex);
+
+        return true;
+    }
+
+    bc_os_mutex_unlock(&self->mutex);
+
+    return false;
 }

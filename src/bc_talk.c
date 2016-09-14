@@ -1,12 +1,15 @@
 #include "bc_talk.h"
 #include "bc_os.h"
 #include <jsmn.h>
+#include <pthread.h>
+#include <bits/sigthread.h>
 #include "bc_log.h"
 
 const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
 const char *bc_talk_bool[] = { "false", "true" };
 
 static bc_os_mutex_t bc_talk_mutex;
+static bc_os_task_t bc_talk_task_stdin;
 static bool bc_talk_add_comma=false;
 
 static bool _bc_talk_schema_check(int r, jsmntok_t *tokens);
@@ -15,10 +18,26 @@ static int _bc_talk_token_get_int(char *line, jsmntok_t *tok);
 static int _bc_talk_token_get_bool_as_int(char *line, jsmntok_t *tok);
 static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, const char *list[], size_t length);
 static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event);
+static void *bc_talk_worker_stdin(void *parameter);
 
-void bc_talk_init(void)
+typedef struct
 {
+    bc_talk_parse_callback callback;
+
+} bc_talk_worker_param_t;
+
+void bc_talk_init(bc_talk_parse_callback callback)
+{
+    bc_talk_worker_param_t *self;
+    self = (bc_talk_worker_param_t *) malloc(sizeof(bc_talk_worker_param_t));
+    if (self == NULL)
+    {
+        bc_log_fatal("task_thermometer_spawn: call failed: malloc");
+    }
+    self->callback = callback;
+
     bc_os_mutex_init(&bc_talk_mutex);
+    bc_os_task_init(&bc_talk_task_stdin, bc_talk_worker_stdin, self );
 }
 
 void bc_talk_publish_begin(char *topic)
@@ -437,4 +456,26 @@ static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event)
     event->device_address = (uint8_t)strtol(str+5, &pEnd, 16);
 
     return true;
+}
+
+static void *bc_talk_worker_stdin(void *parameter)
+{
+
+    bc_talk_worker_param_t *self;
+    self = (bc_talk_worker_param_t *) parameter;
+
+    char *line;
+    size_t length;
+
+    for(;;)
+    {
+        line = NULL;
+
+        if (getline(&line, &length, stdin) != -1)
+        {
+            bc_talk_parse(line, length, self->callback);
+        }
+    }
+
+    return NULL;
 }

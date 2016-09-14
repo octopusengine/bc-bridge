@@ -17,9 +17,12 @@ typedef struct
 
     bc_bridge_t *_bridge;
 
+    bool _quit;
+
 } task_co2_t;
 
 void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info);
+void task_co2_terminate(task_co2_t *self);
 
 void task_co2_set_interval(task_co2_t *self, bc_tick_t interval);
 void task_co2_get_interval(task_co2_t *self, bc_tick_t *interval);

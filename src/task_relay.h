@@ -30,9 +30,12 @@ typedef struct
     bc_bridge_i2c_channel_t _i2c_channel;
     uint8_t _device_address;
 
+    bool _quit;
+
 } task_relay_t;
 
 void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info);
+void task_relay_terminate(task_relay_t *self);
 void task_relay_set_mode(task_relay_t *self, task_relay_mode_t relay_mode);
 void task_relay_get_mode(task_relay_t *self, task_relay_mode_t *relay_mode);
 

@@ -11,6 +11,7 @@
 #include "bc_tag_lux_meter.h"
 #include "bc_tag_barometer.h"
 #include "bc_tag_humidity.h"
+#include "bc_os.h"
 
 #include "bc_i2c.h"
 #include "bc_bridge.h"
@@ -44,60 +45,58 @@ static void _application_bc_talk_callback(bc_talk_event_t *event);
 
 void application_init(application_parameters_t *parameters)
 {
-    bc_talk_init();
+
     bc_log_init(parameters->log_level);
     bc_tick_init();
-
-    // TODO predelat na dynamicke pole
-    bc_bridge_device_info_t devices[6];
-
-    uint8_t device_count;
-
-    if (!bc_bridge_scan(devices, &device_count))
-    {
-        bc_log_fatal("application_init: call failed: bc_bridge_scan");
-    }
-
-    bc_log_info("application_init: number of found devices: %d", device_count);
-
-    if (device_count == 0)
-    {
-        bc_log_fatal("application_init: no devices have been found");
-    }
-
-    if (!bc_bridge_open(&bridge, &devices[0]))
-    {
-        bc_log_fatal("application_init: call failed: bc_bridge_open");
-    }
+    bc_talk_init(_application_bc_talk_callback);
 
     if (!parameters->furious_mode)
     {
         _application_wait_start_string();
     }
 
-//    _application_i2c_scan(&bridge, BC_BRIDGE_I2C_CHANNEL_0);
+    memset(&bridge, 0, sizeof(bridge));
 
-    task_init(&bridge, task_info_list, task_info_list_length );
-
-//    char test[] = "[\"$config/devices/co2-sensor/i2c0-38/update\", {\"publish-interval\": 12 }]";
-//    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
-//    exit(0);
 }
 
 void application_loop(bool *quit)
 {
-    char *line;
-    size_t length;
 
-    for(;;)
+    // TODO predelat na dynamicke pole
+    bc_bridge_device_info_t devices[10];
+
+    uint8_t device_count;
+
+    if (!bc_bridge_scan(devices, &device_count))
     {
-        line = NULL;
-
-        if (getline(&line, &length, stdin) != -1)
-        {
-            bc_talk_parse(line, length, _application_bc_talk_callback);
-        }
+        bc_log_fatal("application_loop: call failed: bc_bridge_scan");
+        return;
     }
+
+    //bc_log_info("application_init: number of found devices: %d", device_count);
+
+    if (device_count == 0)
+    {
+        bc_log_warning("application_loop: no devices have been found");
+        return;
+    }
+
+    if (!bc_bridge_open(&bridge, &devices[0]))
+    {
+        bc_log_fatal("application_loop: call failed: bc_bridge_open");
+        return;
+    }
+
+    task_init(&bridge, task_info_list, task_info_list_length );
+
+    while (bc_bridge_is_live(&bridge))
+    {
+        bc_os_task_sleep(1000);
+    }
+
+    bc_log_warning("application_loop: device disconnect");
+    task_destroy(task_info_list, task_info_list_length);
+    bc_bridge_close(&bridge);
 }
 
 static void _application_wait_start_string(void)
@@ -119,6 +118,11 @@ static void _application_wait_start_string(void)
 
 static void _application_bc_talk_callback(bc_talk_event_t *event)
 {
+    if (!bc_bridge_is_live(&bridge))
+    {
+        return;
+    }
+
     bc_log_info("_application_bc_talk_callback: i2c_channel=%d device_address=%02X", event->i2c_channel, event->device_address);
 
     task_info_t task_info;

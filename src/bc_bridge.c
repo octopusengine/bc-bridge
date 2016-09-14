@@ -131,6 +131,8 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
 
 bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
 {
+    bc_log_info("bc_bridge_open");
+
     memset(self, 0, sizeof(*self));
 
     bc_os_mutex_init(&self->_mutex_i2c);
@@ -180,7 +182,6 @@ bool bc_bridge_is_live(bc_bridge_t *self)
 
     if (s.st_nlink < 1)
     {
-        bc_log_fatal("_bc_bridge_ft260_check_fd: device not connected");
         return false;
     }
 
@@ -189,6 +190,8 @@ bool bc_bridge_is_live(bc_bridge_t *self)
 
 bool bc_bridge_close(bc_bridge_t *self)
 {
+    bc_log_info("bc_bridge_close");
+
     bc_os_mutex_lock(&self->_mutex_i2c);
 
     if (flock(self->_fd_i2c, LOCK_UN) == -1)
@@ -210,6 +213,10 @@ bool bc_bridge_close(bc_bridge_t *self)
     }
 
     bc_os_mutex_unlock(&self->_mutex_i2c);
+
+    bc_os_mutex_destroy(&self->_mutex_i2c);
+
+    memset(self, 0, sizeof(*self));
 
     return true;
 }

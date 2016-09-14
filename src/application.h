@@ -7,6 +7,7 @@
 typedef struct
 {
     bool furious_mode;
+    bool exit;
     bc_log_level_t log_level;
 
 } application_parameters_t;

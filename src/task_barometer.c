@@ -7,6 +7,7 @@
 #include "task.h"
 
 static void *task_barometer_worker(void *parameter);
+static bool task_barometer_is_quit_request(task_barometer_t *self);
 
 void task_barometer_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
@@ -32,7 +33,6 @@ void task_barometer_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 
 void task_barometer_set_interval(task_barometer_t *self, bc_tick_t interval)
 {
-    bc_tick_t minimal_interval;
     bc_os_mutex_lock(&self->mutex);
     self->tick_feed_interval = interval;
     bc_os_mutex_unlock(&self->mutex);
@@ -47,6 +47,34 @@ void task_barometer_get_interval(task_barometer_t *self, bc_tick_t *interval)
     bc_os_mutex_unlock(&self->mutex);
 }
 
+void task_barometer_terminate(task_barometer_t *self)
+{
+
+    bc_bridge_i2c_channel_t i2c_channel;
+    uint8_t device_address;
+
+    i2c_channel = (uint8_t) self->_i2c_channel;
+    device_address = self->_device_address;
+
+    bc_log_info("task_barometer_terminate: terminating instance for bus %d, address 0x%02X",
+                i2c_channel, device_address);
+
+    bc_os_mutex_lock(&self->mutex);
+    self->_quit = true;
+    bc_os_mutex_unlock(&self->mutex);
+
+    bc_os_semaphore_put(&self->semaphore);
+
+    bc_os_task_destroy(&self->task);
+    bc_os_semaphore_destroy(&self->semaphore);
+    bc_os_mutex_destroy(&self->mutex);
+
+    free(self);
+
+    bc_log_info("task_barometer_terminate: terminated instance for bus %d, address 0x%02X",
+                i2c_channel, device_address);
+}
+
 
 static void *task_barometer_worker(void *parameter)
 {
@@ -55,7 +83,6 @@ static void *task_barometer_worker(void *parameter)
     bool altitude_valid = false;
     bool absolute_pressure_valid = false;
 
-    bool init_ok = false;
     bc_tick_t tick_feed_interval;
     bc_tag_barometer_state_t state;
 
@@ -71,6 +98,15 @@ static void *task_barometer_worker(void *parameter)
 
     bc_tag_barometer_t tag_barometer;
 
+    if (!bc_tag_barometer_init(&tag_barometer, &interface))
+    {
+        bc_log_debug("task_barometer_worker: bc_tag_barometer_init false");
+        bc_os_mutex_lock(&self->mutex);
+        self->_quit = true;
+        bc_os_mutex_unlock(&self->mutex);
+        return NULL;
+    }
+
     while (true)
     {
         task_barometer_get_interval(self, &tick_feed_interval);
@@ -84,18 +120,12 @@ static void *task_barometer_worker(void *parameter)
             bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
 
-        bc_log_debug("task_barometer_worker: wake up signal");
-
-        if (init_ok==false) //TODO predelat do task manageru
+        if (task_barometer_is_quit_request(self))
         {
-            if (!bc_tag_barometer_init(&tag_barometer, &interface))
-            {
-                bc_log_error("task_barometer_worker: bc_tag_barometer_init");
-                continue;
-            }
-            init_ok = true;
+            break;
         }
 
+        bc_log_debug("task_barometer_worker: wake up signal");
 
         self->_tick_last_feed = bc_tick_get();
 
@@ -187,4 +217,20 @@ static void *task_barometer_worker(void *parameter)
     }
 
     return NULL;
+}
+
+static bool task_barometer_is_quit_request(task_barometer_t *self)
+{
+    bc_os_mutex_lock(&self->mutex);
+
+    if (self->_quit)
+    {
+        bc_os_mutex_unlock(&self->mutex);
+
+        return true;
+    }
+
+    bc_os_mutex_unlock(&self->mutex);
+
+    return false;
 }

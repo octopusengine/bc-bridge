@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "application.h"
 #include <argp.h>
 
@@ -17,6 +19,7 @@ int main(int argc, char **argv)
     {
         { "furious",  'f', 0, 0,  "Do not wait for the initial start string" },
         { "log",  'l', "level",  0, "dump|debug|info|warning|error|fatal" },
+//        { "exit",  'e', 0,  0, "exit on remove bridge, no wait on reconnect device" }, //TODO jo nebo ne
         { "version",  'v', 0,  0, "Show version" },
         { 0 }
     };
@@ -31,6 +34,7 @@ int main(int argc, char **argv)
     application_parameters_t application_parameters =
     {
         .furious_mode = false,
+//        .exit = false,
         .log_level = BC_LOG_LEVEL_WARNING
     };
 
@@ -43,6 +47,11 @@ int main(int argc, char **argv)
     while (!quit)
     {
         application_loop(&quit);
+//        if (application_parameters.exit)
+//        {
+//            break;
+//        }
+        sleep(5);
     }
 
     exit(EXIT_SUCCESS);
@@ -64,6 +73,11 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
             printf("version bc-bridge " FIRMWARE_RELEASE " " FIRMWARE_DATETIME " \n");
             printf("support <support@bigclown.com> \n");
             exit(EXIT_SUCCESS);
+        }
+        case 'e':
+        {
+            application_parameters->exit = true;
+            break;
         }
         case 'l':
         {

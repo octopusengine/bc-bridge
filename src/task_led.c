@@ -6,6 +6,7 @@
 #include "task.h"
 
 static void *task_led_worker(void *parameter);
+static bool task_led_is_quit_request(task_led_t *self);
 
 void task_led_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
@@ -66,7 +67,7 @@ void task_led_get_blink_interval(task_led_t *self, bc_tick_t *interval)
 void task_led_set_state(task_led_t *self, task_led_state_t state)
 {
     bc_os_mutex_lock(&self->mutex);
-    self->state = state;
+    self->_state = state;
     bc_os_mutex_unlock(&self->mutex);
 
     bc_os_semaphore_put(&self->semaphore);
@@ -75,9 +76,29 @@ void task_led_set_state(task_led_t *self, task_led_state_t state)
 void task_led_get_state(task_led_t *self, task_led_state_t *state)
 {
     bc_os_mutex_lock(&self->mutex);
-    *state = self->state;
+    *state = self->_state;
     bc_os_mutex_unlock(&self->mutex);
 
+}
+
+void task_led_terminate(task_led_t *self)
+{
+
+    bc_log_info("task_led_terminate: terminating instance ");
+
+    bc_os_mutex_lock(&self->mutex);
+    self->_quit = true;
+    bc_os_mutex_unlock(&self->mutex);
+
+    bc_os_semaphore_put(&self->semaphore);
+
+    bc_os_task_destroy(&self->task);
+    bc_os_semaphore_destroy(&self->semaphore);
+    bc_os_mutex_destroy(&self->mutex);
+
+    free(self);
+
+    bc_log_info("task_led_terminate: terminated instance ");
 }
 
 static void *task_led_worker(void *parameter)
@@ -97,13 +118,13 @@ static void *task_led_worker(void *parameter)
     bc_bridge_led_get(self->_bridge, &bridge_led_state);
     if (bridge_led_state==BC_BRIDGE_LED_ON)
     {
-        self->state = TASK_LED_ON;
+        self->_state = TASK_LED_ON;
     }
     else
     {
-        self->state = TASK_LED_OFF;
+        self->_state = TASK_LED_OFF;
     }
-    last_state = self->state;
+    last_state = self->_state;
     bc_os_mutex_unlock(&self->mutex);
 
     while (true)
@@ -123,10 +144,16 @@ static void *task_led_worker(void *parameter)
             bc_os_semaphore_get(&self->semaphore);
         }
 
+
+        if (task_led_is_quit_request(self))
+        {
+            break;
+        }
+
         self->_tick_last_feed = bc_tick_get();
 
         bc_os_mutex_lock(&self->mutex);
-        state = self->state;
+        state = self->_state;
         blink_interval = self->blink_interval;
         bc_os_mutex_unlock(&self->mutex);
 
@@ -173,17 +200,39 @@ static void *task_led_worker(void *parameter)
             last_state = state;
         }
 
-
         for (i=0; i<blink_cnt; i++)
         {
-
             bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_ON);
+            if (task_led_is_quit_request(self))
+            {
+                break;
+            }
             bc_os_task_sleep(blink_interval);
             bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_OFF);
+            if (task_led_is_quit_request(self))
+            {
+                break;
+            }
             bc_os_task_sleep(blink_interval);
         }
 
     }
 
     return NULL;
+}
+
+static bool task_led_is_quit_request(task_led_t *self)
+{
+    bc_os_mutex_lock(&self->mutex);
+
+    if (self->_quit)
+    {
+        bc_os_mutex_unlock(&self->mutex);
+
+        return true;
+    }
+
+    bc_os_mutex_unlock(&self->mutex);
+
+    return false;
 }

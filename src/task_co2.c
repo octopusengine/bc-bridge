@@ -7,6 +7,7 @@
 #include "task.h"
 
 static void *task_co2_worker(void *parameter);
+static bool task_co2_is_quit_request(task_co2_t *self);
 
 void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
@@ -52,10 +53,29 @@ void task_co2_get_interval(task_co2_t *self, bc_tick_t *interval)
 
 }
 
+void task_co2_terminate(task_co2_t *self)
+{
+
+    bc_log_info("task_co2_terminate: terminating instance ");
+
+    bc_os_mutex_lock(&self->mutex);
+    self->_quit = true;
+    bc_os_mutex_unlock(&self->mutex);
+
+    bc_os_semaphore_put(&self->semaphore);
+
+    bc_os_task_destroy(&self->task);
+    bc_os_semaphore_destroy(&self->semaphore);
+    bc_os_mutex_destroy(&self->mutex);
+
+    free(self);
+
+    bc_log_info("task_co2_terminate: terminated instance ");
+}
+
 static void *task_co2_worker(void *parameter)
 {
     int16_t value;
-    bool init_ok = false;
     bc_tick_t tick_feed_interval;
     bc_module_co2_t module_co2;
 
@@ -67,6 +87,15 @@ static void *task_co2_worker(void *parameter)
 
     interface.bridge = self->_bridge;
     interface.channel = BC_BRIDGE_I2C_CHANNEL_0;
+
+    if (!bc_module_co2_init(&module_co2, &interface))
+    {
+        bc_log_debug("task_co2_worker: bc_module_co2_init false");
+        bc_os_mutex_lock(&self->mutex);
+        self->_quit = true;
+        bc_os_mutex_unlock(&self->mutex);
+        return NULL;
+    }
 
     while (true)
     {
@@ -81,17 +110,12 @@ static void *task_co2_worker(void *parameter)
             bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
 
-        bc_log_debug("task_co2_worker: wake up signal");
-
-        if (init_ok==false) //TODO predelat do task manageru
+        if (task_co2_is_quit_request(self))
         {
-            if (!bc_module_co2_init(&module_co2, &interface))
-            {
-                bc_log_error("task_co2_worker: bc_module_co2_init");
-                continue;
-            }
-            init_ok = true;
+            break;
         }
+
+        bc_log_debug("task_co2_worker: wake up signal");
 
         self->_tick_last_feed = bc_tick_get();
 
@@ -110,4 +134,20 @@ static void *task_co2_worker(void *parameter)
     }
 
     return NULL;
+}
+
+static bool task_co2_is_quit_request(task_co2_t *self)
+{
+    bc_os_mutex_lock(&self->mutex);
+
+    if (self->_quit)
+    {
+        bc_os_mutex_unlock(&self->mutex);
+
+        return true;
+    }
+
+    bc_os_mutex_unlock(&self->mutex);
+
+    return false;
 }
