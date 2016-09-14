@@ -4,6 +4,14 @@
 #include <semaphore.h>
 #include <time.h>
 
+typedef struct
+{
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    uint32_t count;
+
+} bc_os_semaphore_primitives_t;
+
 // TODO Budeme resit kdyz se nepovede malloc ? To uz je stejne konec sveta...
 
 void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *parameter)
@@ -72,19 +80,51 @@ void bc_os_mutex_unlock(bc_os_mutex_t *mutex)
 
 void bc_os_semaphore_init(bc_os_semaphore_t *semaphore, uint32_t value)
 {
-    semaphore->_semaphore = malloc(sizeof(sem_t));
+    bc_os_semaphore_primitives_t *primitives;
 
-    if (sem_init((sem_t *) semaphore->_semaphore, 0, value) != 0)
+    pthread_condattr_t cond_attributes;
+
+    semaphore->_semaphore = malloc(sizeof(bc_os_semaphore_primitives_t));
+
+    primitives = (bc_os_semaphore_primitives_t *) semaphore->_semaphore;
+
+    primitives->count = value;
+
+    if (pthread_mutex_init(&primitives->mutex, NULL) != 0)
     {
-        bc_log_fatal("bc_os_semaphore_init: call failed: sem_init");
+        bc_log_fatal("bc_os_semaphore_init: call failed: pthread_mutex_init");
+    }
+
+    if (pthread_condattr_init(&cond_attributes) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_init: call failed: pthread_condattr_init");
+    }
+
+    if (pthread_condattr_setclock(&cond_attributes, CLOCK_MONOTONIC) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_init: call failed: pthread_condattr_setclock");
+    }
+
+    if (pthread_cond_init(&primitives->cond, &cond_attributes) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_init: call failed: pthread_cond_init");
     }
 }
 
 void bc_os_semaphore_destroy(bc_os_semaphore_t *semaphore)
 {
-    if (sem_destroy((sem_t *) semaphore->_semaphore) != 0)
+    bc_os_semaphore_primitives_t *primitives;
+
+    primitives = (bc_os_semaphore_primitives_t *) semaphore->_semaphore;
+
+    if (pthread_cond_destroy(&primitives->cond) != 0)
     {
-        bc_log_fatal("bc_os_semaphore_destroy: call failed: sem_destroy");
+        bc_log_fatal("bc_os_semaphore_destroy: call failed: pthread_cond_destroy");
+    }
+
+    if (pthread_mutex_destroy(&primitives->mutex) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_destroy: call failed: pthread_mutex_destroy");
     }
 
     free(semaphore->_semaphore);
@@ -92,40 +132,86 @@ void bc_os_semaphore_destroy(bc_os_semaphore_t *semaphore)
 
 void bc_os_semaphore_put(bc_os_semaphore_t *semaphore)
 {
-    if (sem_post((sem_t *) semaphore->_semaphore) != 0)
+    bc_os_semaphore_primitives_t *primitives;
+
+    primitives = (bc_os_semaphore_primitives_t *) semaphore->_semaphore;
+
+    if (pthread_mutex_lock(&primitives->mutex) != 0)
     {
-        bc_log_fatal("bc_os_semaphore_put: call failed: sem_post");
+        bc_log_fatal("bc_os_semaphore_put: call failed: pthread_mutex_lock");
+    }
+
+    if (primitives->count == 0)
+    {
+        if (pthread_cond_signal(&primitives->cond) != 0)
+        {
+            bc_log_fatal("bc_os_semaphore_put: call failed: pthread_cond_signal");
+        }
+    }
+
+    primitives->count++;
+
+    if (pthread_mutex_unlock(&primitives->mutex) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_put: call failed: pthread_mutex_unlock");
     }
 }
 
 void bc_os_semaphore_get(bc_os_semaphore_t *semaphore)
 {
-    if (sem_wait((sem_t *) semaphore->_semaphore) != 0)
+    bc_os_semaphore_primitives_t *primitives;
+
+    primitives = (bc_os_semaphore_primitives_t *) semaphore->_semaphore;
+
+    if (pthread_mutex_lock(&primitives->mutex) != 0)
     {
-        bc_log_fatal("bc_os_semaphore_get: call failed: sem_wait");
+        bc_log_fatal("bc_os_semaphore_get: call failed: pthread_mutex_lock");
+    }
+
+    while (primitives->count == 0)
+    {
+        if (pthread_cond_wait(&primitives->cond, &primitives->mutex) != 0)
+        {
+            bc_log_fatal("bc_os_semaphore_get: call failed: pthread_cond_wait");
+        }
+    }
+
+    primitives->count--;
+
+    if (pthread_mutex_unlock(&primitives->mutex) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_get: call failed: pthread_mutex_unlock");
     }
 }
 
 bool bc_os_semaphore_timed_get(bc_os_semaphore_t *semaphore, bc_tick_t timeout)
 {
+    bc_os_semaphore_primitives_t *primitives;
+
+    primitives = (bc_os_semaphore_primitives_t *) semaphore->_semaphore;
+
+    if (pthread_mutex_lock(&primitives->mutex) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_timed_get: call failed: pthread_mutex_lock");
+    }
+
     if (timeout == 0)
     {
-        if (sem_trywait((sem_t *) semaphore->_semaphore) == 0)
+        if (primitives->count == 0)
         {
-            return true;
-        }
+            if (pthread_mutex_unlock(&primitives->mutex) != 0)
+            {
+                bc_log_fatal("bc_os_semaphore_timed_get: call failed: pthread_mutex_unlock");
+            }
 
-        if (errno != EAGAIN)
-        {
-            bc_log_fatal("bc_os_semaphore_timed_get: call failed: sem_trywait");
+            return false;
         }
     }
     else
     {
         struct timespec ts;
 
-        // TODO Problem je, ze Linux pravdepodobne nepodporuje MONOTONIC clock na semaphore
-        if (clock_gettime(CLOCK_REALTIME, &ts) != 0)
+        if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
         {
             bc_log_fatal("bc_os_semaphore_timed_get: call failed: clock_gettime");
         }
@@ -135,16 +221,35 @@ bool bc_os_semaphore_timed_get(bc_os_semaphore_t *semaphore, bc_tick_t timeout)
         ts.tv_sec += ts.tv_nsec / 1000000000UL;
         ts.tv_nsec %= 1000000000UL;
 
-        if (sem_timedwait((sem_t *) semaphore->_semaphore, &ts) == 0)
+        while (primitives->count == 0)
         {
-            return true;
-        }
+            int res;
 
-        if (errno != ETIMEDOUT)
-        {
-            bc_log_fatal("bc_os_semaphore_timed_get: call failed: sem_timedwait");
+            res = pthread_cond_timedwait(&primitives->cond, &primitives->mutex, &ts);
+
+            if (res == ETIMEDOUT)
+            {
+                if (pthread_mutex_unlock(&primitives->mutex) != 0)
+                {
+                    bc_log_fatal("bc_os_semaphore_timed_get: call failed: pthread_mutex_unlock");
+                }
+
+                return false;
+            }
+
+            if (res != 0)
+            {
+                bc_log_fatal("bc_os_semaphore_timed_get: call failed: pthread_cond_timedwait");
+            }
         }
     }
 
-    return false;
+    primitives->count--;
+
+    if (pthread_mutex_unlock(&primitives->mutex) != 0)
+    {
+        bc_log_fatal("bc_os_semaphore_timed_get: call failed: pthread_mutex_unlock");
+    }
+
+    return true;
 }
