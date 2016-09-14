@@ -101,7 +101,14 @@ static void *task_thermometer_worker(void *parameter)
 
         task_thermometer_get_interval(self, &tick_feed_interval);
 
-        bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
+        if (tick_feed_interval < 0)
+        {
+            bc_os_semaphore_get(&self->semaphore);
+        }
+        else
+        {
+            bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
+        }
 
         bc_log_debug("task_thermometer_worker: wake up signal");
 

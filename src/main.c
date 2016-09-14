@@ -10,19 +10,14 @@ int main(int argc, char **argv)
     struct argp argp;
 
     char *doc;
-    char *version;
-    char *support;
 
     doc = "Software interface between Clown.Hub and Bridge Module";
-    // TODO Support following entities
-    version = "bc-bridge " VERSION;
-    support = "<support@bigclown.com>";
-
 
     static struct argp_option options[] =
     {
         { "furious",  'f', 0, 0,  "Do not wait for the initial start string" },
         { "log",  'l', "level",  0, "dump|debug|info|warning|error|fatal" },
+        { "version",  'v', 0,  0, "Show version" },
         { 0 }
     };
 
@@ -36,7 +31,7 @@ int main(int argc, char **argv)
     application_parameters_t application_parameters =
     {
         .furious_mode = false,
-        .log_level = BC_LOG_LEVEL_DUMP
+        .log_level = BC_LOG_LEVEL_WARNING
     };
 
     argp_parse(&argp, argc, argv, 0, 0, &application_parameters);
@@ -63,6 +58,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         {
             application_parameters->furious_mode = true;
             break;
+        }
+        case 'v':
+        {
+            printf("version bc-bridge " FIRMWARE_RELEASE " " FIRMWARE_DATETIME " \n");
+            printf("support <support@bigclown.com> \n");
+            exit(EXIT_SUCCESS);
         }
         case 'l':
         {

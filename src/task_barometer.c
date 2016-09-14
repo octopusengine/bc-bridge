@@ -71,7 +71,14 @@ static void *task_barometer_worker(void *parameter)
     {
         task_barometer_get_interval(self, &tick_feed_interval);
 
-        bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
+        if (tick_feed_interval < 0)
+        {
+            bc_os_semaphore_get(&self->semaphore);
+        }
+        else
+        {
+            bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
+        }
 
         bc_log_debug("task_barometer_worker: wake up signal");
 
@@ -93,6 +100,8 @@ static void *task_barometer_worker(void *parameter)
             bc_log_error("task_barometer_worker: bc_tag_barometer_get_state");
             continue;
         }
+
+        //bc_log_debug("task_barometer_worker: state=%d", state);
 
         switch (state)
         {

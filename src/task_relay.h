@@ -24,6 +24,7 @@ typedef struct
     bc_os_semaphore_t semaphore;
 
     task_relay_mode_t _relay_mode;
+    bc_tick_t _tick_last_feed;
 
     bc_bridge_t *_bridge;
     bc_bridge_i2c_channel_t _i2c_channel;

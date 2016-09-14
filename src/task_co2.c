@@ -16,7 +16,7 @@ void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 
     self->_bridge = bridge;
 
-    self->tick_feed_interval = 1000;
+    self->tick_feed_interval = BC_MODULE_CO2_MINIMAL_MEASUREMENT_INTERVAL_MS;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);
@@ -28,6 +28,10 @@ void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 
 void task_co2_set_interval(task_co2_t *self, bc_tick_t interval)
 {
+    if ( (interval<BC_MODULE_CO2_MINIMAL_MEASUREMENT_INTERVAL_MS) && (interval>0) )
+    {
+        return;
+    }
     bc_os_mutex_lock(&self->mutex);
     self->tick_feed_interval = interval;
     bc_os_mutex_unlock(&self->mutex);
@@ -63,7 +67,14 @@ static void *task_co2_worker(void *parameter)
     {
         task_co2_get_interval(self, &tick_feed_interval);
 
-        bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
+        if (tick_feed_interval < 0)
+        {
+            bc_os_semaphore_get(&self->semaphore);
+        }
+        else
+        {
+            bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
+        }
 
         bc_log_debug("task_co2_worker: wake up signal");
 
