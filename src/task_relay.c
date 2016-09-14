@@ -49,8 +49,8 @@ static void *task_relay_worker(void *parameter)
     task_relay_t *self = (task_relay_t *) parameter;
 
     bool init_ok = false;
-
-    bc_module_relay_mode_t relay_mode;
+    task_relay_mode_t last_mode = TASK_RELAY_MODE_NULL;
+    task_relay_mode_t relay_mode;
 
     bc_log_info("task_relay_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_channel, self->_device_address);
@@ -61,7 +61,6 @@ static void *task_relay_worker(void *parameter)
     interface.channel = self->_i2c_channel;
 
     bc_module_relay_t module_relay;
-
 
 
     while (true)
@@ -79,18 +78,34 @@ static void *task_relay_worker(void *parameter)
         }
 
         bc_os_semaphore_get(&self->semaphore);
+        self->_tick_last_feed = bc_tick_get();
+
         bc_log_debug("task_relay_worker: wake up signal");
 
         bc_os_mutex_lock(&self->mutex);
         relay_mode = self->_relay_mode;
         bc_os_mutex_unlock(&self->mutex);
 
-        if (!bc_module_relay_set_mode(&module_relay, relay_mode))
-        {
-            bc_log_error("task_relay_worker: bc_module_relay_set_mode");
+        if (relay_mode!=TASK_RELAY_MODE_NULL){
+
+            if (!bc_module_relay_set_mode(&module_relay, relay_mode == TASK_RELAY_MODE_FALSE ? BC_MODULE_RELAY_MODE_NO : BC_MODULE_RELAY_MODE_NC ))
+            {
+                bc_log_error("task_relay_worker: bc_module_relay_set_mode");
+            }
+
         }
 
-        bc_talk_publish_relay((int)relay_mode, self->_device_address);
+        if (last_mode!=relay_mode)
+        {
+            bc_talk_publish_relay((int)relay_mode, self->_device_address);
+            last_mode = relay_mode;
+            bc_os_task_sleep(1000L - (bc_tick_get() - self->_tick_last_feed)); //TODO michal navrhuje cvak max 1 za sekundu
+        }
+        else
+        {
+            bc_os_task_sleep(100L - (bc_tick_get() - self->_tick_last_feed)); //TODO pokud nedojde k zmene stavu povoluju 10krat za sekundu bliknout diodou
+        }
+
     }
 
     return NULL;

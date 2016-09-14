@@ -1,14 +1,18 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(bc-bridge C)
+project(bc-bridge LANGUAGES C)
+set(PROJECT_VERSION 0.1.0)
 
 # set(CMAKE_VERBOSE_MAKEFILE on)
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-Wall -pedantic -std=gnu99")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-string(TIMESTAMP VERSION "%Y-%m-%dT%H:%M:%S")
+string(TIMESTAMP FIRMWARE_DATETIME "%Y-%m-%dT%H:%M:%SZ")
 
-add_definitions(-DVERSION="${VERSION}")
+
+
+add_definitions(-DFIRMWARE_RELEASE="${PROJECT_VERSION}")
+add_definitions(-DFIRMWARE_DATETIME="${FIRMWARE_DATETIME}")
 add_definitions(-DBRIDGE)
 add_definitions(-D_BSD_SOURCE)
 add_definitions(-D_REENTRANT)

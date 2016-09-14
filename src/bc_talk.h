@@ -3,6 +3,9 @@
 
 #include "bc_common.h"
 
+#define BC_TALK_INT_VALUE_NULL -1
+#define BC_TALK_INT_VALUE_INVALID -2
+
 typedef enum
 {
     BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL,

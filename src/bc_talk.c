@@ -12,8 +12,9 @@ static bool bc_talk_add_comma=false;
 static bool _bc_talk_schema_check(int r, jsmntok_t *tokens);
 static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s);
 static int _bc_talk_token_get_int(char *line, jsmntok_t *tok);
-static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event);
+static int _bc_talk_token_get_bool_as_int(char *line, jsmntok_t *tok);
 static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, const char *list[], size_t length);
+static bool _bc_talk_set_i2c(char *str, bc_talk_event_t *event);
 
 void bc_talk_init(void)
 {
@@ -219,7 +220,10 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
 
                     event.operation = BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL;
                     event.value = _bc_talk_token_get_int(line, &tokens[i+1] );
-                    callback(&event);
+                    if (event.value != BC_TALK_INT_VALUE_INVALID)
+                    {
+                        callback(&event);
+                    }
                 }
             }
         }
@@ -237,8 +241,11 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
         {
             event.operation = BC_TALK_OPERATION_LED_SET;
-            event.value = _bc_talk_token_find_index(line, &tokens[4], bc_talk_led_state,  sizeof(bc_talk_led_state)/sizeof(*bc_talk_led_state) );
-            callback(&event);
+            event.value = _bc_talk_token_find_index(line, &tokens[4], bc_talk_led_state, sizeof(bc_talk_led_state)/sizeof(*bc_talk_led_state) );
+            if (event.value != BC_TALK_INT_VALUE_INVALID)
+            {
+                callback(&event);
+            }
         }
         else if ((strcmp(payload[2], "get") == 0) )
         {
@@ -256,8 +263,11 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state") )
         {
             event.operation = BC_TALK_OPERATION_RELAY_SET;
-            event.value = _bc_talk_token_find_index(line, &tokens[4], bc_talk_bool,  sizeof(bc_talk_bool)/sizeof(*bc_talk_bool) );
-            callback(&event);
+            event.value = _bc_talk_token_get_bool_as_int(line, &tokens[4]);
+            if (event.value != BC_TALK_INT_VALUE_INVALID)
+            {
+                callback(&event);
+            }
         }
         else if ((strcmp(payload[2], "get") == 0) )
         {
@@ -314,9 +324,44 @@ static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s) {
 static int _bc_talk_token_get_int(char *line, jsmntok_t *tok)
 {
     char temp[10];
+    int ret;
+
+    if (tok->type != JSMN_PRIMITIVE)
+    {
+        return BC_TALK_INT_VALUE_INVALID;
+    }
+
     memset(temp, 0x00, sizeof(temp));
     strncpy(temp, line+tok->start, tok->end - tok->start < sizeof(temp) ? tok->end - tok->start : sizeof(temp) - 1 );
-    return (int) strtol(temp, NULL, 10);
+
+    if (strcmp(temp, "null") == 0)
+    {
+        return BC_TALK_INT_VALUE_NULL;
+    }
+
+    if (strchr(temp, 'e')) //support 1e3
+    {
+        ret = (int)strtof(temp, NULL);
+    }
+    else
+    {
+        ret = (int)strtol(temp, NULL, 10);
+    }
+
+    if (ret < 0 )
+    {
+        return BC_TALK_INT_VALUE_INVALID;
+    }
+    return ret;
+}
+
+static int _bc_talk_token_get_bool_as_int(char *line, jsmntok_t *tok)
+{
+    if (tok->type != JSMN_PRIMITIVE)
+    {
+        return BC_TALK_INT_VALUE_INVALID;
+    }
+    return _bc_talk_token_find_index(line, tok, bc_talk_bool, sizeof(bc_talk_bool)/sizeof(*bc_talk_bool) );
 }
 
 static int _bc_talk_token_find_index(char *line, jsmntok_t *tok,const char *list[], size_t length){
@@ -336,7 +381,7 @@ static int _bc_talk_token_find_index(char *line, jsmntok_t *tok,const char *list
         }
     }
     free(temp);
-    return -1;
+    return BC_TALK_INT_VALUE_INVALID;
 }
 
 //static int _bc_talk_token_get_enum(char *line, jsmntok_t *tok, ...){

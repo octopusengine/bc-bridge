@@ -48,9 +48,6 @@ void application_init(application_parameters_t *parameters)
     bc_log_init(parameters->log_level);
     bc_tick_init();
 
-
-    bc_log_info("application_init: build %s", VERSION);
-
     // TODO predelat na dynamicke pole
     bc_bridge_device_info_t devices[6];
 
@@ -90,13 +87,13 @@ void application_init(application_parameters_t *parameters)
 //    char testd[] = "[\"led/-/get\",{\"state\":null}]";
 //    bc_talk_parse(testd, sizeof(testd), _application_bc_talk_callback);
 
-//    char test[] = "[\"$config/devices/thermometer/i2c0-48/update\", {\"publish-interval\": 500, \"aaa\": true}]";
+//    char test[] = "[\"$config/devices/co2-sensor/i2c0-38/update\", {\"publish-interval\": 12 }]";
 //    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
 //
-//    char testb[] = "[\"relay/i2c0-3b/set\",{\"state\":false}]";
+//    char testb[] = "[\"relay/i2c0-3b/set\",{\"state\": true }]";
 //    bc_talk_parse(testb, sizeof(testb), _application_bc_talk_callback);
 //
-//    char teste[] = "[\"$config/devices/led/-/update\",{\"publish-interval\":5000}]";
+//    char teste[] = "[\"$config/devices/led/-/update\",{\"publish-interval\": 1e2}]";
 //    bc_talk_parse(teste, sizeof(teste), _application_bc_talk_callback);
 
 
@@ -132,7 +129,7 @@ static void _application_wait_start_string(void)
         {
             if (bc_talk_parse_start(line, size))
             {
-                printf("[\"$config/clown.talk/-\", {\"ack\":false, \"device\":\"bridge\", \"capabilities\":1,  \"firmware-datetime\":\"%s\"]\n", VERSION);
+                printf("[\"$config/clown.talk/-\", {\"ack\":false, \"device\":\"bridge\", \"capabilities\":1,  \"firmware-datetime\":\"%s\", \"firmware-release\":\"%s\"]\n", FIRMWARE_DATETIME, FIRMWARE_RELEASE);
                 return;
             }
         }
@@ -179,7 +176,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
     {
         case BC_TALK_OPERATION_UPDATE_PUBLISH_INTERVAL:
         {
-            bc_log_info("_application_bc_talk_callback: UPDATE_PUBLISH_INTERVAL %d", (bc_tick_t) event->value);
+            bc_log_debug("_application_bc_talk_callback: UPDATE_PUBLISH_INTERVAL %d", (bc_tick_t) event->value);
             task_set_interval(&task_info, (bc_tick_t) event->value );
             //break; //necham propadnout at se vypise potvrzeni o nastaveni
         }
@@ -191,18 +188,13 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
                 bc_talk_make_topic( task_info.i2c_channel, task_info.device_address, tmp, sizeof(tmp) );
                 snprintf(topic, sizeof(topic), "$config/devices/%s", tmp );
                 bc_talk_publish_begin(topic);
-                bc_talk_publish_add_value("publish-interval", "%d", publish_interval );
+                bc_talk_publish_add_value("publish-interval", publish_interval == BC_TALK_INT_VALUE_NULL ? "null" : "%d", publish_interval );
                 bc_talk_publish_end();
             }
             break;
         }
         case BC_TALK_OPERATION_RELAY_SET :
         {
-            if ( event->value == -1)
-            {
-                bc_log_info("_application_bc_talk_callback: BC_TALK_OPERATION_RELAY_SET bad value");
-                return;
-            }
             task_relay_set_mode((task_relay_t *)task_info.task, event->value==1 ? TASK_RELAY_MODE_TRUE : TASK_RELAY_MODE_FALSE);
             break;
         }
@@ -210,17 +202,11 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             task_relay_mode_t relay_mode;
             task_relay_get_mode((task_relay_t *)task_info.task, &relay_mode);
-
             bc_talk_publish_relay((int)relay_mode, task_info.device_address);
             break;
         }
         case BC_TALK_OPERATION_LED_SET:
         {
-            if ( event->value == -1)
-            {
-                bc_log_info("_application_bc_talk_callback: BC_TALK_OPERATION_LED_SET bad value");
-                return;
-            }
             task_led_set_state((task_led_t *)task_info.task, (task_led_state_t)event->value);
             //break; //necham propadnout at se vypise potvrzeni o nastaveni
         }
