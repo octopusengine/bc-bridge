@@ -93,7 +93,7 @@ void application_init(application_parameters_t *parameters)
 //    char testb[] = "[\"relay/i2c0-3b/set\",{\"state\": true }]";
 //    bc_talk_parse(testb, sizeof(testb), _application_bc_talk_callback);
 //
-//    char teste[] = "[\"$config/devices/led/-/update\",{\"publish-interval\":5000}]";
+//    char teste[] = "[\"$config/devices/led/-/update\",{\"publish-interval\": 1e2}]";
 //    bc_talk_parse(teste, sizeof(teste), _application_bc_talk_callback);
 
 

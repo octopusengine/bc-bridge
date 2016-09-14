@@ -338,7 +338,16 @@ static int _bc_talk_token_get_int(char *line, jsmntok_t *tok)
     {
         return BC_TALK_INT_VALUE_NULL;
     }
-    ret = (int) strtol(temp, NULL, 10);
+
+    if (strchr(temp, 'e')) //support 1e3
+    {
+        ret = (int)strtof(temp, NULL);
+    }
+    else
+    {
+        ret = (int)strtol(temp, NULL, 10);
+    }
+
     if (ret < 0 )
     {
         return BC_TALK_INT_VALUE_INVALID;
