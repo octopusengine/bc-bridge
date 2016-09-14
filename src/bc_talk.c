@@ -96,6 +96,7 @@ void bc_talk_publish_add_value(char *name, char *value, ...)
 void bc_talk_publish_end(void)
 {
     fprintf(stdout, "}]\n");
+    fflush(stdout);
 
     bc_os_mutex_unlock(&bc_talk_mutex);
 }
