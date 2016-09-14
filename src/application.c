@@ -79,27 +79,8 @@ void application_init(application_parameters_t *parameters)
 
     task_init(&bridge, task_info_list, task_info_list_length );
 
-//
-
-
-//    char testc[] = "[\"led/-/set\",{\"state\":\"3-dot\"}]";
-//    bc_talk_parse(testc, sizeof(testc), _application_bc_talk_callback);
-//    char testd[] = "[\"led/-/get\",{\"state\":null}]";
-//    bc_talk_parse(testd, sizeof(testd), _application_bc_talk_callback);
-
 //    char test[] = "[\"$config/devices/co2-sensor/i2c0-38/update\", {\"publish-interval\": 12 }]";
 //    bc_talk_parse(test, sizeof(test), _application_bc_talk_callback);
-//
-//    char testb[] = "[\"relay/i2c0-3b/set\",{\"state\": true }]";
-//    bc_talk_parse(testb, sizeof(testb), _application_bc_talk_callback);
-//
-//    char teste[] = "[\"$config/devices/led/-/update\",{\"publish-interval\": 1e2}]";
-//    bc_talk_parse(teste, sizeof(teste), _application_bc_talk_callback);
-
-
-//    char testq[] = "[\"$config/devices/-/-/list\",{}]";
-//    bc_talk_parse(testq, sizeof(testq), _application_bc_talk_callback);
-//
 //    exit(0);
 }
 

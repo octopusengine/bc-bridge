@@ -27,6 +27,7 @@ void task_barometer_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 
 void task_barometer_set_interval(task_barometer_t *self, bc_tick_t interval)
 {
+    bc_tick_t minimal_interval;
     bc_os_mutex_lock(&self->mutex);
     self->tick_feed_interval = interval;
     bc_os_mutex_unlock(&self->mutex);
@@ -64,8 +65,6 @@ static void *task_barometer_worker(void *parameter)
     interface.channel = self->_i2c_channel;
 
     bc_tag_barometer_t tag_barometer;
-
-
 
     while (true)
     {
@@ -122,11 +121,6 @@ static void *task_barometer_worker(void *parameter)
             {
                 altitude_valid = false;
 
-                if (!bc_tag_barometer_read_result(&tag_barometer))
-                {
-                    bc_log_error("task_barometer_worker: bc_tag_barometer_read_result");
-                    continue;
-                }
 
                 if (!bc_tag_barometer_get_altitude(&tag_barometer, &altitude))
                 {
@@ -149,11 +143,6 @@ static void *task_barometer_worker(void *parameter)
 
                 absolute_pressure_valid = false;
 
-                if (!bc_tag_barometer_read_result(&tag_barometer))
-                {
-                    bc_log_error("task_barometer_worker: bc_tag_barometer_read_result");
-                    continue;
-                }
 
                 if (!bc_tag_barometer_get_pressure(&tag_barometer, &absolute_pressure))
                 {

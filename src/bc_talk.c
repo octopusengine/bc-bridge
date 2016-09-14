@@ -320,7 +320,6 @@ static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s) {
     return false;
 }
 
-
 static int _bc_talk_token_get_int(char *line, jsmntok_t *tok)
 {
     char temp[10];

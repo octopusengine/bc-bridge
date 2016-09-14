@@ -49,6 +49,7 @@ typedef enum
 
 bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count);
 bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info);
+bool bc_bridge_is_live(bc_bridge_t *self);
 bool bc_bridge_close(bc_bridge_t *self);
 bool bc_bridge_i2c_reset(bc_bridge_t *self);
 bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer);

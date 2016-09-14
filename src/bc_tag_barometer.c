@@ -1,20 +1,45 @@
 #include "bc_tag_barometer.h"
 
+static bool _bc_tag_barometer_read_result(bc_tag_barometer_t *self);
 static bool _bc_tag_barometer_write_register(bc_tag_barometer_t *self, uint8_t address, uint8_t value);
 static bool _bc_tag_barometer_read_register(bc_tag_barometer_t *self, uint8_t address, uint8_t *value);
+static bc_tick_t _minimal_measurement_interval[] = {6, 10, 18, 34, 66, 130, 258, 512};
 
 bool bc_tag_barometer_init(bc_tag_barometer_t *self, bc_i2c_interface_t *interface)
 {
+    uint8_t who_am_i;
     memset(self, 0, sizeof(*self));
 
     self->_interface = interface;
     self->_communication_fault = true;
+
+    if (!_bc_tag_barometer_read_register(self, 0x0C, &who_am_i))
+    {
+        return false;
+    }
+
+    if (who_am_i != 0xC4)
+    {
+        return false;
+    }
 
     if (!bc_tag_barometer_power_down(self))
     {
         return false;
     }
 
+    return true;
+}
+
+bool bc_tag_barometer_get_minimal_measurement_interval(bc_tag_barometer_t *self, bc_tick_t *interval)
+{
+    uint8_t ctrl_reg1;
+    if (!_bc_tag_barometer_read_register(self, 0x26, &ctrl_reg1))
+    {
+        return false;
+    }
+
+    *interval = _minimal_measurement_interval[(ctrl_reg1 >> 3) & 0x07];
     return true;
 }
 
@@ -155,7 +180,12 @@ bool bc_tag_barometer_get_altitude(bc_tag_barometer_t *self, float *altitude_met
 {
     uint32_t out_p;
 
-    out_p = (uint32_t) self->_out_p_lsb;
+    if (!_bc_tag_barometer_read_result(self))
+    {
+        return false;
+    }
+
+    out_p = (uint32_t) self->_out_p_lsb ;
     out_p |= ((uint32_t) self->_out_p_csb) << 8;
     out_p |= ((uint32_t) self->_out_p_msb) << 16;
 
@@ -168,6 +198,11 @@ bool bc_tag_barometer_get_pressure(bc_tag_barometer_t *self, float *pressure_pas
 {
     uint32_t out_p;
 
+    if (!_bc_tag_barometer_read_result(self))
+    {
+        return false;
+    }
+
     out_p = (uint32_t) self->_out_p_lsb;
     out_p |= ((uint32_t) self->_out_p_csb) << 8;
     out_p |= ((uint32_t) self->_out_p_msb) << 16;
@@ -177,7 +212,28 @@ bool bc_tag_barometer_get_pressure(bc_tag_barometer_t *self, float *pressure_pas
     return true;
 }
 
-bool bc_tag_barometer_read_result(bc_tag_barometer_t *self)
+bool bc_tag_barometer_get_temperature(bc_tag_barometer_t *self, float *temperature)
+{
+    uint32_t out_t;
+
+    if (!_bc_tag_barometer_read_register(self, 0x04, &self->_out_t_msb))
+    {
+        return false;
+    }
+
+    if (!_bc_tag_barometer_read_register(self, 0x05, &self->_out_t_lsb))
+    {
+        return false;
+    }
+
+    out_t = (uint16_t)(self->_out_t_msb << 8) | (uint16_t)( self->_out_t_lsb );
+
+    *temperature = ((float) out_t) / 256.f;
+
+    return true;
+}
+
+static bool _bc_tag_barometer_read_result(bc_tag_barometer_t *self)
 {
     if (!_bc_tag_barometer_read_register(self, 0x01, &self->_out_p_msb))
     {
@@ -190,16 +246,6 @@ bool bc_tag_barometer_read_result(bc_tag_barometer_t *self)
     }
 
     if (!_bc_tag_barometer_read_register(self, 0x03, &self->_out_p_lsb))
-    {
-        return false;
-    }
-
-    if (!_bc_tag_barometer_read_register(self, 0x04, &self->_out_t_msb))
-    {
-        return false;
-    }
-
-    if (!_bc_tag_barometer_read_register(self, 0x05, &self->_out_t_lsb))
     {
         return false;
     }
