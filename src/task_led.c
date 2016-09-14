@@ -11,6 +11,11 @@ void task_led_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
     task_led_t *self = (task_led_t *) malloc(sizeof(task_led_t));
 
+    if (self == NULL)
+    {
+        bc_log_fatal("task_led_spawn: call failed: malloc");
+    }
+
     self->_bridge = bridge;
     self->_i2c_channel = task_info->i2c_channel;
     self->_device_address = task_info->device_address;

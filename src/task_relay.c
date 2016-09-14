@@ -11,6 +11,11 @@ void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
     task_relay_t *self = (task_relay_t *) malloc(sizeof(task_relay_t));
 
+    if (self == NULL)
+    {
+        bc_log_fatal("task_relay_spawn: call failed: malloc");
+    }
+
     self->_bridge = bridge;
     self->_i2c_channel = task_info->i2c_channel;
     self->_device_address = task_info->device_address;

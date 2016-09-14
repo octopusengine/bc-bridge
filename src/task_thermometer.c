@@ -17,6 +17,11 @@ void task_thermometer_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 
     self = (task_thermometer_t *) malloc(sizeof(task_thermometer_t));
 
+    if (self == NULL)
+    {
+        bc_log_fatal("task_thermometer_spawn: call failed: malloc");
+    }
+
     memset(self, 0, sizeof(task_thermometer_t));
 
     self->_i2c_interface.bridge = bridge;
