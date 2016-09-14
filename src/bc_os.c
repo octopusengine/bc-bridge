@@ -18,6 +18,11 @@ void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *p
 {
     task->_task = malloc(sizeof(pthread_t));
 
+    if (task->_task == NULL)
+    {
+        bc_log_fatal("bc_os_task_init: call failed: malloc");
+    }
+
     if (pthread_create((pthread_t *) task->_task, NULL, task_function, parameter) != 0)
     {
         bc_log_fatal("bc_os_task_init: call failed: pthread_create");
@@ -45,6 +50,11 @@ void bc_os_task_sleep(bc_tick_t timeout)
 void bc_os_mutex_init(bc_os_mutex_t *mutex)
 {
     mutex->_mutex = malloc(sizeof(pthread_mutex_t));
+
+    if (mutex->_mutex == NULL)
+    {
+        bc_log_fatal("bc_os_mutex_init: call failed: malloc");
+    }
 
     if (pthread_mutex_init((pthread_mutex_t *) mutex->_mutex, NULL) != 0)
     {
@@ -85,6 +95,11 @@ void bc_os_semaphore_init(bc_os_semaphore_t *semaphore, uint32_t value)
     pthread_condattr_t cond_attributes;
 
     semaphore->_semaphore = malloc(sizeof(bc_os_semaphore_primitives_t));
+
+    if (semaphore->_semaphore == NULL)
+    {
+        bc_log_fatal("bc_os_semaphore_init: call failed: malloc");
+    }
 
     primitives = (bc_os_semaphore_primitives_t *) semaphore->_semaphore;
 

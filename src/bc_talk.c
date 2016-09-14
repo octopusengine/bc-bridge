@@ -178,6 +178,12 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
     }
 
     payload_string = malloc( sizeof(char) * (tokens[1].end-tokens[1].start+1) );
+
+    if (payload_string == NULL)
+    {
+        bc_log_fatal("bc_talk_parse: call failed: malloc");
+    }
+
     strncpy(payload_string, line+tokens[1].start, tokens[1].end-tokens[1].start );
     payload_string[ tokens[1].end-tokens[1].start ] = 0x00;
 
@@ -369,6 +375,12 @@ static int _bc_talk_token_find_index(char *line, jsmntok_t *tok,const char *list
     int i;
     int temp_length = tok->end - tok->start;
     temp = malloc(sizeof(char) * (temp_length + 1) );
+
+    if (temp == NULL)
+    {
+        bc_log_fatal("_bc_talk_token_find_index: call failed: malloc");
+    }
+
     temp[ temp_length ] = 0x00;
     strncpy(temp, line+tok->start, temp_length);
 

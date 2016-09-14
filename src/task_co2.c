@@ -14,6 +14,11 @@ void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 
     task_co2_t *self = (task_co2_t *) malloc(sizeof(task_co2_t));
 
+    if (self == NULL)
+    {
+        bc_log_fatal("task_co2_spawn: call failed: malloc");
+    }
+
     self->_bridge = bridge;
 
     self->tick_feed_interval = BC_MODULE_CO2_MINIMAL_MEASUREMENT_INTERVAL_MS;
