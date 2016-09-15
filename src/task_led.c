@@ -107,7 +107,7 @@ static void *task_led_worker(void *parameter)
     bc_tick_t blink_interval;
     task_led_state_t last_state;
     task_led_state_t state;
-    bc_bridge_led_t bridge_led_state;
+    bc_bridge_led_state_t bridge_led_state;
     int blink_cnt = 0;
 
     task_led_t *self = (task_led_t *) parameter;
@@ -115,8 +115,8 @@ static void *task_led_worker(void *parameter)
     bc_log_info("task_led_worker: started instance ");
 
     bc_os_mutex_lock(&self->mutex);
-    bc_bridge_led_get(self->_bridge, &bridge_led_state);
-    if (bridge_led_state==BC_BRIDGE_LED_ON)
+    bc_bridge_led_get_state(self->_bridge, &bridge_led_state);
+    if (bridge_led_state==BC_BRIDGE_LED_STATE_ON)
     {
         self->_state = TASK_LED_ON;
     }
@@ -165,13 +165,13 @@ static void *task_led_worker(void *parameter)
             {
                 case TASK_LED_OFF :
                 {
-                    bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_OFF);
+                    bc_bridge_led_set_state(self->_bridge, BC_BRIDGE_LED_STATE_OFF);
                     blink_cnt = 0;
                     break;
                 }
                 case TASK_LED_ON :
                 {
-                    bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_ON);
+                    bc_bridge_led_set_state(self->_bridge, BC_BRIDGE_LED_STATE_ON);
                     blink_cnt = 0;
                     break;
                 }
@@ -202,13 +202,13 @@ static void *task_led_worker(void *parameter)
 
         for (i=0; i<blink_cnt; i++)
         {
-            bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_ON);
+            bc_bridge_led_set_state(self->_bridge, BC_BRIDGE_LED_STATE_ON);
             if (task_led_is_quit_request(self))
             {
                 break;
             }
             bc_os_task_sleep(blink_interval);
-            bc_bridge_led_set(self->_bridge, BC_BRIDGE_LED_OFF);
+            bc_bridge_led_set_state(self->_bridge, BC_BRIDGE_LED_STATE_OFF);
             if (task_led_is_quit_request(self))
             {
                 break;

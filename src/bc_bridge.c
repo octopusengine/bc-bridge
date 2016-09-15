@@ -135,7 +135,7 @@ bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
 
     memset(self, 0, sizeof(*self));
 
-    bc_os_mutex_init(&self->_mutex_i2c);
+    bc_os_mutex_init(&self->_mutex);
 
     self->_fd_i2c = open(info->path_i2c, O_RDWR);
 
@@ -170,13 +170,45 @@ bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info)
     return true;
 }
 
-bool bc_bridge_is_live(bc_bridge_t *self)
+bool bc_bridge_close(bc_bridge_t *self)
+{
+    bc_log_info("bc_bridge_close");
+
+    bc_os_mutex_lock(&self->_mutex);
+
+    if (flock(self->_fd_i2c, LOCK_UN) == -1)
+    {
+        bc_log_error("bc_bridge_close: call failed: flock");
+
+        bc_os_mutex_unlock(&self->_mutex);
+
+        return false;
+    }
+
+    if (close(self->_fd_i2c) == -1)
+    {
+        bc_log_error("bc_bridge_close: call failed: close");
+
+        bc_os_mutex_unlock(&self->_mutex);
+
+        return false;
+    }
+
+    bc_os_mutex_unlock(&self->_mutex);
+
+    bc_os_mutex_destroy(&self->_mutex);
+
+    return true;
+}
+
+bool bc_bridge_is_alive(bc_bridge_t *self)
 {
     struct stat s;
 
     if (fstat(self->_fd_i2c, &s) == -1)
     {
-        bc_log_fatal("_bc_bridge_ft260_check_fd: call failed: fstat");
+        bc_log_fatal("bc_bridge_is_alive: call failed: fstat");
+
         return false;
     }
 
@@ -188,42 +220,9 @@ bool bc_bridge_is_live(bc_bridge_t *self)
     return true;
 }
 
-bool bc_bridge_close(bc_bridge_t *self)
-{
-    bc_log_info("bc_bridge_close");
-
-    bc_os_mutex_lock(&self->_mutex_i2c);
-
-    if (flock(self->_fd_i2c, LOCK_UN) == -1)
-    {
-        bc_log_error("bc_bridge_close: call failed: flock");
-
-        bc_os_mutex_unlock(&self->_mutex_i2c);
-
-        return false;
-    }
-
-    if (close(self->_fd_i2c) == -1)
-    {
-        bc_log_error("bc_bridge_close: call failed: close");
-
-        bc_os_mutex_unlock(&self->_mutex_i2c);
-
-        return false;
-    }
-
-    bc_os_mutex_unlock(&self->_mutex_i2c);
-
-    bc_os_mutex_destroy(&self->_mutex_i2c);
-
-    memset(self, 0, sizeof(*self));
-
-    return true;
-}
-
 bool bc_bridge_i2c_reset(bc_bridge_t *self)
 {
-    bc_os_mutex_lock(&self->_mutex_i2c);
+    bc_os_mutex_lock(&self->_mutex);
 
     bc_log_info("bc_bridge_i2c_reset");
 
@@ -231,12 +230,12 @@ bool bc_bridge_i2c_reset(bc_bridge_t *self)
     {
         bc_log_error("bc_bridge_i2c_reset: call failed: _bc_bridge_ft260_i2c_reset");
 
-        bc_os_mutex_unlock(&self->_mutex_i2c);
+        bc_os_mutex_unlock(&self->_mutex);
 
         return false;
     }
 
-    bc_os_mutex_unlock(&self->_mutex_i2c);
+    bc_os_mutex_unlock(&self->_mutex);
 
     return true;
 }
@@ -245,7 +244,7 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
     uint8_t buffer[60];
 
-    bc_os_mutex_lock(&self->_mutex_i2c);
+    bc_os_mutex_lock(&self->_mutex);
 
     if (transfer->address_16_bit)
     {
@@ -253,7 +252,7 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
         {
             bc_log_error("bc_bridge_i2c_write: length is too big");
 
-            bc_os_mutex_unlock(&self->_mutex_i2c);
+            bc_os_mutex_unlock(&self->_mutex);
 
             return false;
         }
@@ -269,7 +268,7 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
         {
             bc_log_error("bc_bridge_i2c_write: length is too big");
 
-            bc_os_mutex_unlock(&self->_mutex_i2c);
+            bc_os_mutex_unlock(&self->_mutex);
 
             return false;
         }
@@ -299,13 +298,13 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
         {
             bc_log_error("bc_bridge_i2c_write: call failed: _bc_bridge_ft260_i2c_write");
 
-            bc_os_mutex_unlock(&self->_mutex_i2c);
+            bc_os_mutex_unlock(&self->_mutex);
 
             return false;
         }
     }
 
-    bc_os_mutex_unlock(&self->_mutex_i2c);
+    bc_os_mutex_unlock(&self->_mutex);
 
     return true;
 }
@@ -314,13 +313,13 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 {
     uint8_t buffer[2];
 
-    bc_os_mutex_lock(&self->_mutex_i2c);
+    bc_os_mutex_lock(&self->_mutex);
 
     if (transfer->length > 60)
     {
         bc_log_error("bc_bridge_i2c_read: length is too big");
 
-        bc_os_mutex_unlock(&self->_mutex_i2c);
+        bc_os_mutex_unlock(&self->_mutex);
 
         return false;
     }
@@ -352,7 +351,7 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     {
         bc_log_error("bc_bridge_i2c_read: call failed: _bc_bridge_i2c_set_channel");
 
-        bc_os_mutex_unlock(&self->_mutex_i2c);
+        bc_os_mutex_unlock(&self->_mutex);
 
         return false;
     }
@@ -362,7 +361,7 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     {
         bc_log_error("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_write");
 
-        bc_os_mutex_unlock(&self->_mutex_i2c);
+        bc_os_mutex_unlock(&self->_mutex);
 
         return false;
     }
@@ -372,7 +371,7 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     {
         bc_log_error("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_read");
 
-        bc_os_mutex_unlock(&self->_mutex_i2c);
+        bc_os_mutex_unlock(&self->_mutex);
 
         return false;
     }
@@ -381,7 +380,7 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_read: read %d bytes", transfer->length);
 #endif
 
-    bc_os_mutex_unlock(&self->_mutex_i2c);
+    bc_os_mutex_unlock(&self->_mutex);
 
     return true;
 }
@@ -457,19 +456,22 @@ bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint
 }
 
 
-bool bc_bridge_led_set(bc_bridge_t *self, bc_bridge_led_t value)
+bool bc_bridge_led_set_state(bc_bridge_t *self, bc_bridge_led_state_t state)
 {
-    //LED   GPIOH DIO13   pin 28
     uint8_t buffer[5];
+
+    bc_os_mutex_lock(&self->_mutex);
 
     buffer[0] = REPORT_ID_GPIO;
 
     if (!_bc_bridge_ft260_get_feature(self->_fd_i2c, buffer, sizeof(buffer)))
     {
+        bc_os_mutex_unlock(&self->_mutex);
+
         return false;
     }
 
-    if (value == BC_BRIDGE_LED_ON)
+    if (state == BC_BRIDGE_LED_STATE_ON)
     {
         buffer[3] |= 0x80;
     }
@@ -478,28 +480,39 @@ bool bc_bridge_led_set(bc_bridge_t *self, bc_bridge_led_t value)
         buffer[3] &= 0x7F;
     }
 
-    buffer[4] |= 0x80; //set output direction
+    /* Set output direction */
+    buffer[4] |= 0x80;
 
     if (!_bc_bridge_ft260_set_feature(self->_fd_i2c, buffer, sizeof(buffer)))
     {
+        bc_os_mutex_unlock(&self->_mutex);
+
         return false;
     }
+
+    bc_os_mutex_unlock(&self->_mutex);
 
     return true;
 }
 
-bool bc_bridge_led_get(bc_bridge_t *self, bc_bridge_led_t *value)
+bool bc_bridge_led_get_state(bc_bridge_t *self, bc_bridge_led_state_t *state)
 {
     uint8_t buffer[5];
+
+    bc_os_mutex_lock(&self->_mutex);
 
     buffer[0] = REPORT_ID_GPIO;
 
     if (!_bc_bridge_ft260_get_feature(self->_fd_i2c, buffer, sizeof(buffer)))
     {
+        bc_os_mutex_unlock(&self->_mutex);
+
         return false;
     }
 
-    *value = (buffer[3] & 0x80) == 0x80 ? BC_BRIDGE_LED_ON : BC_BRIDGE_LED_OFF;
+    *state = (buffer[3] & 0x80) != 0 ? BC_BRIDGE_LED_STATE_ON : BC_BRIDGE_LED_STATE_OFF;
+
+    bc_os_mutex_unlock(&self->_mutex);
 
     return true;
 }
@@ -507,6 +520,7 @@ bool bc_bridge_led_get(bc_bridge_t *self, bc_bridge_led_t *value)
 static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_t i2c_channel)
 {
     uint8_t buffer[1];
+
     int i;
 
     bc_log_debug("_bc_bridge_i2c_set_channel: switching to channel: %d", (uint8_t) i2c_channel);
@@ -534,17 +548,20 @@ static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_
         }
     }
 
-    for (i=0; i<3; i++)
+    for (i = 0; i < 3; i++)
     {
         if (_bc_bridge_ft260_i2c_write(self->_fd_i2c, 0x70, buffer, sizeof(buffer), 0x06))
         {
             self->_i2c_channel = i2c_channel;
+
             return true;
         }
+
         bc_os_task_sleep(10);
     }
 
     bc_log_error("_bc_bridge_i2c_set_channel: call failed: _bc_bridge_ft260_i2c_write");
+
     return false;
 }
 

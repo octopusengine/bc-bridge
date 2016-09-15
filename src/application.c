@@ -82,7 +82,7 @@ void application_loop(bool *quit)
 
     task_init(&bridge, task_info_list, task_info_list_length );
 
-    while (bc_bridge_is_live(&bridge))
+    while (bc_bridge_is_alive(&bridge))
     {
         bc_os_task_sleep(1000);
     }
@@ -111,7 +111,7 @@ static void _application_wait_start_string(void)
 
 static void _application_bc_talk_callback(bc_talk_event_t *event)
 {
-    if (!bc_bridge_is_live(&bridge))
+    if (!bc_bridge_is_alive(&bridge))
     {
         return;
     }
