@@ -109,7 +109,7 @@ static void _application_wait_start_string(void)
         {
             if (bc_talk_parse_start(line, size))
             {
-                printf("[\"$config/clown.talk/-\", {\"ack\":false, \"device\":\"bridge\", \"capabilities\":1,  \"firmware-datetime\":\"%s\", \"firmware-release\":\"%s\"]\n", FIRMWARE_DATETIME, FIRMWARE_RELEASE);
+                printf("[\"$config/clown.talk/-\", {\"ack\":false, \"device\":\"bridge\", \"capabilities\":1,  \"firmware-datetime\":\"%s\", \"firmware-release\":\"%s\"}]\n", FIRMWARE_DATETIME, FIRMWARE_RELEASE);
                 return;
             }
         }
