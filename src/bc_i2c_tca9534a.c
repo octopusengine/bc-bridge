@@ -12,6 +12,13 @@ bool bc_i2c_tca9534a_init(bc_i2c_tca9534a_t *self, bc_i2c_interface_t *interface
 	self->_device_address = device_address;
 	self->_communication_fault = true;
 
+    uint8_t direction;
+
+    if (!_bc_i2c_tca9534a_read_register(self, 0x03, &direction))
+    {
+        return false;
+    }
+
 	return true;
 }
 
@@ -190,8 +197,6 @@ static bool _bc_i2c_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t add
 
     if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
     {
-        bc_log_error("_bc_i2c_tca9534a_write_register: call failed: bc_bridge_i2c_write");
-
         return false;
     }
 
@@ -230,8 +235,6 @@ static bool _bc_i2c_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t addr
 
     if (!bc_bridge_i2c_read(self->_interface->bridge, &transfer))
     {
-        bc_log_error("_bc_i2c_tca9534a_read_register: call failed: bc_bridge_i2c_read");
-
         return false;
     }
 
