@@ -44,9 +44,6 @@ bool bc_module_relay_set_state(bc_module_relay_t *self, bc_module_relay_state_t 
         }
     }
 
-    // TODO REMOVE
-    bc_log_error("------------ RELAY SET ---------------");
-
     if (!bc_i2c_tca9534a_write_port(&self->_tca9534a, port))
     {
         bc_log_error("bc_module_relay_set_state: call failed: bc_i2c_tca9534a_write_port");
