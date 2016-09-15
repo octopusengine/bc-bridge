@@ -2,7 +2,6 @@
 #include "bc_os.h"
 #include <jsmn.h>
 #include <pthread.h>
-#include <bits/sigthread.h>
 #include "bc_log.h"
 
 const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
