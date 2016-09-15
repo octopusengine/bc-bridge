@@ -9,8 +9,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 string(TIMESTAMP FIRMWARE_DATETIME "%Y-%m-%dT%H:%M:%SZ")
 
-
-
 add_definitions(-DFIRMWARE_RELEASE="${PROJECT_VERSION}")
 add_definitions(-DFIRMWARE_DATETIME="${FIRMWARE_DATETIME}")
 add_definitions(-DBRIDGE)
@@ -27,30 +25,30 @@ include_directories(jsmn)
 
 set(SOURCE_FILES
         jsmn/jsmn.c
+        src/application.c
         src/bc_bridge.c
+        src/bc_i2c.c
+        src/bc_i2c_pca9535.c
+        src/bc_i2c_sc16is740.c
+        src/bc_i2c_tca9534a.c
+        src/bc_log.c
         src/bc_module_co2.c
         src/bc_module_relay.c
         src/bc_os.c
         src/bc_tag_barometer.c
-        src/bc_i2c.c
         src/bc_tag_humidity.c
         src/bc_tag_lux_meter.c
         src/bc_tag_temperature.c
-        src/bc_tick.c
-        src/bc_i2c_sc16is740.c
-        src/bc_i2c_tca9534a.c
-        src/bc_i2c_pca9535.c
-        src/bc_log.c
-        src/task_thermometer.c
-        src/task_lux_meter.c
-        src/task_co2.c
-        src/task_relay.c
-        src/task_led.c
-        src/task_barometer.c
-        src/task_humidity.c
-        src/task.c
         src/bc_talk.c
-        src/application.c
+        src/bc_tick.c
+        src/task_barometer.c
+        src/task.c
+        src/task_co2.c
+        src/task_humidity.c
+        src/task_led.c
+        src/task_lux_meter.c
+        src/task_relay.c
+        src/task_thermometer.c
         )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} src/main.c)
@@ -66,4 +64,3 @@ set(CPACK_MONOLITHIC_INSTALL 1)
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
 
 include(CPack)
-
