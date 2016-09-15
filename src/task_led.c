@@ -22,6 +22,7 @@ void task_led_spawn(bc_bridge_t *bridge, task_info_t *task_info)
     self->_device_address = task_info->device_address;
     self->tick_feed_interval = 1000;
     self->blink_interval = 100;
+    self->_quit = false;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);

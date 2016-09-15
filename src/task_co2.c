@@ -21,6 +21,7 @@ void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info)
     }
 
     self->_bridge = bridge;
+    self->_quit = false;
 
     self->tick_feed_interval = BC_MODULE_CO2_MINIMAL_MEASUREMENT_INTERVAL_MS;
 

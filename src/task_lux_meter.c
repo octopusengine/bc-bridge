@@ -22,6 +22,7 @@ void task_lux_meter_spawn(bc_bridge_t *bridge, task_info_t *task_info)
     self->_i2c_channel = task_info->i2c_channel;
     self->_device_address = task_info->device_address;
     self->tick_feed_interval = 1000;
+    self->_quit = false;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);

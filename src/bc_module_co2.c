@@ -62,33 +62,6 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_i2c_interface_t *interface)
 
     bc_log_debug("bc_module_co2_init: initialization end");
 
-//    while (true)
-//    {
-//
-//
-//        self->_tx_buffer[0] = 0x55;
-//        self->_tx_buffer[1] = 0xFF;
-//
-//        if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 2))
-//        {
-//            bc_log_error("bc_module_co2_init: call failed: bc_ic2_sc16is740_write");
-//
-//            self->_state = BC_MODULE_CO2_STATE_ERROR;
-//        }
-//
-//
-//        if (!bc_ic2_sc16is740_read(&self->_sc16is740, self->_rx_buffer, 2, 100))
-//        {
-//            bc_log_error("bc_module_co2_init: call failed: bc_ic2_sc16is740_read");
-//            self->_state = BC_MODULE_CO2_STATE_ERROR;
-//        }else{
-//            bc_log_dump(self->_rx_buffer, 2, "self->_rx_buffer");
-//        }
-//
-//        bc_os_task_sleep(1000);
-//
-//    }
-
     self->_state = BC_MODULE_CO2_STATE_INIT;
 
     return true;
