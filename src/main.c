@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include "application.h"
 #include <argp.h>
 

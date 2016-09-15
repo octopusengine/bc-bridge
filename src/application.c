@@ -2,21 +2,14 @@
 #include "bc_talk.h"
 #include "bc_log.h"
 #include "task_thermometer.h"
-#include "task_lux_meter.h"
 #include "task_relay.h"
-#include "task_co2.h"
 #include "task_led.h"
 #include "bc_i2c_pca9535.h"
 #include "bc_tag_temperature.h"
 #include "bc_tag_lux_meter.h"
 #include "bc_tag_barometer.h"
 #include "bc_tag_humidity.h"
-#include "bc_os.h"
 
-#include "bc_i2c.h"
-#include "bc_bridge.h"
-#include "task.h"
-#include <jsmn.h>
 
 bc_bridge_t bridge;
 

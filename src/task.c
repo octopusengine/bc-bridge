@@ -9,10 +9,6 @@
 #include "task_led.h"
 #include "task_barometer.h"
 #include "task_humidity.h"
-#include "bc_i2c_pca9535.h"
-#include "bc_tag_temperature.h"
-#include "bc_tag_lux_meter.h"
-
 #include "task.h"
 
 void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
