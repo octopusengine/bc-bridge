@@ -22,6 +22,7 @@ void task_barometer_spawn(bc_bridge_t *bridge, task_info_t *task_info)
     self->_i2c_channel = task_info->i2c_channel;
     self->_device_address = task_info->device_address;
     self->tick_feed_interval = 1000;
+    self->_quit = false;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);
@@ -100,7 +101,8 @@ static void *task_barometer_worker(void *parameter)
 
     if (!bc_tag_barometer_init(&tag_barometer, &interface))
     {
-        bc_log_debug("task_barometer_worker: bc_tag_barometer_init false");
+        bc_log_debug("task_barometer_worker: bc_tag_barometer_init false bus %d, address 0x%02X",
+                     (uint8_t) self->_i2c_channel, self->_device_address);
         bc_os_mutex_lock(&self->mutex);
         self->_quit = true;
         bc_os_mutex_unlock(&self->mutex);
@@ -111,6 +113,8 @@ static void *task_barometer_worker(void *parameter)
     {
         task_barometer_get_interval(self, &tick_feed_interval);
 
+        //bc_log_debug("task_barometer_worker: tick_feed_interval %d ", tick_feed_interval);
+
         if (tick_feed_interval < 0)
         {
             bc_os_semaphore_get(&self->semaphore);
@@ -120,12 +124,13 @@ static void *task_barometer_worker(void *parameter)
             bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
 
+        bc_log_debug("task_barometer_worker: wake up signal");
+
         if (task_barometer_is_quit_request(self))
         {
+            bc_log_debug("task_barometer_worker: quit_request");
             break;
         }
-
-        bc_log_debug("task_barometer_worker: wake up signal");
 
         self->_tick_last_feed = bc_tick_get();
 

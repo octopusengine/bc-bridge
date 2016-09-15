@@ -21,6 +21,7 @@ void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info)
     }
 
     self->_bridge = bridge;
+    self->_quit = false;
 
     self->tick_feed_interval = BC_MODULE_CO2_MINIMAL_MEASUREMENT_INTERVAL_MS;
 
@@ -110,12 +111,13 @@ static void *task_co2_worker(void *parameter)
             bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
 
+        bc_log_debug("task_co2_worker: wake up signal");
+
         if (task_co2_is_quit_request(self))
         {
+            bc_log_debug("task_co2_worker: quit_request");
             break;
         }
-
-        bc_log_debug("task_co2_worker: wake up signal");
 
         self->_tick_last_feed = bc_tick_get();
 

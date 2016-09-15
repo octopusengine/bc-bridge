@@ -20,6 +20,7 @@ void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info)
     self->_bridge = bridge;
     self->_i2c_channel = task_info->i2c_channel;
     self->_device_address = task_info->device_address;
+    self->_quit = false;
 
     bc_os_mutex_init(&self->mutex);
     bc_os_semaphore_init(&self->semaphore, 0);
@@ -89,7 +90,7 @@ static void *task_relay_worker(void *parameter)
 
     if (!bc_module_relay_init(&module_relay, &interface, self->_device_address))
     {
-        bc_log_error("task_relay_worker: bc_module_relay_init false");
+        bc_log_debug("task_relay_worker: bc_module_relay_init false");
         bc_os_mutex_lock(&self->mutex);
         self->_quit = true;
         bc_os_mutex_unlock(&self->mutex);
@@ -101,14 +102,16 @@ static void *task_relay_worker(void *parameter)
 
         bc_os_semaphore_get(&self->semaphore);
 
+
+        bc_log_debug("task_relay_worker: wake up signal");
+
         if (task_relay_is_quit_request(self))
         {
+            bc_log_debug("task_relay_worker: quit_request");
             break;
         }
 
         self->_tick_last_feed = bc_tick_get();
-
-        bc_log_debug("task_relay_worker: wake up signal");
 
         bc_os_mutex_lock(&self->mutex);
         relay_mode = self->_relay_mode;
@@ -118,7 +121,7 @@ static void *task_relay_worker(void *parameter)
 
             if (!bc_module_relay_set_state(&module_relay, relay_mode == TASK_RELAY_MODE_FALSE ? BC_MODULE_RELAY_STATE_T : BC_MODULE_RELAY_STATE_F ))
             {
-                bc_log_error("task_relay_worker: bc_module_relay_set_state");
+                bc_log_debug("task_relay_worker: bc_module_relay_set_state");
             }
 
         }
