@@ -116,9 +116,9 @@ static void *task_relay_worker(void *parameter)
 
         if (relay_mode!=TASK_RELAY_MODE_NULL){
 
-            if (!bc_module_relay_set_mode(&module_relay, relay_mode == TASK_RELAY_MODE_FALSE ? BC_MODULE_RELAY_MODE_NO : BC_MODULE_RELAY_MODE_NC ))
+            if (!bc_module_relay_set_state(&module_relay, relay_mode == TASK_RELAY_MODE_FALSE ? BC_MODULE_RELAY_STATE_T : BC_MODULE_RELAY_STATE_F ))
             {
-                bc_log_error("task_relay_worker: bc_module_relay_set_mode");
+                bc_log_error("task_relay_worker: bc_module_relay_set_state");
             }
 
         }

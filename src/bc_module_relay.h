@@ -10,10 +10,10 @@
 
 typedef enum
 {
-     BC_MODULE_RELAY_MODE_NO = 0, //red led
-     BC_MODULE_RELAY_MODE_NC = 1  //green led
+     BC_MODULE_RELAY_STATE_T = 0,
+     BC_MODULE_RELAY_STATE_F = 1
 
-} bc_module_relay_mode_t;
+} bc_module_relay_state_t;
 
 typedef struct
 {
@@ -22,6 +22,6 @@ typedef struct
 } bc_module_relay_t;
 
 bool bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface, uint8_t device_address);
-bool bc_module_relay_set_mode(bc_module_relay_t *self, bc_module_relay_mode_t relay_mode);
+bool bc_module_relay_set_state(bc_module_relay_t *self, bc_module_relay_state_t state);
 
 #endif /* _BC_MODULE_RELAY_H */

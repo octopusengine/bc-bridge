@@ -10,8 +10,8 @@
 
 typedef enum
 {
-    TASK_RELAY_MODE_FALSE = BC_MODULE_RELAY_MODE_NO, //red led
-    TASK_RELAY_MODE_TRUE = BC_MODULE_RELAY_MODE_NC,  //green led
+    TASK_RELAY_MODE_FALSE = BC_MODULE_RELAY_STATE_T, //red led
+    TASK_RELAY_MODE_TRUE = BC_MODULE_RELAY_STATE_F,  //green led
     TASK_RELAY_MODE_NULL = -1
 
 } task_relay_mode_t;

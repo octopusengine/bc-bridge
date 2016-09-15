@@ -8,7 +8,7 @@ static void bc_tick_diff(struct timespec *start, struct timespec *end, struct ti
 
 void bc_tick_init(void)
 {
-	if (clock_gettime(CLOCK_MONOTONIC_RAW, &bc_tick_ts_start) != 0)
+	if (clock_gettime(CLOCK_MONOTONIC, &bc_tick_ts_start) != 0)
 	{
 		bc_log_fatal("bc_tick_init: call failed: clock_gettime");
 	}
@@ -19,7 +19,7 @@ bc_tick_t bc_tick_get(void)
 	struct timespec ts_now;
 	struct timespec ts_diff;
 
-	if (clock_gettime(CLOCK_MONOTONIC_RAW, &ts_now) != 0)
+	if (clock_gettime(CLOCK_MONOTONIC, &ts_now) != 0)
 	{
 		bc_log_fatal("bc_tick_get: call failed: clock_gettime");
 	}
