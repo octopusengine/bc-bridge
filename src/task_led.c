@@ -146,8 +146,11 @@ static void *task_led_worker(void *parameter)
         }
 
 
+        bc_log_debug("task_led_worker: wake up signal");
+
         if (task_led_is_quit_request(self))
         {
+            bc_log_debug("task_led_worker: quit_request");
             break;
         }
 
@@ -157,8 +160,6 @@ static void *task_led_worker(void *parameter)
         state = self->_state;
         blink_interval = self->blink_interval;
         bc_os_mutex_unlock(&self->mutex);
-
-        bc_log_debug("task_led_worker: wake up signal");
 
         if (last_state != state)
         {
@@ -206,12 +207,14 @@ static void *task_led_worker(void *parameter)
             bc_bridge_led_set_state(self->_bridge, BC_BRIDGE_LED_STATE_ON);
             if (task_led_is_quit_request(self))
             {
+                bc_log_debug("task_led_worker: quit_request");
                 break;
             }
             bc_os_task_sleep(blink_interval);
             bc_bridge_led_set_state(self->_bridge, BC_BRIDGE_LED_STATE_OFF);
             if (task_led_is_quit_request(self))
             {
+                bc_log_debug("task_led_worker: quit_request");
                 break;
             }
             bc_os_task_sleep(blink_interval);

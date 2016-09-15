@@ -102,14 +102,16 @@ static void *task_relay_worker(void *parameter)
 
         bc_os_semaphore_get(&self->semaphore);
 
+
+        bc_log_debug("task_relay_worker: wake up signal");
+
         if (task_relay_is_quit_request(self))
         {
+            bc_log_debug("task_relay_worker: quit_request");
             break;
         }
 
         self->_tick_last_feed = bc_tick_get();
-
-        bc_log_debug("task_relay_worker: wake up signal");
 
         bc_os_mutex_lock(&self->mutex);
         relay_mode = self->_relay_mode;

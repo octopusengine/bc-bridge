@@ -116,12 +116,13 @@ static void *task_lux_meter_worker(void *parameter)
             bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
 
+        bc_log_debug("task_lux_meter_worker: wake up signal");
+
         if (task_lux_meter_is_quit_request(self))
         {
+            bc_log_debug("task_lux_meter_worker: quit_request");
             break;
         }
-
-        bc_log_debug("task_lux_meter_worker: wake up signal");
 
         self->_tick_last_feed = bc_tick_get();
 

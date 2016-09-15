@@ -117,12 +117,13 @@ static void *task_humidity_worker(void *parameter)
             bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
 
+        bc_log_debug("task_humidity_worker: wake up signal");
+
         if (task_humidity_is_quit_request(self))
         {
+            bc_log_debug("task_humidity_worker: quit_request");
             break;
         }
-
-        bc_log_debug("task_humidity_worker: wake up signal");
 
         self->_tick_last_feed = bc_tick_get();
 
