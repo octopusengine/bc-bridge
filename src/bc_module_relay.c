@@ -7,7 +7,7 @@ bool bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface
 
     if (!bc_i2c_tca9534a_init(&self->_tca9534a, interface, device_address))
     {
-        bc_log_error("bc_module_relay_init: call failed: bc_i2c_tca9534a_init");
+        bc_log_warning("bc_module_relay_init: call failed: bc_i2c_tca9534a_init");
 
         return false;
     }

@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 //        {
 //            break;
 //        }
-        sleep(5);
+        sleep(1);
     }
 
     exit(EXIT_SUCCESS);
