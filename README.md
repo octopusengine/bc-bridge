@@ -1,6 +1,6 @@
 How to build
 
-    apt-get install cmake libudev-dev git
+    sudo apt-get install cmake libudev-dev git
     git clone git@bitbucket.org:BigClown/bc-bridge.git
     cd bc-bridge
     cmake .
