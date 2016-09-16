@@ -6,7 +6,7 @@
 #include "bc_i2c_tca9534a.h"
 
 #define BC_MODULE_RELAY_ADDRESS_DEFAULT 0x3B
-#define BC_MODULE_RELAY_ADDRESS_ALTERNATE 0x3B
+#define BC_MODULE_RELAY_ADDRESS_ALTERNATE 0x3F
 
 typedef enum
 {
