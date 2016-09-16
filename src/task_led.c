@@ -6,7 +6,6 @@
 #include "task.h"
 
 static void *task_led_worker(void *parameter);
-static bool task_led_is_quit_request(task_led_t *self);
 
 void task_led_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
@@ -225,7 +224,7 @@ static void *task_led_worker(void *parameter)
     return NULL;
 }
 
-static bool task_led_is_quit_request(task_led_t *self)
+bool task_led_is_quit_request(task_led_t *self)
 {
     bc_os_mutex_lock(&self->mutex);
 

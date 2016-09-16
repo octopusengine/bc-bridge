@@ -33,5 +33,6 @@ void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length);
 void task_destroy(task_info_t *task_info_list, size_t length);
 bool task_set_interval(task_info_t *task_info, bc_tick_t interval);
 bool task_get_interval(task_info_t *task_info, bc_tick_t *interval);
+bool task_is_quit_request(task_info_t *task_info);
 
 #endif //BC_BRIDGE_TASK_H

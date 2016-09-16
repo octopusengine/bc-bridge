@@ -25,7 +25,7 @@ typedef struct
 
 void task_barometer_spawn(bc_bridge_t *bridge, task_info_t *task_info);
 void task_barometer_terminate(task_barometer_t *self);
-
+bool task_barometer_is_quit_request(task_barometer_t *self);
 void task_barometer_set_interval(task_barometer_t *self, bc_tick_t interval);
 void task_barometer_get_interval(task_barometer_t *self, bc_tick_t *interval);
 

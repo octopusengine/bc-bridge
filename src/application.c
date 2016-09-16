@@ -9,6 +9,7 @@
 #include "bc_tag_lux_meter.h"
 #include "bc_tag_barometer.h"
 #include "bc_tag_humidity.h"
+#include "task.h"
 
 bc_bridge_t bridge;
 
@@ -243,7 +244,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
 
             for (i = 0; i < task_info_list_length; ++i)
             {
-                if (task_info_list[i].enabled)
+                if ( !task_is_quit_request( &task_info_list[i]) )
                 {
                     if (task_info_list[i].class == TASK_CLASS_SENSOR)
                     {

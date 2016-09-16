@@ -6,7 +6,6 @@
 #include "task.h"
 
 static void *task_relay_worker(void *parameter);
-static bool task_relay_is_quit_request(task_relay_t *self);
 
 void task_relay_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
@@ -143,7 +142,7 @@ static void *task_relay_worker(void *parameter)
 }
 
 
-static bool task_relay_is_quit_request(task_relay_t *self)
+bool task_relay_is_quit_request(task_relay_t *self)
 {
     bc_os_mutex_lock(&self->mutex);
 

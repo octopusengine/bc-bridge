@@ -200,4 +200,43 @@ bool task_get_interval(task_info_t *task_info, bc_tick_t *interval)
     return false;
 }
 
+bool task_is_quit_request(task_info_t *task_info)
+{
+    switch (task_info->type)
+    {
+        case TASK_TYPE_LED:
+        {
+            return task_led_is_quit_request((task_led_t *)task_info->task );
+        }
+        case TAG_THERMOMETHER:
+        {
+            return task_thermometer_is_quit_request((task_thermometer_t *)task_info->task );
+        }
+        case TAG_LUX_METER:
+        {
+            return task_lux_meter_is_quit_request((task_lux_meter_t*)task_info->task );
+        }
+        case TAG_BAROMETER:
+        {
+            return task_barometer_is_quit_request((task_barometer_t*)task_info->task );
+        }
+        case TAG_HUMIDITY:
+        {
+            return task_humidity_is_quit_request((task_humidity_t*)task_info->task );
+        }
+        case MODULE_CO2:
+        {
+            return task_co2_is_quit_request((task_co2_t*)task_info->task );
+        }
+        case MODULE_RELAY:
+        {
+            return task_relay_is_quit_request((task_relay_t*)task_info->task);
+        }
+        default:
+            bc_log_error("task_set_interval: unknown task_info->type=%d", task_info->type);
+            return false;
+    }
+    return false;
+}
+
 

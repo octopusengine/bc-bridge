@@ -6,7 +6,7 @@
 #include "task.h"
 
 static void *task_thermometer_worker(void *parameter);
-static bool task_thermometer_is_quit_request(task_thermometer_t *self);
+
 
 void task_thermometer_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
@@ -219,7 +219,7 @@ static void *task_thermometer_worker(void *parameter)
     return NULL;
 }
 
-static bool task_thermometer_is_quit_request(task_thermometer_t *self)
+bool task_thermometer_is_quit_request(task_thermometer_t *self)
 {
     bc_os_mutex_lock(&self->mutex);
 

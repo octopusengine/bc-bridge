@@ -7,7 +7,6 @@
 #include "task.h"
 
 static void *task_humidity_worker(void *parameter);
-static bool task_humidity_is_quit_request(task_humidity_t *self);
 
 void task_humidity_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 {
@@ -207,7 +206,7 @@ static void *task_humidity_worker(void *parameter)
     return NULL;
 }
 
-static bool task_humidity_is_quit_request(task_humidity_t *self)
+bool task_humidity_is_quit_request(task_humidity_t *self)
 {
     bc_os_mutex_lock(&self->mutex);
 
