@@ -207,7 +207,7 @@ static bool _bc_tag_humidity_write_register(bc_tag_humidity_t *self, uint8_t add
 
     bc_i2c_transfer_init(&transfer);
 
-    transfer.device_address = BC_TAG_HUMIDITY_DEVICE_ADDRESS;
+    transfer.device_address = BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT;
     transfer.buffer = buffer;
     transfer.address = address;
     transfer.length = 1;
@@ -239,7 +239,7 @@ static bool _bc_tag_humidity_read_register(bc_tag_humidity_t *self, uint8_t addr
 
     bc_i2c_transfer_init(&transfer);
 
-    transfer.device_address = BC_TAG_HUMIDITY_DEVICE_ADDRESS;
+    transfer.device_address = BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT;
     transfer.buffer = buffer;
     transfer.address = address;
     transfer.length = 1;

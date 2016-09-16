@@ -102,11 +102,13 @@ void bc_talk_publish_end(void)
 
 char *bc_talk_get_device_name(uint8_t device_address)
 {
+    // TODO We all feel this is all wrong :D
     switch (device_address)
     {
         case 0x00: return "led";
         case 0x38: return "co2-sensor";
         case 0x3B: return "relay";
+        case 0x3F: return "relay";
         case 0x44: return "lux-meter";
         case 0x45: return "lux-meter";
         case 0x48: return "thermometer";
@@ -117,15 +119,15 @@ char *bc_talk_get_device_name(uint8_t device_address)
     }
 }
 
-void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic, size_t length)
+void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic, size_t topic_size)
 {
     if (device_address==0)
     {
-        snprintf(topic, length, "%s/-", bc_talk_get_device_name(device_address));
+        snprintf(topic, topic_size, "%s/-", bc_talk_get_device_name(device_address));
     }
     else
     {
-        snprintf(topic, length, "%s/i2c%d-%02x", bc_talk_get_device_name(device_address), (uint8_t) i2c_channel, device_address);
+        snprintf(topic, topic_size, "%s/i2c%d-%02x", bc_talk_get_device_name(device_address), (uint8_t) i2c_channel, device_address);
     }
 }
 

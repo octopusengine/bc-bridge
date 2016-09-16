@@ -37,7 +37,7 @@ void bc_talk_publish_add_value(char *name, char *value, ...);
 void bc_talk_publish_end(void);
 
 char *bc_talk_get_device_name(uint8_t device_address);
-void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic, size_t length);
+void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic, size_t topic_size);
 
 void bc_talk_publish_led_state(int state);
 void bc_talk_publish_relay(int state, uint8_t device_address);

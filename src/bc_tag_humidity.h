@@ -3,7 +3,7 @@
 
 #include "bc_i2c.h"
 
-#define BC_TAG_HUMIDITY_DEVICE_ADDRESS 0x5F
+#define BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT 0x5F
 
 typedef enum
 {

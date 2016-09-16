@@ -1,7 +1,6 @@
 #include "bc_os.h"
 #include "bc_log.h"
 #include <pthread.h>
-#include <semaphore.h>
 #include <time.h>
 
 typedef struct
@@ -11,8 +10,6 @@ typedef struct
     uint32_t count;
 
 } bc_os_semaphore_primitives_t;
-
-// TODO Budeme resit kdyz se nepovede malloc ? To uz je stejne konec sveta...
 
 void bc_os_task_init(bc_os_task_t *task, void *(*task_function)(void *), void *parameter)
 {
