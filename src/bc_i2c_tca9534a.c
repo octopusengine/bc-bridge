@@ -6,11 +6,11 @@ static bool _bc_i2c_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t addr
 
 bool bc_i2c_tca9534a_init(bc_i2c_tca9534a_t *self, bc_i2c_interface_t *interface, uint8_t device_address)
 {
-	memset(self, 0, sizeof(*self));
+    memset(self, 0, sizeof(*self));
 
-	self->_interface = interface;
-	self->_device_address = device_address;
-	self->_communication_fault = true;
+    self->_interface = interface;
+    self->_device_address = device_address;
+    self->_communication_fault = true;
 
     uint8_t direction;
 
@@ -19,7 +19,7 @@ bool bc_i2c_tca9534a_init(bc_i2c_tca9534a_t *self, bc_i2c_interface_t *interface
         return false;
     }
 
-	return true;
+    return true;
 }
 
 bool bc_i2c_tca9534a_read_port(bc_i2c_tca9534a_t *self, uint8_t *value)
@@ -176,18 +176,18 @@ bool bc_i2c_tca9534a_set_pin_direction(bc_i2c_tca9534a_t *self, bc_i2c_tca9534a_
 
 static bool _bc_i2c_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t value)
 {
-	bc_i2c_transfer_t transfer;
+    bc_i2c_transfer_t transfer;
 
-	uint8_t buffer[1];
+    uint8_t buffer[1];
 
     bc_i2c_transfer_init(&transfer);
 
-	transfer.device_address = self->_device_address;
-	transfer.buffer = buffer;
-	transfer.address = address;
-	transfer.length = 1;
+    transfer.device_address = self->_device_address;
+    transfer.buffer = buffer;
+    transfer.address = address;
+    transfer.length = 1;
 
-	buffer[0] = value;
+    buffer[0] = value;
 
 #ifdef BRIDGE
 
@@ -204,28 +204,28 @@ static bool _bc_i2c_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t add
 
 #else
 
-	if (!self->_interface->write(&transfer, &self->_communication_fault))
-	{
-		return false;
-	}
+    if (!self->_interface->write(&transfer, &self->_communication_fault))
+    {
+        return false;
+    }
 
 #endif
 
-	return true;
+    return true;
 }
 
 static bool _bc_i2c_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t *value)
 {
-	bc_i2c_transfer_t transfer;
+    bc_i2c_transfer_t transfer;
 
-	uint8_t buffer[1];
+    uint8_t buffer[1];
 
     bc_i2c_transfer_init(&transfer);
 
-	transfer.device_address = self->_device_address;
-	transfer.buffer = buffer;
-	transfer.address = address;
-	transfer.length = 1;
+    transfer.device_address = self->_device_address;
+    transfer.buffer = buffer;
+    transfer.address = address;
+    transfer.length = 1;
 
 #ifdef BRIDGE
 
@@ -242,14 +242,14 @@ static bool _bc_i2c_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t addr
 
 #else
 
-	if (!self->_interface->read(&transfer, &self->_communication_fault))
-	{
-		return false;
-	}
+    if (!self->_interface->read(&transfer, &self->_communication_fault))
+    {
+        return false;
+    }
 
 #endif
 
-	*value = buffer[0];
+    *value = buffer[0];
 
-	return true;
+    return true;
 }

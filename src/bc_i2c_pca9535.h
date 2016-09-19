@@ -6,15 +6,15 @@
 
 typedef enum
 {
-     BC_I2C_pca9535_OUTPUT = 0,
-     BC_I2C_pca9535_INPUT = 1
+    BC_I2C_pca9535_OUTPUT = 0,
+    BC_I2C_pca9535_INPUT = 1
 
 } bc_i2c_pca9535_mode_t;
 
 typedef enum
 {
-     BC_I2C_pca9535_LOW = 0,
-     BC_I2C_pca9535_HIGH = 1
+    BC_I2C_pca9535_LOW = 0,
+    BC_I2C_pca9535_HIGH = 1
 
 } bc_i2c_pca9535_value_t;
 
@@ -43,9 +43,9 @@ typedef enum
 
 typedef struct
 {
-	bc_i2c_interface_t *_interface;
-	uint8_t _device_address;
-	bool _communication_fault;
+    bc_i2c_interface_t *_interface;
+    uint8_t _device_address;
+    bool _communication_fault;
 
 } bc_i2c_pca9535_t;
 

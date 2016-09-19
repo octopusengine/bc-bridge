@@ -30,7 +30,8 @@ typedef enum
 static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_t i2c_channel);
 static bool _bc_bridge_ft260_i2c_set_clock_speed(bc_bridge_t *self, bc_bridge_i2c_clock_speed_t clock_speed);
 static bool _bc_bridge_ft260_get_i2c_bus_status(bc_bridge_t *self, uint8_t *bus_status);
-static bool _bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length, uint8_t flag);
+static bool
+_bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length, uint8_t flag);
 static bool _bc_bridge_ft260_i2c_read(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length);
 static bool _bc_bridge_ft260_i2c_reset(bc_bridge_t *self);
 static bool _bc_bridge_ft260_get_feature(bc_bridge_t *self, uint8_t *buffer, size_t length);
@@ -71,9 +72,9 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
         uint16_t id_vendor;
         uint16_t id_product;
 
-        const char* path = udev_list_entry_get_name(entry);
-        const char* path_i2c=NULL;
-        const char* path_uart=NULL;
+        const char *path = udev_list_entry_get_name(entry);
+        const char *path_i2c = NULL;
+        const char *path_uart = NULL;
 
         usb_dev = udev_device_new_from_syspath(udev, path);
 
@@ -96,11 +97,11 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
                 const char *entry_hid_path = udev_list_entry_get_name(entry_hid);
                 hid = udev_device_new_from_syspath(udev, entry_hid_path);
 
-                if (path_i2c==NULL)
+                if (path_i2c == NULL)
                 {
                     path_i2c = udev_device_get_devnode(hid);
                 }
-                else if (path_uart==NULL)
+                else if (path_uart == NULL)
                 {
                     path_uart = udev_device_get_devnode(hid);
                 }
@@ -280,12 +281,14 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
 #if BC_BRIDGE_DEBUG == 1
     if (transfer->address_16_bit)
     {
-        bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_write: channel 0x%02X, device 0x%02X, address 0x%04X, length %d bytes",
+        bc_log_dump(transfer->buffer, transfer->length,
+                    "bc_bridge_i2c_write: channel 0x%02X, device 0x%02X, address 0x%04X, length %d bytes",
                     transfer->channel, transfer->device_address, transfer->address, transfer->length);
     }
     else
     {
-        bc_log_dump(transfer->buffer, transfer->length, "bc_bridge_i2c_write: channel 0x%02X, address 0x%02X, length %d bytes",
+        bc_log_dump(transfer->buffer, transfer->length,
+                    "bc_bridge_i2c_write: channel 0x%02X, address 0x%02X, length %d bytes",
                     transfer->channel, transfer->device_address, transfer->address, transfer->length);
     }
 #endif
@@ -293,7 +296,7 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     if (_bc_bridge_i2c_set_channel(self, transfer->channel))
     {
         if (!_bc_bridge_ft260_i2c_write(self, transfer->device_address, buffer,
-                                            (transfer->address_16_bit ? 2 : 1) + transfer->length, 0x06))
+                                        (transfer->address_16_bit ? 2 : 1) + transfer->length, 0x06))
         {
             bc_log_warning("bc_bridge_i2c_write: call failed: _bc_bridge_ft260_i2c_write");
 
@@ -649,7 +652,8 @@ static bool _bc_bridge_ft260_get_i2c_bus_status(bc_bridge_t *self, uint8_t *bus_
     return true;
 }
 
-static bool _bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length, uint8_t flag)
+static bool
+_bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length, uint8_t flag)
 {
     uint8_t report[64];
     uint8_t bus_status;
@@ -832,7 +836,7 @@ static bool _bc_bridge_ft260_i2c_read(bc_bridge_t *self, uint8_t address, uint8_
         return false;
     }
 
-    memcpy(buffer, &report[2],  report[1]);
+    memcpy(buffer, &report[2], report[1]);
 
     return true;
 }

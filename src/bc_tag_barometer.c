@@ -3,7 +3,7 @@
 static bool _bc_tag_barometer_read_result(bc_tag_barometer_t *self);
 static bool _bc_tag_barometer_write_register(bc_tag_barometer_t *self, uint8_t address, uint8_t value);
 static bool _bc_tag_barometer_read_register(bc_tag_barometer_t *self, uint8_t address, uint8_t *value);
-static bc_tick_t _minimal_measurement_interval[] = {6, 10, 18, 34, 66, 130, 258, 512};
+static bc_tick_t _minimal_measurement_interval[] = { 6, 10, 18, 34, 66, 130, 258, 512 };
 
 bool bc_tag_barometer_init(bc_tag_barometer_t *self, bc_i2c_interface_t *interface)
 {
@@ -185,7 +185,7 @@ bool bc_tag_barometer_get_altitude(bc_tag_barometer_t *self, float *altitude_met
         return false;
     }
 
-    out_p = (uint32_t) self->_out_p_lsb ;
+    out_p = (uint32_t) self->_out_p_lsb;
     out_p |= ((uint32_t) self->_out_p_csb) << 8;
     out_p |= ((uint32_t) self->_out_p_msb) << 16;
 
@@ -226,7 +226,7 @@ bool bc_tag_barometer_get_temperature(bc_tag_barometer_t *self, float *temperatu
         return false;
     }
 
-    out_t = (uint16_t)(self->_out_t_msb << 8) | (uint16_t)( self->_out_t_lsb );
+    out_t = (uint16_t) (self->_out_t_msb << 8) | (uint16_t) (self->_out_t_lsb);
 
     *temperature = ((float) out_t) / 256.f;
 

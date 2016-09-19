@@ -3,7 +3,7 @@
 
 bool bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface, uint8_t device_address)
 {
-	memset(self, 0, sizeof(*self));
+    memset(self, 0, sizeof(*self));
 
     if (!bc_i2c_tca9534a_init(&self->_tca9534a, interface, device_address))
     {
@@ -35,8 +35,16 @@ bool bc_module_relay_set_state(bc_module_relay_t *self, bc_module_relay_state_t 
 
     switch (state)
     {
-        case BC_MODULE_RELAY_STATE_T: { port = 0xC0; break; }
-        case BC_MODULE_RELAY_STATE_F: { port = 0x30; break; }
+        case BC_MODULE_RELAY_STATE_T:
+        {
+            port = 0xC0;
+            break;
+        }
+        case BC_MODULE_RELAY_STATE_F:
+        {
+            port = 0x30;
+            break;
+        }
 
         default:
         {

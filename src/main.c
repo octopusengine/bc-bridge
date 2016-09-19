@@ -14,13 +14,13 @@ int main(int argc, char **argv)
     doc = "Software interface between Clown.Hub and Bridge Module";
 
     static struct argp_option options[] =
-    {
-        { "furious",  'f', 0, 0,  "Do not wait for the initial start string" },
-        { "log",  'l', "level",  0, "dump|debug|info|warning|error|fatal" },
+        {
+            { "furious", 'f', 0,       0, "Do not wait for the initial start string" },
+            { "log",     'l', "level", 0, "dump|debug|info|warning|error|fatal" },
 //        { "exit",  'e', 0,  0, "exit on remove bridge, no wait on reconnect device" }, //TODO jo nebo ne
-        { "version",  'v', 0,  0, "Show version" },
-        { 0 }
-    };
+            { "version", 'v', 0,       0, "Show version" },
+            { 0 }
+        };
 
     memset(&argp, 0, sizeof(argp));
 
@@ -30,11 +30,11 @@ int main(int argc, char **argv)
     argp.doc = doc;
 
     application_parameters_t application_parameters =
-    {
-        .furious_mode = false,
+        {
+            .furious_mode = false,
 //        .exit = false,
-        .log_level = BC_LOG_LEVEL_WARNING
-    };
+            .log_level = BC_LOG_LEVEL_WARNING
+        };
 
     argp_parse(&argp, argc, argv, 0, 0, &application_parameters);
 

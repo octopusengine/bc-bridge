@@ -8,18 +8,18 @@
 
 typedef struct
 {
-	bc_i2c_interface_t *_interface;
-	uint8_t _device_address;
-	bool _communication_fault;
-	uint16_t _configuration;
-	uint16_t _temperature;
+    bc_i2c_interface_t *_interface;
+    uint8_t _device_address;
+    bool _communication_fault;
+    uint16_t _configuration;
+    uint16_t _temperature;
 
 } bc_tag_temperature_t;
 
 typedef enum
 {
-	BC_TAG_TEMPERATURE_STATE_POWER_DOWN = 0,
-	BC_TAG_TEMPERATURE_STATE_CONVERSION = 1
+    BC_TAG_TEMPERATURE_STATE_POWER_DOWN = 0,
+    BC_TAG_TEMPERATURE_STATE_CONVERSION = 1
 
 } bc_tag_temperature_state_t;
 

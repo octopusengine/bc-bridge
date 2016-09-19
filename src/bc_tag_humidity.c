@@ -187,7 +187,9 @@ bool bc_tag_humidity_get_result(bc_tag_humidity_t *self, float *humidity)
     h_t_out = (int16_t) self->_humidity_out_lsb;
     h_t_out |= ((int16_t) self->_humidity_out_msb) << 8;
 
-    *humidity = (float) (((((((int32_t) h1_rh) - ((int32_t) h0_rh)) * (((int32_t) h_t_out) - ((int32_t) h0_t0_out))) * 10) / (((int32_t) h1_t0_out) - ((int32_t) h0_t0_out))) + (10 * (int32_t) h0_rh));
+    *humidity = (float) (
+        ((((((int32_t) h1_rh) - ((int32_t) h0_rh)) * (((int32_t) h_t_out) - ((int32_t) h0_t0_out))) * 10) /
+         (((int32_t) h1_t0_out) - ((int32_t) h0_t0_out))) + (10 * (int32_t) h0_rh));
     *humidity /= 10.f;
 
     if (*humidity >= 100.f)
@@ -245,16 +247,16 @@ static bool _bc_tag_humidity_read_register(bc_tag_humidity_t *self, uint8_t addr
     transfer.length = 1;
 
 #ifdef BRIDGE
-	self->_communication_fault = true;
-	transfer.channel = self->_interface->channel;
-	if (!bc_bridge_i2c_read(self->_interface->bridge, &transfer))
-	{
-		return false;
-	}
-	self->_communication_fault = false;
+    self->_communication_fault = true;
+    transfer.channel = self->_interface->channel;
+    if (!bc_bridge_i2c_read(self->_interface->bridge, &transfer))
+    {
+        return false;
+    }
+    self->_communication_fault = false;
 #else
 
-	if (!self->_interface->read(&transfer, &self->_communication_fault))
+    if (!self->_interface->read(&transfer, &self->_communication_fault))
     {
         return false;
     }

@@ -116,7 +116,7 @@ static void *task_led_worker(void *parameter)
 
     bc_os_mutex_lock(&self->mutex);
     bc_bridge_led_get_state(self->_bridge, &bridge_led_state);
-    if (bridge_led_state==BC_BRIDGE_LED_STATE_ON)
+    if (bridge_led_state == BC_BRIDGE_LED_STATE_ON)
     {
         self->_state = TASK_LED_ON;
     }
@@ -135,7 +135,7 @@ static void *task_led_worker(void *parameter)
         tick_feed_interval = self->tick_feed_interval;
         bc_os_mutex_unlock(&self->mutex);
 
-        if (blink_cnt>0)
+        if (blink_cnt > 0)
         {
             bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
@@ -201,7 +201,7 @@ static void *task_led_worker(void *parameter)
             last_state = state;
         }
 
-        for (i=0; i<blink_cnt; i++)
+        for (i = 0; i < blink_cnt; i++)
         {
             bc_bridge_led_set_state(self->_bridge, BC_BRIDGE_LED_STATE_ON);
             if (task_led_is_quit_request(self))

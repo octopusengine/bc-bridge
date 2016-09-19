@@ -7,22 +7,22 @@
 
 typedef enum
 {
-	BC_TAG_BAROMETER_STATE_POWER_DOWN = 0,
-	BC_TAG_BAROMETER_STATE_CONVERSION = 1,
-	BC_TAG_BAROMETER_STATE_RESULT_READY_ALTITUDE = 2,
-	BC_TAG_BAROMETER_STATE_RESULT_READY_PRESSURE = 3
+    BC_TAG_BAROMETER_STATE_POWER_DOWN = 0,
+    BC_TAG_BAROMETER_STATE_CONVERSION = 1,
+    BC_TAG_BAROMETER_STATE_RESULT_READY_ALTITUDE = 2,
+    BC_TAG_BAROMETER_STATE_RESULT_READY_PRESSURE = 3
 
 } bc_tag_barometer_state_t;
 
 typedef struct
 {
-	bc_i2c_interface_t *_interface;
-	bool _communication_fault;
-	uint8_t _out_p_msb;
-	uint8_t _out_p_csb;
-	uint8_t _out_p_lsb;
-	uint8_t _out_t_msb;
-	uint8_t _out_t_lsb;
+    bc_i2c_interface_t *_interface;
+    bool _communication_fault;
+    uint8_t _out_p_msb;
+    uint8_t _out_p_csb;
+    uint8_t _out_p_lsb;
+    uint8_t _out_t_msb;
+    uint8_t _out_t_lsb;
 
 } bc_tag_barometer_t;
 

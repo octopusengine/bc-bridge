@@ -44,7 +44,7 @@ void task_relay_set_mode(task_relay_t *self, task_relay_mode_t relay_mode)
 void task_relay_get_mode(task_relay_t *self, task_relay_mode_t *relay_mode)
 {
     bc_os_mutex_lock(&self->mutex);
-    *relay_mode =  self->_relay_mode;
+    *relay_mode = self->_relay_mode;
     bc_os_mutex_unlock(&self->mutex);
 
 }
@@ -116,24 +116,28 @@ static void *task_relay_worker(void *parameter)
         relay_mode = self->_relay_mode;
         bc_os_mutex_unlock(&self->mutex);
 
-        if (relay_mode!=TASK_RELAY_MODE_NULL){
+        if (relay_mode != TASK_RELAY_MODE_NULL)
+        {
 
-            if (!bc_module_relay_set_state(&module_relay, relay_mode == TASK_RELAY_MODE_FALSE ? BC_MODULE_RELAY_STATE_T : BC_MODULE_RELAY_STATE_F ))
+            if (!bc_module_relay_set_state(&module_relay, relay_mode == TASK_RELAY_MODE_FALSE ? BC_MODULE_RELAY_STATE_T
+                                                                                              : BC_MODULE_RELAY_STATE_F))
             {
                 bc_log_debug("task_relay_worker: bc_module_relay_set_state");
             }
 
         }
 
-        if (last_mode!=relay_mode)
+        if (last_mode != relay_mode)
         {
-            bc_talk_publish_relay((int)relay_mode, self->_device_address);
+            bc_talk_publish_relay((int) relay_mode, self->_device_address);
             last_mode = relay_mode;
-            bc_os_task_sleep(1000L - (bc_tick_get() - self->_tick_last_feed)); //TODO michal navrhuje cvak max 1 za sekundu
+            bc_os_task_sleep(
+                1000L - (bc_tick_get() - self->_tick_last_feed)); //TODO michal navrhuje cvak max 1 za sekundu
         }
         else
         {
-            bc_os_task_sleep(100L - (bc_tick_get() - self->_tick_last_feed)); //TODO pokud nedojde k zmene stavu povoluju 10krat za sekundu bliknout diodou
+            bc_os_task_sleep(100L - (bc_tick_get() -
+                                     self->_tick_last_feed)); //TODO pokud nedojde k zmene stavu povoluju 10krat za sekundu bliknout diodou
         }
 
     }

@@ -8,19 +8,19 @@
 
 typedef struct
 {
-	bc_i2c_interface_t *_interface;
-	uint8_t _device_address;
-	bool _communication_fault;
-	uint16_t _configuration;
-	uint16_t _result;
+    bc_i2c_interface_t *_interface;
+    uint8_t _device_address;
+    bool _communication_fault;
+    uint16_t _configuration;
+    uint16_t _result;
 
 } bc_tag_lux_meter_t;
 
 typedef enum
 {
-	BC_TAG_LUX_METER_STATE_POWER_DOWN = 0,
-	BC_TAG_LUX_METER_STATE_CONVERSION = 1,
-	BC_TAG_LUX_METER_STATE_RESULT_READY = 2
+    BC_TAG_LUX_METER_STATE_POWER_DOWN = 0,
+    BC_TAG_LUX_METER_STATE_CONVERSION = 1,
+    BC_TAG_LUX_METER_STATE_RESULT_READY = 2
 
 } bc_tag_lux_meter_state_t;
 

@@ -8,7 +8,8 @@
 
 // pri zmene zmenit i bc_talk bc_talk_led_state
 
-typedef enum {
+typedef enum
+{
     TASK_LED_OFF,
     TASK_LED_ON,
     TASK_LED_1DOT,

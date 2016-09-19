@@ -96,7 +96,7 @@ static void *task_humidity_worker(void *parameter)
     if (!bc_tag_humidity_init(&tag_humidity, &interface))
     {
         bc_log_debug("task_humidity_worker: bc_tag_humidity_init false for bus %d, address 0x%02X",
-                     (uint8_t) self->_i2c_channel, self->_device_address );
+                     (uint8_t) self->_i2c_channel, self->_device_address);
         bc_os_mutex_lock(&self->mutex);
         self->_quit = true;
         bc_os_mutex_unlock(&self->mutex);

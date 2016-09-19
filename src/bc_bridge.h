@@ -45,7 +45,7 @@ typedef enum
     BC_BRIDGE_LED_STATE_OFF = 0,
     BC_BRIDGE_LED_STATE_ON = 1
 
-}bc_bridge_led_state_t;
+} bc_bridge_led_state_t;
 
 bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count);
 bool bc_bridge_open(bc_bridge_t *self, bc_bridge_device_info_t *info);

@@ -90,7 +90,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         }
         case BC_MODULE_CO2_STATE_PRECHARGE:
         {
-            bc_log_debug("bc_module_co2_task: precharge timeout %d ", self->_t_state_timeout-t_now);
+            bc_log_debug("bc_module_co2_task: precharge timeout %d ", self->_t_state_timeout - t_now);
 
             if ((t_now - self->_t_state_timeout) >= 0)
             {
@@ -143,7 +143,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
             bc_ic2_sc16is740_reset_fifo(&self->_sc16is740, BC_I2C_SC16IS740_FIFO_RX);
 
             if (bc_i2c_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) &&
-            (rdy_pin_value == BC_I2C_TCA9534A_VALUE_LOW ))
+                (rdy_pin_value == BC_I2C_TCA9534A_VALUE_LOW))
             {
                 if (!self->_first_measurement_done)
                 {
@@ -160,7 +160,8 @@ void bc_module_co2_task(bc_module_co2_t *self)
 
                     if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 8))
                     {
-                        bc_log_error("bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_write");
+                        bc_log_error(
+                            "bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_write");
                         self->_state = BC_MODULE_CO2_STATE_ERROR;
                         break;
                     }
@@ -190,7 +191,8 @@ void bc_module_co2_task(bc_module_co2_t *self)
 
                     if (!bc_ic2_sc16is740_write(&self->_sc16is740, self->_tx_buffer, 33))
                     {
-                        bc_log_error("bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_write");
+                        bc_log_error(
+                            "bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_write");
                         self->_state = BC_MODULE_CO2_STATE_ERROR;
                         break;
                     }
@@ -198,7 +200,8 @@ void bc_module_co2_task(bc_module_co2_t *self)
 
                 if (!bc_ic2_sc16is740_read(&self->_sc16is740, self->_rx_buffer, 4, 100))
                 {
-                    bc_log_error("bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_read");
+                    bc_log_error(
+                        "bc_module_co2_task: state BC_MODULE_CO2_STATE_BOOT, call failed: bc_ic2_sc16is740_read");
                     self->_state = BC_MODULE_CO2_STATE_ERROR;
                     break;
                 }
@@ -230,7 +233,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
             bc_ic2_sc16is740_reset_fifo(&self->_sc16is740, BC_I2C_SC16IS740_FIFO_RX);
 
             if (bc_i2c_tca9534a_read_pin(&self->_tca9534a, RDY_Pin, &rdy_pin_value) &&
-            (rdy_pin_value == BC_I2C_TCA9534A_VALUE_HIGH) )
+                (rdy_pin_value == BC_I2C_TCA9534A_VALUE_HIGH))
             {
                 memset(self->_tx_buffer, 0, sizeof(self->_tx_buffer));
 

@@ -7,22 +7,22 @@
 
 typedef enum
 {
-	BC_TAG_HUMIDITY_STATE_CALIBRATION_NOT_READ = 0,
-	BC_TAG_HUMIDITY_STATE_POWER_DOWN = 1,
-	BC_TAG_HUMIDITY_STATE_POWER_UP = 2,
-	BC_TAG_HUMIDITY_STATE_CONVERSION = 3,
-	BC_TAG_HUMIDITY_STATE_RESULT_READY = 4
+    BC_TAG_HUMIDITY_STATE_CALIBRATION_NOT_READ = 0,
+    BC_TAG_HUMIDITY_STATE_POWER_DOWN = 1,
+    BC_TAG_HUMIDITY_STATE_POWER_UP = 2,
+    BC_TAG_HUMIDITY_STATE_CONVERSION = 3,
+    BC_TAG_HUMIDITY_STATE_RESULT_READY = 4
 
 } bc_tag_humidity_state_t;
 
 typedef struct
 {
-	bc_i2c_interface_t *_interface;
-	bool _communication_fault;
-	bool _calibration_not_read;
-	uint8_t _calibration[16];
-	uint8_t _humidity_out_lsb;
-	uint8_t _humidity_out_msb;
+    bc_i2c_interface_t *_interface;
+    bool _communication_fault;
+    bool _calibration_not_read;
+    uint8_t _calibration[16];
+    uint8_t _humidity_out_lsb;
+    uint8_t _humidity_out_msb;
 
 } bc_tag_humidity_t;
 

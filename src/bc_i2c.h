@@ -2,8 +2,11 @@
 #define _BC_I2C_H
 
 #include "bc_common.h"
+
 #ifdef BRIDGE
+
 #include "bc_bridge.h"
+
 #endif
 
 #ifdef BRIDGE

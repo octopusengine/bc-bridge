@@ -34,7 +34,7 @@ void task_co2_spawn(bc_bridge_t *bridge, task_info_t *task_info)
 
 void task_co2_set_interval(task_co2_t *self, bc_tick_t interval)
 {
-    if ( (interval<BC_MODULE_CO2_MINIMAL_MEASUREMENT_INTERVAL_MS) && (interval>0) )
+    if ((interval < BC_MODULE_CO2_MINIMAL_MEASUREMENT_INTERVAL_MS) && (interval > 0))
     {
         return;
     }
