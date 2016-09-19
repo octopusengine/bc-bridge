@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/task_co2.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_led.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_co2.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tag_lux_meter.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_thermometer.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tag_lux_meter.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_i2c_tca9534a.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_relay.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tag_humidity.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_i2c.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_relay.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_lux_meter.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_humidity.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_bridge.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_lux_meter.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tick.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/application.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tick.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_module_relay.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_i2c_pca9535.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_humidity.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_log.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_i2c_pca9535.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tag_temperature.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_i2c_sc16is740.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_os.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tag_barometer.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_bridge.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_i2c_sc16is740.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_led.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_thermometer.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_module_co2.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_module_relay.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tag_barometer.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_i2c.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_barometer.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_talk.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/task_barometer.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_log.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tag_temperature.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_module_co2.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_os.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/application.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_tag_humidity.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_talk.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/bc_i2c_tca9534a.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/jsmn/jsmn.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/jsmn/jsmn.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/cmake/Findargp.cmake" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/cmake/FindLibudev.cmake" isTestSource="false" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="Header Search Paths">
+        <CLASSES>
+          <root url="file:///usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+          <root url="file:///usr/lib/gcc/x86_64-linux-gnu/5/include" />
+          <root url="file:///usr/include" />
+          <root url="file:///usr/local/include" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+          <root url="file:///usr/lib/gcc/x86_64-linux-gnu/5/include" />
+          <root url="file:///usr/include" />
+          <root url="file:///usr/local/include" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+  </component>
+</module>
