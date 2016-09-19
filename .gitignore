@@ -1,11 +1,7 @@
-.vscode/*
-.idea/*
-*~
-*.pyc
-*.a
-CMakeFiles*
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-Bridge
 bc-bridge
+CMakeCache.txt
+CMakeFiles/
+CPackConfig.cmake
+CPackSourceConfig.cmake
+Makefile
+cmake_install.cmake
