@@ -1,15 +1,12 @@
 #include "application.h"
 #include "bc_talk.h"
-#include "bc_log.h"
 #include "task_thermometer.h"
 #include "task_relay.h"
 #include "task_led.h"
-#include "bc_i2c_pca9535.h"
 #include "bc_tag_temperature.h"
 #include "bc_tag_lux_meter.h"
 #include "bc_tag_barometer.h"
 #include "bc_tag_humidity.h"
-#include "task.h"
 
 bc_bridge_t bridge;
 
@@ -30,13 +27,13 @@ task_info_t task_info_list[] =
         { TASK_CLASS_SENSOR,   TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT, NULL, false },
         { TASK_CLASS_ACTUATOR, MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_DEFAULT,        NULL, false },
         { TASK_CLASS_ACTUATOR, MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_ALTERNATE,      NULL, false },
-        { TASK_CLASS_SENSOR,   MODULE_CO2,       BC_BRIDGE_I2C_CHANNEL_0, 0x38,                                   NULL, false } // TODO CO2 occupies two I2C addresses
+        { TASK_CLASS_SENSOR,   MODULE_CO2,       BC_BRIDGE_I2C_CHANNEL_0, 0x38,                                   NULL, false }
     };
 
 size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);
 
 static void _application_wait_start_string(void);
-static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel);
+//static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel);
 static void _application_bc_talk_callback(bc_talk_event_t *event);
 
 void application_init(application_parameters_t *parameters)
@@ -100,6 +97,8 @@ void application_loop(bool *quit)
     task_destroy(task_info_list, task_info_list_length);
 
     bc_bridge_close(&bridge);
+
+    *quit = false;
 }
 
 static void _application_wait_start_string(void)
@@ -307,37 +306,37 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         }
     }
 }
+//
+//static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel)
+//{
+//    uint8_t address;
+//    for (address = 1; address < 128; address++)
+//    {
+//        if (bc_bridge_i2c_ping(bridge, i2c_channel, address))
+//        {
+//            printf("address: %hhx %d \n", address, address);
+//        }
+//    }
+//
+//}
 
-static void _application_i2c_scan(bc_bridge_t *bridge, bc_bridge_i2c_channel_t i2c_channel)
-{
-    uint8_t address;
-    for (address = 1; address < 128; address++)
-    {
-        if (bc_bridge_i2c_ping(bridge, i2c_channel, address))
-        {
-            printf("address: %hhx %d \n", address, address);
-        }
-    }
-
-}
-
-static void _application_quad_test(bc_bridge_t *bridge)
-{
-    bc_i2c_pca9535_t pca;
-    bc_i2c_interface_t interface = {
-        .bridge = bridge,
-        .channel = BC_BRIDGE_I2C_CHANNEL_0
-    };
-
-    bc_ic2_pca9535_init(&pca, &interface, 0x24);
-    bc_ic2_pca9535_set_modes(&pca, BC_I2C_pca9535_PORT1, BC_I2C_pca9535_ALL_OUTPUT);
-//    exit(1);
-
-    while (true)
-    {
-        bc_ic2_pca9535_write_pins(&pca, BC_I2C_pca9535_PORT1, 0x0f);
-        bc_os_task_sleep(100);
-        bc_ic2_pca9535_write_pins(&pca, BC_I2C_pca9535_PORT1, 0x00);
-        bc_os_task_sleep(100);
-    }
-}
+//static void _application_quad_test(bc_bridge_t *bridge)
+//{
+//    bc_i2c_pca9535_t pca;
+//    bc_i2c_interface_t interface = {
+//        .bridge = bridge,
+//        .channel = BC_BRIDGE_I2C_CHANNEL_0
+//    };
+//
+//    bc_ic2_pca9535_init(&pca, &interface, 0x24);
+//    bc_ic2_pca9535_set_modes(&pca, BC_I2C_pca9535_PORT1, BC_I2C_pca9535_ALL_OUTPUT);
+////    exit(1);
+//
+//    while (true)
+//    {
+//        bc_ic2_pca9535_write_pins(&pca, BC_I2C_pca9535_PORT1, 0x0f);
+//        bc_os_task_sleep(100);
+//        bc_ic2_pca9535_write_pins(&pca, BC_I2C_pca9535_PORT1, 0x00);
+//        bc_os_task_sleep(100);
+//    }
+//}

@@ -36,7 +36,7 @@ typedef struct
     uint16_t address;
     bool address_16_bit;
     uint8_t *buffer;
-    uint16_t length;
+    uint8_t length;
 
 } bc_bridge_i2c_transfer_t;
 

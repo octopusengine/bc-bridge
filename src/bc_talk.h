@@ -36,13 +36,13 @@ void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...);
 void bc_talk_publish_add_value(char *name, char *value, ...);
 void bc_talk_publish_end(void);
 
-char *bc_talk_get_device_name(uint8_t device_address);
+char *bc_talk_get_device_name(uint8_t device_address, char* output_str, size_t max_len );
 void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic, size_t topic_size);
 
 void bc_talk_publish_led_state(int state);
 void bc_talk_publish_relay(int state, uint8_t device_address);
 
 bool bc_talk_parse_start(char *line, size_t length);
-bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *event));
+bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback);
 
 #endif /* _BC_TALK_H */

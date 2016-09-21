@@ -32,8 +32,8 @@ typedef struct
     uint8_t _sensor_state[23];
     bool _co2_concentration_unknown;
     int16_t _co2_concentration;
-    uint8_t _rx_buffer[64]; // TODO Trim size
-    uint8_t _tx_buffer[64]; // TODO Trim size
+    uint8_t _rx_buffer[45];
+    uint8_t _tx_buffer[33];
     bc_i2c_tca9534a_t _tca9534a;
     bc_i2c_sc16is740_t _sc16is740;
 

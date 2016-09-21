@@ -82,7 +82,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         {
             // TODO Adjust time to > 1min
             self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
-            self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);
+            self->_t_state_timeout = t_now + 30000;
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
             bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
             bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
@@ -95,7 +95,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
             if ((t_now - self->_t_state_timeout) >= 0)
             {
                 self->_state = BC_MODULE_CO2_STATE_IDLE;
-                self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
+                self->_t_state_timeout = t_now + 5000;
 
                 //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_LOW);
                 bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_DIRECTION_INPUT);
@@ -116,7 +116,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         case BC_MODULE_CO2_STATE_READY:
         {
             self->_state = BC_MODULE_CO2_STATE_CHARGE;
-            self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
+            self->_t_state_timeout = t_now + 5000;
 
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, BOOST_Pin, BC_I2C_TCA9534A_HIGH);
             bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
@@ -130,7 +130,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
             if ((t_now - self->_t_state_timeout) >= 0)
             {
                 self->_state = BC_MODULE_CO2_STATE_BOOT;
-                self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
+                self->_t_state_timeout = t_now + 5000;
 
                 //bc_ic2_tca9534a_write_pin(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_HIGH);
                 bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_DIRECTION_OUTPUT);
@@ -219,7 +219,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
                 }
 
                 self->_state = BC_MODULE_CO2_STATE_MEASURE;
-                self->_t_state_timeout = t_now + BC_TICK_SECONDS(10);
+                self->_t_state_timeout = t_now + 10000;
             }
             else if ((t_now - self->_t_state_timeout) >= 0)
             {
@@ -281,7 +281,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
                 }
 
                 self->_state = BC_MODULE_CO2_STATE_SHUTDOWN;
-                self->_t_state_timeout = t_now + BC_TICK_SECONDS(5);
+                self->_t_state_timeout = t_now + 5000;
             }
             else if ((t_now - self->_t_state_timeout) >= 0)
             {
@@ -293,7 +293,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
         case BC_MODULE_CO2_STATE_SHUTDOWN:
         {
             self->_state = BC_MODULE_CO2_STATE_IDLE;
-            self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);
+            self->_t_state_timeout = t_now + 30000;
 
             // TODO Split these two operations
             //bc_ic2_tca9534a_write_pin(&self->_tca9534a, EN_Pin, BC_I2C_TCA9534A_LOW);
@@ -315,7 +315,7 @@ void bc_module_co2_task(bc_module_co2_t *self)
             bc_i2c_tca9534a_set_pin_direction(&self->_tca9534a, VDD2_PIN, BC_I2C_TCA9534A_DIRECTION_INPUT);
 
             self->_state = BC_MODULE_CO2_STATE_PRECHARGE;
-            self->_t_state_timeout = t_now + BC_TICK_SECONDS(30);
+            self->_t_state_timeout = t_now + 30000;
             self->_first_measurement_done = false;
             self->_co2_concentration_unknown = true;
 

@@ -1,8 +1,9 @@
 #include "bc_talk.h"
 #include "bc_os.h"
 #include <jsmn.h>
-#include <pthread.h>
 #include "bc_log.h"
+
+#define BC_TALK_DEVICE_NAME_SIZE 16
 
 const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
 const char *bc_talk_bool[] = { "false", "true" };
@@ -32,6 +33,10 @@ void bc_talk_init(bc_talk_parse_callback callback)
     if (self == NULL)
     {
         bc_log_fatal("task_thermometer_spawn: call failed: malloc");
+    }
+    if (callback == NULL)
+    {
+        bc_log_fatal("task_thermometer_spawn: callback == NULL");
     }
     self->callback = callback;
 
@@ -100,47 +105,77 @@ void bc_talk_publish_end(void)
     bc_os_mutex_unlock(&bc_talk_mutex);
 }
 
-char *bc_talk_get_device_name(uint8_t device_address)
+char *bc_talk_get_device_name(uint8_t device_address, char* output_str, size_t max_len )
 {
-    // TODO We all feel this is all wrong :D
+    char *str;
+
     switch (device_address)
     {
         case 0x00:
-            return "led";
+        {
+            str = "led";
+            break;
+        };
         case 0x38:
-            return "co2-sensor";
+        {
+            str = "co2-sensor";
+            break;
+        };
         case 0x3B:
-            return "relay";
         case 0x3F:
-            return "relay";
+        {
+            str = "relay";
+            break;
+        };
         case 0x44:
-            return "lux-meter";
         case 0x45:
-            return "lux-meter";
+        {
+            str = "lux-meter";
+            break;
+        };
         case 0x48:
-            return "thermometer";
         case 0x49:
-            return "thermometer";
+        {
+            str = "thermometer";
+            break;
+        };
         case 0x5F:
-            return "humidity-sensor";
+        {
+            str = "humidity-sensor";
+            break;
+        };
         case 0x60:
-            return "barometer";
+        {
+            str = "barometer";
+            break;
+        };
         default:
-            return "-";
+            str = "-";
     }
+
+    size_t l = strlen(str);
+    if (l+1 > max_len) {
+        return NULL;
+    }
+
+    strcpy(output_str, str);
+    return output_str;
 }
 
 void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic, size_t topic_size)
 {
+    char *str = malloc(BC_TALK_DEVICE_NAME_SIZE);
+
     if (device_address == 0)
     {
-        snprintf(topic, topic_size, "%s/-", bc_talk_get_device_name(device_address));
+        snprintf(topic, topic_size, "led/-");
     }
     else
     {
-        snprintf(topic, topic_size, "%s/i2c%d-%02x", bc_talk_get_device_name(device_address), (uint8_t) i2c_channel,
+        snprintf(topic, topic_size, "%s/i2c%d-%02x", bc_talk_get_device_name(device_address, str, BC_TALK_DEVICE_NAME_SIZE ), (uint8_t) i2c_channel,
                  device_address);
     }
+    free(str);
 }
 
 void bc_talk_publish_led_state(int state)
@@ -191,7 +226,7 @@ bool bc_talk_parse_start(char *line, size_t length)
 
 }
 
-bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *event))
+bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
 {
     jsmn_parser parser;
     jsmntok_t tokens[20];
@@ -219,7 +254,7 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
         bc_log_fatal("bc_talk_parse: call failed: malloc");
     }
 
-    strncpy(payload_string, line + tokens[1].start, tokens[1].end - tokens[1].start);
+    strncpy(payload_string, line + tokens[1].start, (size_t)(tokens[1].end - tokens[1].start));
     payload_string[tokens[1].end - tokens[1].start] = 0x00;
 
     bc_log_debug("bc_talk_parse: payload %s", payload_string);
@@ -248,12 +283,15 @@ bool bc_talk_parse(char *line, size_t length, void (*callback)(bc_talk_event_t *
             return false;
         }
 
-        if (strcmp(payload[2], bc_talk_get_device_name(event.device_address)) != 0)
+        char *str_device_name = malloc(BC_TALK_DEVICE_NAME_SIZE);
+
+        if (strcmp(payload[2], bc_talk_get_device_name(event.device_address, str_device_name, BC_TALK_DEVICE_NAME_SIZE )) != 0)
         {
-            bc_log_error("bc_talk_parse: bad payload: contained %s expected %s", payload[2],
-                         bc_talk_get_device_name(event.device_address));
+            bc_log_error("bc_talk_parse: bad payload: contained %s expected %s", payload[2], str_device_name);
             return false;
         }
+
+        free(str_device_name);
 
         if (strcmp(payload[payload_length - 1], "update") == 0)
         {
@@ -365,7 +403,7 @@ static bool _bc_talk_schema_check(int r, jsmntok_t *tokens)
 static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s)
 {
     if ((tok->type == JSMN_STRING) && ((int) strlen(s) == tok->end - tok->start) &&
-        (strncmp(line + tok->start, s, tok->end - tok->start) == 0))
+        (strncmp(line + tok->start, s, (size_t)(tok->end - tok->start)) == 0))
     {
         return true;
     }
@@ -383,7 +421,7 @@ static int _bc_talk_token_get_int(char *line, jsmntok_t *tok)
     }
 
     memset(temp, 0x00, sizeof(temp));
-    strncpy(temp, line + tok->start, tok->end - tok->start < sizeof(temp) ? tok->end - tok->start : sizeof(temp) - 1);
+    strncpy(temp, line + tok->start, tok->end - tok->start < sizeof(temp) ? (size_t)(tok->end - tok->start) : sizeof(temp) - 1);
 
     if (strcmp(temp, "null") == 0)
     {
@@ -428,7 +466,7 @@ static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, const char *lis
     }
 
     temp[temp_length] = 0x00;
-    strncpy(temp, line + tok->start, temp_length);
+    strncpy(temp, line + tok->start, (size_t)temp_length);
 
     for (i = 0; i < length; i++)
     {

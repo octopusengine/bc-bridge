@@ -1,9 +1,6 @@
 #include "task_relay.h"
 #include "bc_log.h"
 #include "bc_talk.h"
-#include "bc_i2c.h"
-#include "bc_bridge.h"
-#include "task.h"
 
 static void *task_relay_worker(void *parameter);
 
@@ -132,12 +129,12 @@ static void *task_relay_worker(void *parameter)
             bc_talk_publish_relay((int) relay_mode, self->_device_address);
             last_mode = relay_mode;
             bc_os_task_sleep(
-                1000L - (bc_tick_get() - self->_tick_last_feed)); //TODO michal navrhuje cvak max 1 za sekundu
+                1000L - (bc_tick_get() - self->_tick_last_feed)); // cvak max 1 za sekundu
         }
         else
         {
             bc_os_task_sleep(100L - (bc_tick_get() -
-                                     self->_tick_last_feed)); //TODO pokud nedojde k zmene stavu povoluju 10krat za sekundu bliknout diodou
+                                     self->_tick_last_feed)); //pokud nedojde k zmene stavu povoluju 10krat za sekundu bliknout diodou
         }
 
     }
