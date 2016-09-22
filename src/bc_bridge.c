@@ -4,6 +4,7 @@
 #include <linux/input.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <fcntl.h>
 #include <libudev.h>
 
 #define BC_BRIDGE_DEBUG 1
@@ -728,7 +729,8 @@ _bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, 
 
     if ((bus_status & 0x1E) != 0)
     {
-        bc_log_error("_bc_bridge_ft260_i2c_write: bat bus_status 0x%02X", bus_status);
+        bc_log_warning("_bc_bridge_ft260_i2c_write: bus_status 0x%02X", bus_status);
+
         return false;
     }
 
@@ -807,8 +809,8 @@ static bool _bc_bridge_ft260_i2c_read(bc_bridge_t *self, uint8_t address, uint8_
     FD_ZERO(&fds);
     FD_SET(self->_fd_i2c, &fds);
 
-    tv.tv_sec = 0;
-    tv.tv_usec = (__suseconds_t)1e6;
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
 
     res = select(self->_fd_i2c + 1, &fds, NULL, NULL, &tv);
 

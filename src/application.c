@@ -7,27 +7,29 @@
 #include "bc_tag_lux_meter.h"
 #include "bc_tag_barometer.h"
 #include "bc_tag_humidity.h"
+#include "task.h"
+#include "task_manager.h"
 
 bc_bridge_t bridge;
 
 task_info_t task_info_list[] =
     {
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_LED,              BC_BRIDGE_I2C_CHANNEL_0, 0x00,                                   NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,   NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,   NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_DEFAULT,       NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_DEFAULT,       NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_ALTERNATE,     NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_ALTERNATE,     NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_BAROMETER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_BAROMETER_ADDRESS_DEFAULT,       NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_BAROMETER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_BAROMETER_ADDRESS_DEFAULT,       NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT, NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT, NULL, false },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_DEFAULT,        NULL, false },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_ALTERNATE,      NULL, false },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_MODULE_CO2,       BC_BRIDGE_I2C_CHANNEL_0, 0x38,                                   NULL, false }
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_LED,              BC_BRIDGE_I2C_CHANNEL_0, 0x00 ,                                  NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,   NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,   NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_DEFAULT,       NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_DEFAULT,       NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_ALTERNATE,     NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_ALTERNATE,     NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_BAROMETER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_BAROMETER_ADDRESS_DEFAULT,       NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_BAROMETER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_BAROMETER_ADDRESS_DEFAULT,       NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT, NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT, NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_DEFAULT,        NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_ALTERNATE,      NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_MODULE_CO2,       BC_BRIDGE_I2C_CHANNEL_0, 0x38,                                   NULL }
     };
 
 size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);
@@ -56,6 +58,7 @@ void application_loop(bool *quit)
     bc_bridge_device_info_t devices[10];
 
     uint8_t device_count;
+    bc_tick_t last_init=0;
 
     bc_log_info("application_loop: searching device");
     while (true)
@@ -85,16 +88,25 @@ void application_loop(bool *quit)
         return;
     }
 
-    task_init(&bridge, task_info_list, task_info_list_length);
+    task_manager_init(&bridge, task_info_list, task_info_list_length);
+    last_init = bc_tick_get();
 
     while (bc_bridge_is_alive(&bridge))
     {
+
+        if (bc_tick_get() > last_init+30000 )
+        {
+            task_manager_init(&bridge, task_info_list, task_info_list_length);
+            last_init = bc_tick_get();
+        }
+
         bc_os_task_sleep(1000);
+
     }
 
     bc_log_error("application_loop: device disconnect");
 
-    task_destroy(task_info_list, task_info_list_length);
+    task_manager_terminate(task_info_list, task_info_list_length);
 
     bc_bridge_close(&bridge);
 
@@ -161,13 +173,12 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
             return;
         }
 
-        if (!task_info.enabled)
+        if (!task_is_alive(&task_info))
         {
             bc_log_error("_application_bc_talk_callback: tag or module not enabled");
 
             return;
         }
-
     }
 
     switch (event->operation)
@@ -182,20 +193,19 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             bc_tick_t publish_interval;
 
-            if (task_get_interval(&task_info, &publish_interval))
-            {
-                char topic[64];
-                char tmp[64];
+            task_get_interval(&task_info, &publish_interval);
 
-                bc_talk_make_topic(task_info.i2c_channel, task_info.device_address, tmp, sizeof(tmp));
+            char topic[64];
+            char tmp[64];
 
-                snprintf(topic, sizeof(topic), "$config/devices/%s", tmp);
+            bc_talk_make_topic(task_info.i2c_channel, task_info.device_address, tmp, sizeof(tmp));
 
-                bc_talk_publish_begin(topic);
-                bc_talk_publish_add_value("publish-interval",
-                                          publish_interval == BC_TALK_INT_VALUE_NULL ? "null" : "%d", publish_interval);
-                bc_talk_publish_end();
-            }
+            snprintf(topic, sizeof(topic), "$config/devices/%s", tmp);
+
+            bc_talk_publish_begin(topic);
+            bc_talk_publish_add_value("publish-interval",
+                                      publish_interval == BC_TALK_INT_VALUE_NULL ? "null" : "%d", publish_interval);
+            bc_talk_publish_end();
 
             break;
         }
@@ -203,34 +213,34 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             if (event->value == 1)
             {
-                task_relay_set_mode((task_relay_t *) task_info.task, TASK_RELAY_MODE_TRUE);
+                task_relay_set_state(&task_info, TASK_RELAY_STATE_TRUE);
             }
             else
             {
-                task_relay_set_mode((task_relay_t *) task_info.task, TASK_RELAY_MODE_FALSE);
+                task_relay_set_state(&task_info, TASK_RELAY_STATE_FALSE);
             }
 
             break;
         }
         case BC_TALK_OPERATION_RELAY_GET:
         {
-            task_relay_mode_t relay_mode;
+            task_relay_state_t relay_state;
 
-            task_relay_get_mode((task_relay_t *) task_info.task, &relay_mode);
+            task_relay_get_state(&task_info, &relay_state);
 
-            bc_talk_publish_relay((int) relay_mode, task_info.device_address);
+            bc_talk_publish_relay((int) relay_state, task_info.device_address);
 
             break;
         }
         case BC_TALK_OPERATION_LED_SET:
         {
-            task_led_set_state((task_led_t *) task_info.task, (task_led_state_t) event->value);
+            task_led_set_state(&task_info, (task_led_state_t) event->value);
         }
         case BC_TALK_OPERATION_LED_GET:
         {
             task_led_state_t led_state;
 
-            task_led_get_state((task_led_t *) task_info.task, &led_state);
+            task_led_get_state(&task_info, &led_state);
 
             bc_talk_publish_led_state((int) led_state);
 
@@ -248,7 +258,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
 
             for (i = 0; i < task_info_list_length; ++i)
             {
-                if (!task_is_quit_request(&task_info_list[i]))
+                if (task_is_alive(&task_info_list[i]))
                 {
                     if (task_info_list[i].class == TASK_CLASS_SENSOR)
                     {

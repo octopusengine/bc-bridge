@@ -1,7 +1,4 @@
-#include "application.h"
-#include "bc_bridge.h"
-#include "bc_talk.h"
-#include "bc_log.h"
+#include "task.h"
 #include "task_thermometer.h"
 #include "task_lux_meter.h"
 #include "task_relay.h"
@@ -9,234 +6,81 @@
 #include "task_led.h"
 #include "task_barometer.h"
 #include "task_humidity.h"
-#include "task.h"
+#include "bc_log.h"
 
-void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
+bool task_is_alive(task_info_t *task_info)
 {
-    int i;
-    for (i = 0; i < length; i++)
-    {
-        switch (task_info_list[i].type)
-        {
-            case TASK_TYPE_LED:
-            {
-                task_led_spawn(bridge, &task_info_list[i]);
-                break;
-            }
-            case TASK_TYPE_TAG_THERMOMETHER:
-            {
-                task_thermometer_spawn(bridge, &task_info_list[i]);
-                break;
-            }
-            case TASK_TYPE_TAG_LUX_METER:
-            {
-                task_lux_meter_spawn(bridge, &task_info_list[i]);
-                break;
-            }
-            case TASK_TYPE_TAG_BAROMETER:
-            {
-                task_barometer_spawn(bridge, &task_info_list[i]);
-                break;
-            }
-            case TASK_TYPE_TAG_HUMIDITY:
-            {
-                task_humidity_spawn(bridge, &task_info_list[i]);
-                break;
-            }
-            case TASK_TYPE_MODULE_RELAY:
-            {
-                task_relay_spawn(bridge, &task_info_list[i]);
-                break;
-            }
-            case TASK_TYPE_MODULE_CO2:
-            {
-                task_co2_spawn(bridge, &task_info_list[i]);
-                break;
-            }
-            default:
-                break;
-        }
-
-    }
-}
-
-void task_destroy(task_info_t *task_info_list, size_t length)
-{
-    int i;
-    for (i = 0; i < length; i++)
-    {
-        switch (task_info_list[i].type)
-        {
-            case TASK_TYPE_LED:
-            {
-                task_led_terminate((task_led_t *) task_info_list[i].task);
-                break;
-            }
-            case TASK_TYPE_TAG_THERMOMETHER:
-            {
-                task_thermometer_terminate((task_thermometer_t *) task_info_list[i].task);
-                break;
-            }
-            case TASK_TYPE_TAG_LUX_METER:
-            {
-                task_lux_meter_terminate((task_lux_meter_t *) task_info_list[i].task);
-                break;
-            }
-            case TASK_TYPE_TAG_BAROMETER:
-            {
-                task_barometer_terminate((task_barometer_t *) task_info_list[i].task);
-                break;
-            }
-            case TASK_TYPE_TAG_HUMIDITY:
-            {
-                task_humidity_terminate((task_humidity_t *) task_info_list[i].task);
-                break;
-            }
-            case TASK_TYPE_MODULE_RELAY:
-            {
-                task_relay_terminate((task_relay_t *) task_info_list[i].task);
-                break;
-            }
-            case TASK_TYPE_MODULE_CO2:
-            {
-                task_co2_terminate((task_co2_t *) task_info_list[i].task);
-                break;
-            }
-            default:
-                break;
-        }
-        task_info_list[i].task = NULL;
-        task_info_list[i].enabled = false;
-    }
-}
-
-bool task_set_interval(task_info_t *task_info, bc_tick_t interval)
-{
-    if (!task_info->enabled)
+    if (task_info->worker == NULL )
     {
         return false;
     }
-    switch (task_info->type)
-    {
-        case TASK_TYPE_LED:
-        {
-            task_led_set_interval((task_led_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_TAG_THERMOMETHER:
-        {
-            task_thermometer_set_interval((task_thermometer_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_TAG_LUX_METER:
-        {
-            task_lux_meter_set_interval((task_lux_meter_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_TAG_BAROMETER:
-        {
-            task_barometer_set_interval((task_barometer_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_TAG_HUMIDITY:
-        {
-            task_humidity_set_interval((task_humidity_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_MODULE_CO2:
-        {
-            task_co2_set_interval((task_co2_t *) task_info->task, interval);
-            return true;
-        }
-        default:
-            bc_log_error("task_set_interval: unknown task_info->type=%d", task_info->type);
-            return false;
-    }
-    return false;
+    return  bc_os_task_is_alive(&task_info->worker->task);
 }
 
-bool task_get_interval(task_info_t *task_info, bc_tick_t *interval)
+void task_lock(task_info_t *task_info)
 {
-    if (!task_info->enabled)
-    {
-        return false;
-    }
-    switch (task_info->type)
-    {
-        case TASK_TYPE_LED:
-        {
-            task_led_get_interval((task_led_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_TAG_THERMOMETHER:
-        {
-            task_thermometer_get_interval((task_thermometer_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_TAG_LUX_METER:
-        {
-            task_lux_meter_get_interval((task_lux_meter_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_TAG_BAROMETER:
-        {
-            task_barometer_get_interval((task_barometer_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_TAG_HUMIDITY:
-        {
-            task_humidity_get_interval((task_humidity_t *) task_info->task, interval);
-            return true;
-        }
-        case TASK_TYPE_MODULE_CO2:
-        {
-            task_co2_get_interval((task_co2_t *) task_info->task, interval);
-            return true;
-        }
-        default:
-            bc_log_error("task_get_interval: unknown task_info->type=%d", task_info->type);
-            return false;
-    }
-    return false;
+    bc_os_mutex_lock(task_info->mutex);
 }
 
-bool task_is_quit_request(task_info_t *task_info)
+void task_unlock(task_info_t *task_info)
 {
-    switch (task_info->type)
+    bc_os_mutex_unlock(task_info->mutex);
+}
+
+void task_semaphore_put(task_info_t *task_info)
+{
+    task_lock(task_info);
+    if (task_info->worker != NULL)
     {
-        case TASK_TYPE_LED:
-        {
-            return task_led_is_quit_request((task_led_t *) task_info->task);
-        }
-        case TASK_TYPE_TAG_THERMOMETHER:
-        {
-            return task_thermometer_is_quit_request((task_thermometer_t *) task_info->task);
-        }
-        case TASK_TYPE_TAG_LUX_METER:
-        {
-            return task_lux_meter_is_quit_request((task_lux_meter_t *) task_info->task);
-        }
-        case TASK_TYPE_TAG_BAROMETER:
-        {
-            return task_barometer_is_quit_request((task_barometer_t *) task_info->task);
-        }
-        case TASK_TYPE_TAG_HUMIDITY:
-        {
-            return task_humidity_is_quit_request((task_humidity_t *) task_info->task);
-        }
-        case TASK_TYPE_MODULE_CO2:
-        {
-            return task_co2_is_quit_request((task_co2_t *) task_info->task);
-        }
-        case TASK_TYPE_MODULE_RELAY:
-        {
-            return task_relay_is_quit_request((task_relay_t *) task_info->task);
-        }
-        default:
-            bc_log_error("task_set_interval: unknown task_info->type=%d", task_info->type);
-            return false;
+        bc_os_semaphore_put(&task_info->worker->semaphore);
     }
+    task_unlock(task_info);
+}
+
+void task_set_interval(task_info_t *task_info, bc_tick_t interval)
+{
+    if (task_info->type == TASK_TYPE_MODULE_CO2)
+    {
+        if ((interval < 16000) && (interval > 0))
+        {
+            return;
+        }
+    }
+
+    task_lock(task_info);
+    *task_info->publish_interval = interval;
+    task_unlock(task_info);
+
+    task_semaphore_put(task_info);
+
+}
+
+void task_get_interval(task_info_t *task_info, bc_tick_t *interval)
+{
+    task_lock(task_info);
+    *interval = *task_info->publish_interval;
+    task_unlock(task_info);
+}
+
+bool task_worker_is_quit_request(task_worker_t *self)
+{
+    bc_os_mutex_lock(self->mutex);
+
+    if (self->_quit)
+    {
+        bc_os_mutex_unlock(self->mutex);
+
+        return true;
+    }
+
+    bc_os_mutex_unlock(self->mutex);
+
     return false;
 }
 
-
+void task_worker_get_interval(task_worker_t *self, bc_tick_t *interval)
+{
+    bc_os_mutex_lock(self->mutex);
+    *interval = *self->publish_interval;
+    bc_os_mutex_unlock(self->mutex);
+}

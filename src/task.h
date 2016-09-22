@@ -1,6 +1,8 @@
 #ifndef BC_BRIDGE_TASK_H
 #define BC_BRIDGE_TASK_H
 
+#include "bc_bridge.h"
+
 typedef enum
 {
     TASK_CLASS_SENSOR,
@@ -23,19 +25,49 @@ typedef enum
 
 typedef struct
 {
+    bc_os_task_t task;
+    bc_os_semaphore_t semaphore;
+
+    bc_tick_t _tick_feed_interval;
+    bc_tick_t _tick_last_feed;
+
+    bc_bridge_t *_bridge;
+    bc_bridge_i2c_channel_t _i2c_channel;
+    uint8_t _device_address;
+
+    bool _quit;
+
+    bc_os_mutex_t *mutex;
+    void *parameters;
+    bc_tick_t *publish_interval;
+
+} task_worker_t;
+
+typedef struct
+{
     task_class_t class;
     task_type_t type;
     bc_bridge_i2c_channel_t i2c_channel;
     uint8_t device_address;
-    void *task;
-    bool enabled;
+
+    bc_os_mutex_t *mutex;
+
+    bc_tick_t *publish_interval;
+    void *parameters;
+
+    task_worker_t *worker;
+
 
 } task_info_t;
 
-void task_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length);
-void task_destroy(task_info_t *task_info_list, size_t length);
-bool task_set_interval(task_info_t *task_info, bc_tick_t interval);
-bool task_get_interval(task_info_t *task_info, bc_tick_t *interval);
-bool task_is_quit_request(task_info_t *task_info);
+bool task_is_alive(task_info_t *task_info);
+void task_set_interval(task_info_t *task_info, bc_tick_t interval);
+void task_get_interval(task_info_t *task_info, bc_tick_t *interval);
+void task_lock(task_info_t *task_info);
+void task_unlock(task_info_t *task_info);
+void task_semaphore_put(task_info_t *task_info);
+
+bool task_worker_is_quit_request(task_worker_t *self);
+void task_worker_get_interval(task_worker_t *self, bc_tick_t *interval);
 
 #endif //BC_BRIDGE_TASK_H

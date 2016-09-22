@@ -6,82 +6,13 @@
 #include "bc_bridge.h"
 #include "task.h"
 
-static void *task_humidity_worker(void *parameter);
-
-void task_humidity_spawn(bc_bridge_t *bridge, task_info_t *task_info)
-{
-    task_humidity_t *self = (task_humidity_t *) malloc(sizeof(task_humidity_t));
-
-    if (self == NULL)
-    {
-        bc_log_fatal("task_humidity_spawn: call failed: malloc");
-    }
-
-    self->_bridge = bridge;
-    self->_i2c_channel = task_info->i2c_channel;
-    self->_device_address = task_info->device_address;
-    self->tick_feed_interval = 1000;
-    self->_quit = false;
-
-    bc_os_mutex_init(&self->mutex);
-    bc_os_semaphore_init(&self->semaphore, 0);
-    bc_os_task_init(&self->task, task_humidity_worker, self);
-
-    task_info->task = self;
-    task_info->enabled = true;
-}
-
-void task_humidity_set_interval(task_humidity_t *self, bc_tick_t interval)
-{
-    bc_os_mutex_lock(&self->mutex);
-    self->tick_feed_interval = interval;
-    bc_os_mutex_unlock(&self->mutex);
-
-    bc_os_semaphore_put(&self->semaphore);
-}
-
-void task_humidity_get_interval(task_humidity_t *self, bc_tick_t *interval)
-{
-    bc_os_mutex_lock(&self->mutex);
-    *interval = self->tick_feed_interval;
-    bc_os_mutex_unlock(&self->mutex);
-}
-
-void task_humidity_terminate(task_humidity_t *self)
-{
-
-    bc_bridge_i2c_channel_t i2c_channel;
-    uint8_t device_address;
-
-    i2c_channel = (uint8_t) self->_i2c_channel;
-    device_address = self->_device_address;
-
-    bc_log_info("task_humidity_terminate: terminating instance for bus %d, address 0x%02X",
-                i2c_channel, device_address);
-
-    bc_os_mutex_lock(&self->mutex);
-    self->_quit = true;
-    bc_os_mutex_unlock(&self->mutex);
-
-    bc_os_semaphore_put(&self->semaphore);
-
-    bc_os_task_destroy(&self->task);
-    bc_os_semaphore_destroy(&self->semaphore);
-    bc_os_mutex_destroy(&self->mutex);
-
-    free(self);
-
-    bc_log_info("task_humidity_terminate: terminated instance for bus %d, address 0x%02X",
-                i2c_channel, device_address);
-}
-
-static void *task_humidity_worker(void *parameter)
+void *task_humidity_worker(void *task_parameter)
 {
     float value;
     bc_tick_t tick_feed_interval;
     bc_tag_humidity_state_t state;
 
-    task_humidity_t *self = (task_humidity_t *) parameter;
+    task_worker_t *self = (task_worker_t *) task_parameter;
 
     bc_log_info("task_humidity_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_channel, self->_device_address);
@@ -97,15 +28,13 @@ static void *task_humidity_worker(void *parameter)
     {
         bc_log_debug("task_humidity_worker: bc_tag_humidity_init false for bus %d, address 0x%02X",
                      (uint8_t) self->_i2c_channel, self->_device_address);
-        bc_os_mutex_lock(&self->mutex);
-        self->_quit = true;
-        bc_os_mutex_unlock(&self->mutex);
+
         return NULL;
     }
 
     while (true)
     {
-        task_humidity_get_interval(self, &tick_feed_interval);
+        task_worker_get_interval(self, &tick_feed_interval);
 
         if (tick_feed_interval < 0)
         {
@@ -118,7 +47,7 @@ static void *task_humidity_worker(void *parameter)
 
         bc_log_debug("task_humidity_worker: wake up signal");
 
-        if (task_humidity_is_quit_request(self))
+        if (task_worker_is_quit_request(self))
         {
             bc_log_debug("task_humidity_worker: quit_request");
             break;
@@ -129,7 +58,7 @@ static void *task_humidity_worker(void *parameter)
         if (!bc_tag_humidity_get_state(&tag_humidity, &state))
         {
             bc_log_error("task_humidity_worker: bc_tag_humidity_get_state");
-            continue;
+            return NULL;
         }
 
         switch (state)
@@ -140,7 +69,7 @@ static void *task_humidity_worker(void *parameter)
                 if (!bc_tag_humidity_read_calibration(&tag_humidity))
                 {
                     bc_log_error("task_humidity_worker: bc_tag_humidity_read_calibration");
-                    continue;
+                    return NULL;
                 }
 
                 break;
@@ -150,7 +79,7 @@ static void *task_humidity_worker(void *parameter)
                 if (!bc_tag_humidity_power_up(&tag_humidity))
                 {
                     bc_log_error("task_humidity_worker: bc_tag_humidity_power_up");
-                    continue;
+                    return NULL;
                 }
 
                 break;
@@ -160,7 +89,7 @@ static void *task_humidity_worker(void *parameter)
                 if (!bc_tag_humidity_one_shot_conversion(&tag_humidity))
                 {
                     bc_log_error("task_humidity_worker: bc_tag_humidity_one_shot_conversion");
-                    continue;
+                    return NULL;
                 }
 
                 break;
@@ -175,19 +104,19 @@ static void *task_humidity_worker(void *parameter)
                 if (!bc_tag_humidity_read_result(&tag_humidity))
                 {
                     bc_log_error("task_humidity_worker: bc_tag_humidity_read_result");
-                    continue;
+                    return NULL;
                 }
 
                 if (!bc_tag_humidity_get_result(&tag_humidity, &value))
                 {
                     bc_log_error("task_humidity_worker: bc_tag_humidity_get_result");
-                    continue;
+                    return NULL;
                 }
 
                 if (!bc_tag_humidity_one_shot_conversion(&tag_humidity))
                 {
                     bc_log_error("task_humidity_worker: bc_tag_humidity_one_shot_conversion");
-                    continue;
+                    return NULL;
                 }
 
                 bc_talk_publish_begin_auto((uint8_t) self->_i2c_channel, self->_device_address);
@@ -197,27 +126,11 @@ static void *task_humidity_worker(void *parameter)
             }
             default:
             {
-                continue;
+                break;
             }
         }
 
     }
 
     return NULL;
-}
-
-bool task_humidity_is_quit_request(task_humidity_t *self)
-{
-    bc_os_mutex_lock(&self->mutex);
-
-    if (self->_quit)
-    {
-        bc_os_mutex_unlock(&self->mutex);
-
-        return true;
-    }
-
-    bc_os_mutex_unlock(&self->mutex);
-
-    return false;
 }

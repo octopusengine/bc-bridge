@@ -7,8 +7,6 @@
 #include "bc_i2c_tca9534a.h"
 #include "bc_i2c_sc16is740.h"
 
-#define BC_MODULE_CO2_MINIMAL_MEASUREMENT_INTERVAL_MS 16000L
-
 typedef enum
 {
     BC_MODULE_CO2_STATE_ERROR = -1,

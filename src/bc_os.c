@@ -1,7 +1,7 @@
 #include "bc_os.h"
 #include "bc_log.h"
 #include <pthread.h>
-#include <time.h>
+#include <signal.h>
 
 typedef struct
 {
@@ -34,7 +34,15 @@ void bc_os_task_destroy(bc_os_task_t *task)
     }
 
     free(task->_task);
+
+    task->_task = NULL;
 }
+
+bool bc_os_task_is_alive(bc_os_task_t *task)
+{
+    return pthread_kill( *(pthread_t *)task->_task, 0) == 0 ? true : false;
+}
+
 
 void bc_os_task_sleep(bc_tick_t timeout)
 {

@@ -6,82 +6,12 @@
 #include "bc_bridge.h"
 #include "task.h"
 
-static void *task_lux_meter_worker(void *parameter);
-
-void task_lux_meter_spawn(bc_bridge_t *bridge, task_info_t *task_info)
+void *task_lux_meter_worker(void *task_parameter)
 {
-    task_lux_meter_t *self = (task_lux_meter_t *) malloc(sizeof(task_lux_meter_t));
-
-    if (self == NULL)
-    {
-        bc_log_fatal("task_lux_meter_spawn: call failed: malloc");
-    }
-
-    self->_bridge = bridge;
-    self->_i2c_channel = task_info->i2c_channel;
-    self->_device_address = task_info->device_address;
-    self->tick_feed_interval = 1000;
-    self->_quit = false;
-
-    bc_os_mutex_init(&self->mutex);
-    bc_os_semaphore_init(&self->semaphore, 0);
-    bc_os_task_init(&self->task, task_lux_meter_worker, self);
-
-    task_info->task = self;
-    task_info->enabled = true;
-}
-
-void task_lux_meter_set_interval(task_lux_meter_t *self, bc_tick_t interval)
-{
-    bc_os_mutex_lock(&self->mutex);
-    self->tick_feed_interval = interval;
-    bc_os_mutex_unlock(&self->mutex);
-
-    bc_os_semaphore_put(&self->semaphore);
-}
-
-void task_lux_meter_get_interval(task_lux_meter_t *self, bc_tick_t *interval)
-{
-    bc_os_mutex_lock(&self->mutex);
-    *interval = self->tick_feed_interval;
-    bc_os_mutex_unlock(&self->mutex);
-}
-
-void task_lux_meter_terminate(task_lux_meter_t *self)
-{
-
-    bc_bridge_i2c_channel_t i2c_channel;
-    uint8_t device_address;
-
-    i2c_channel = (uint8_t) self->_i2c_channel;
-    device_address = self->_device_address;
-
-    bc_log_info("task_lux_meter_terminate: terminating instance for bus %d, address 0x%02X",
-                i2c_channel, device_address);
-
-    bc_os_mutex_lock(&self->mutex);
-    self->_quit = true;
-    bc_os_mutex_unlock(&self->mutex);
-
-    bc_os_semaphore_put(&self->semaphore);
-
-    bc_os_task_destroy(&self->task);
-    bc_os_semaphore_destroy(&self->semaphore);
-    bc_os_mutex_destroy(&self->mutex);
-
-    free(self);
-
-    bc_log_info("task_lux_meter_terminate: terminated instance for bus %d, address 0x%02X",
-                i2c_channel, device_address);
-}
-
-static void *task_lux_meter_worker(void *parameter)
-{
+    task_worker_t *self = (task_worker_t *) task_parameter;
     float value;
     bc_tick_t tick_feed_interval;
     bc_tag_lux_meter_state_t state;
-
-    task_lux_meter_t *self = (task_lux_meter_t *) parameter;
 
     bc_log_info("task_lux_meter_worker: started instance for bus %d, address 0x%02X",
                 (uint8_t) self->_i2c_channel, self->_device_address);
@@ -95,16 +25,15 @@ static void *task_lux_meter_worker(void *parameter)
 
     if (!bc_tag_lux_meter_init(&tag_lux_meter, &interface, self->_device_address))
     {
-        bc_log_debug("task_lux_meter_worker: bc_tag_lux_meter_init false");
-        bc_os_mutex_lock(&self->mutex);
-        self->_quit = true;
-        bc_os_mutex_unlock(&self->mutex);
+        bc_log_debug("task_lux_meter_worker: bc_tag_lux_meter_init false bus %d, address 0x%02X",
+                     (uint8_t) self->_i2c_channel, self->_device_address);
+
         return NULL;
     }
 
     while (true)
     {
-        task_lux_meter_get_interval(self, &tick_feed_interval);
+        task_worker_get_interval(self, &tick_feed_interval);
 
         if (tick_feed_interval < 0)
         {
@@ -117,7 +46,7 @@ static void *task_lux_meter_worker(void *parameter)
 
         bc_log_debug("task_lux_meter_worker: wake up signal");
 
-        if (task_lux_meter_is_quit_request(self))
+        if (task_worker_is_quit_request(self))
         {
             bc_log_debug("task_lux_meter_worker: quit_request");
             break;
@@ -128,7 +57,7 @@ static void *task_lux_meter_worker(void *parameter)
         if (!bc_tag_lux_meter_get_state(&tag_lux_meter, &state))
         {
             bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_get_state");
-            continue;
+            return NULL;
         }
 
         switch (state)
@@ -138,7 +67,7 @@ static void *task_lux_meter_worker(void *parameter)
                 if (!bc_tag_lux_meter_single_shot_conversion(&tag_lux_meter))
                 {
                     bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_single_shot_conversion");
-                    continue;
+                    return NULL;
                 }
                 break;
             }
@@ -151,19 +80,19 @@ static void *task_lux_meter_worker(void *parameter)
                 if (!bc_tag_lux_meter_read_result(&tag_lux_meter))
                 {
                     bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_read_result");
-                    continue;
+                    return NULL;
                 }
 
                 if (!bc_tag_lux_meter_get_result_lux(&tag_lux_meter, &value))
                 {
                     bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_get_result_lux");
-                    continue;
+                    return NULL;
                 }
 
                 if (!bc_tag_lux_meter_single_shot_conversion(&tag_lux_meter))
                 {
                     bc_log_error("task_lux_meter_worker: bc_tag_lux_meter_single_shot_conversion");
-                    continue;
+                    return NULL;
                 }
 
                 bc_log_info("task_lux_meter_worker: illuminance = %.1f lux", value);
@@ -182,20 +111,4 @@ static void *task_lux_meter_worker(void *parameter)
     }
 
     return NULL;
-}
-
-bool task_lux_meter_is_quit_request(task_lux_meter_t *self)
-{
-    bc_os_mutex_lock(&self->mutex);
-
-    if (self->_quit)
-    {
-        bc_os_mutex_unlock(&self->mutex);
-
-        return true;
-    }
-
-    bc_os_mutex_unlock(&self->mutex);
-
-    return false;
 }
