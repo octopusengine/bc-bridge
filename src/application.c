@@ -59,12 +59,14 @@ void application_init(application_parameters_t *parameters)
 void application_loop(bool *quit)
 {
     bc_bridge_device_info_t devices[10];
-    uint8_t device_count = 10;
-    bc_tick_t last_init=0;
+    uint8_t device_count;
+    bc_tick_t last_init = 0;
 
     bc_log_info("application_loop: searching device");
     while (true)
     {
+
+        device_count = sizeof(devices)/sizeof(bc_bridge_device_info_t);
 
         if (!bc_bridge_scan(devices, &device_count))
         {
