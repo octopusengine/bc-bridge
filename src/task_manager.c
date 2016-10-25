@@ -8,6 +8,7 @@
 #include "task_humidity.h"
 #include "task_display_oled.h"
 #include "bc_log.h"
+#include "bc_talk.h"
 
 static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void *(*task_worker)(void *) );
 static void _task_worker_terminate(task_info_t *task_info);
@@ -90,7 +91,9 @@ void task_manager_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t 
                     parameters = malloc(sizeof(task_display_oled_parameters_t));
                     memset(parameters, 0x00, sizeof(task_display_oled_parameters_t) );
                     strcpy( ((task_display_oled_parameters_t *) parameters)->lines[0], "BigClown");
-                    strcpy( ((task_display_oled_parameters_t *) parameters)->lines[2], "i2c oled display");
+                    char topic[21] = "";
+                    bc_talk_make_topic(task_info_list[i].i2c_channel, task_info_list[i].device_address, topic, sizeof(topic));
+                    strcpy( ((task_display_oled_parameters_t *) parameters)->lines[2], topic);
                     task_info_list[i].parameters = parameters;
                 }
                 _task_spawn_worker(bridge, &task_info_list[i], task_display_oled);
