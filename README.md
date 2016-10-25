@@ -7,7 +7,7 @@ Clown.Bridge is a proxy between BigClown's Bridge Module
 
 > The following snippet has been tested on Ubuntu Desktop 16.04 LTS.
 
-    sudo apt-get install cmake libudev-dev git
+    sudo apt-get install build-essential cmake git libudev-dev 
     git clone --recursive https://github.com/bigclownlabs/bc-bridge.git
     cd bc-bridge
     cmake .
