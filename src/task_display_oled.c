@@ -2,6 +2,7 @@
 #include "bc_log.h"
 #include "bc_bridge.h"
 #include "task.h"
+#include "bc_i2c_ssd1306.h"
 
 void *task_display_oled(void *task_parameter)
 {
@@ -34,6 +35,8 @@ void *task_display_oled(void *task_parameter)
 
     int i;
 
+    actual_parameters.raw = NULL;
+
     bc_os_mutex_lock(self->mutex);
     for (i=0; i<8; i++)
     {
@@ -50,29 +53,64 @@ void *task_display_oled(void *task_parameter)
 
     while (true)
     {
+
         bc_os_semaphore_get(&self->semaphore);
 
-        bc_os_mutex_lock(self->mutex);
-        for (i=0; i<8; i++)
+        bc_log_debug("task_display_oled: wake up signal");
+
+        if (task_worker_is_quit_request(self))
         {
-            if (strcmp(actual_parameters.lines[i], parameters->lines[i] ) != 0 )
+            bc_log_debug("task_display_oled: quit_request");
+            break;
+        }
+
+        bc_os_mutex_lock(self->mutex);
+
+        if (parameters->raw != NULL)
+        {
+            if (actual_parameters.raw != parameters->raw)
             {
-                strcpy(actual_parameters.lines[i], parameters->lines[i] );
+                memcpy(disp.buffer, parameters->raw, disp.length);
+
+                actual_parameters.raw = parameters->raw;
+
                 bc_os_mutex_unlock(self->mutex);
 
-                bc_gfx_clean_line(&gfx, i);
-                bc_gfx_text(&gfx, actual_parameters.lines[i] );
-                if (!bc_ic2_ssd1306_display_page(&disp, i))
+                if (!bc_ic2_ssd1306_display(&disp))
                 {
                     return NULL;
                 }
+            }
+            else
+            {
+                bc_os_mutex_unlock(self->mutex);
+            }
+        }
+        else
+        {
+            for (i=0; i<8; i++)
+            {
+                if ( (strcmp(actual_parameters.lines[i], parameters->lines[i] ) != 0) || (actual_parameters.raw!=NULL) )
+                {
+                    strcpy(actual_parameters.lines[i], parameters->lines[i] );
+                    bc_os_mutex_unlock(self->mutex);
 
-                bc_os_mutex_lock(self->mutex);
+                    bc_gfx_clean_line(&gfx, i);
+                    bc_gfx_text(&gfx, actual_parameters.lines[i] );
+                    if (!bc_ic2_ssd1306_display_page(&disp, i))
+                    {
+                        return NULL;
+                    }
+
+                    bc_os_mutex_lock(self->mutex);
+                }
+
             }
 
-        }
-        bc_os_mutex_unlock(self->mutex);
+            actual_parameters.raw = NULL;
 
+            bc_os_mutex_unlock(self->mutex);
+        }
     }
 
     return NULL;
@@ -87,8 +125,40 @@ void task_display_oled_set_line(task_info_t *task_info, uint8_t line, char *text
     }
 
     task_lock(task_info);
-    strncpy( ((task_display_oled_parameters_t *)task_info->parameters)->lines[line], text, 21);
+
+    task_display_oled_parameters_t *parameters = (task_display_oled_parameters_t *)task_info->parameters;
+
+    if ( parameters->raw != NULL )
+    {
+        free(parameters->raw);
+        parameters->raw = NULL;
+    }
+
+    strncpy( parameters->lines[line], text, 21);
     task_unlock(task_info);
 
+    task_semaphore_put(task_info);
+}
+
+void task_display_oled_set_raw(task_info_t *task_info, uint8_t *buffer)
+{
+    task_lock(task_info);
+
+    task_display_oled_parameters_t *parameters = (task_display_oled_parameters_t *)task_info->parameters;
+
+    if ( parameters->raw != NULL )
+    {
+        free(parameters->raw);
+    }
+
+    parameters->raw = buffer;
+
+    int i;
+    for (i=0; i<8; i++)
+    {
+        strcpy(parameters->lines[i], "");
+    }
+
+    task_unlock(task_info);
     task_semaphore_put(task_info);
 }

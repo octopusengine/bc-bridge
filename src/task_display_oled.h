@@ -10,10 +10,12 @@
 typedef struct
 {
     char lines[8][22];
+    uint8_t *raw;
 
 } task_display_oled_parameters_t;
 
 void *task_display_oled(void *task_parameter);
 void task_display_oled_set_line(task_info_t *task_info, uint8_t line, char *text);
+void task_display_oled_set_raw(task_info_t *task_info, uint8_t *buffer);
 
 #endif /* _TASK_DISPLAY_OLED_H */

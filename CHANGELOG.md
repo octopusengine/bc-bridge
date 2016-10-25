@@ -8,5 +8,5 @@ Support
 - Barometer TAG
 - CO2 Module
 - Relay Module
-- OLED I2C Device (without raw mode)
+- OLED I2C Device
     

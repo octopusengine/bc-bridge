@@ -40,6 +40,7 @@ set(SOURCE_FILES
         src/bc_tag_humidity.c
         src/bc_tag_lux_meter.c
         src/bc_tag_temperature.c
+        src/bc_base64.c
         src/bc_talk.c
         src/bc_tick.c
         src/bc_gfx.c

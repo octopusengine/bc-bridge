@@ -11,6 +11,8 @@
 #include "task.h"
 #include "task_display_oled.h"
 
+#include "bc_base64.h"
+
 bc_bridge_t bridge;
 
 task_info_t task_info_list[] =
@@ -256,7 +258,14 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
             if (task_info.type == TASK_TYPE_DISPLAY_OLED)
             {
                 task_display_oled_set_line(&task_info, event->param, event->value);
-                free(event->value);
+            }
+            break;
+        }
+        case BC_TALK_OPERATION_RAW_SET:
+        {
+            if (task_info.type == TASK_TYPE_DISPLAY_OLED)
+            {
+                task_display_oled_set_raw(&task_info, event->value);
             }
             break;
         }

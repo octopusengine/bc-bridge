@@ -2,9 +2,13 @@
 #include "bc_os.h"
 #include <jsmn.h>
 #include "bc_log.h"
+#include "bc_base64.h"
 
 #define BC_TALK_MAX_PAYLOAD_SUBTOPIC 4
 #define BC_TALK_DEVICE_NAME_SIZE 16
+
+#define BC_TALK_RAW_BASE64_LENGTH 1368
+#define BC_TALK_RAW_BUFFER_LENGTH 1024
 
 const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
 const char *bc_talk_bool[] = { "false", "true" };
@@ -258,6 +262,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
     char *saveptr;
     char *text_tmp;
     bc_talk_event_t event;
+    event.value = NULL;
 
     jsmn_init(&parser);
     r = jsmn_parse(&parser, line, length, tokens, sizeof(tokens));
@@ -396,26 +401,55 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
     {
         if (strcmp(payload[2], "set") == 0)
         {
-            event.operation = BC_TALK_OPERATION_LINE_SET;
 
-            text_tmp = malloc(sizeof(char)*22);
-            for (i = 3; i < tokens[2].size * 2 + 3 && i + 1 < r; i += 2)
+
+            if (_bc_talk_token_cmp(line, &tokens[3], "raw") && (r==5))
             {
-                event.param = _bc_talk_token_find_index(line, &tokens[i], bc_talk_lines,
-                                                        sizeof(bc_talk_lines) / sizeof(*bc_talk_lines));
-                if ( event.param > -1 ){
+                event.operation = BC_TALK_OPERATION_RAW_SET;
 
-                    event.value = _bc_talk_token_get_string(line, &tokens[i + 1], text_tmp, 22 );
-                    if (event.value != NULL)
-                    {
-                        callback(&event);
-                    }
-                    else
-                    {
-                        bc_log_error("bc_talk_parse: bad length max 21 char");
-                        free(text_tmp);
+                text_tmp = malloc(sizeof(char)*BC_TALK_RAW_BASE64_LENGTH);
+                uint8_t *buffer;
+                size_t buffer_length = sizeof(uint8_t)*BC_TALK_RAW_BUFFER_LENGTH;
+                buffer = malloc(buffer_length);
+
+                _bc_talk_token_get_string(line, &tokens[4], text_tmp, BC_TALK_RAW_BASE64_LENGTH );
+                bc_log_debug("base %s", text_tmp);
+
+                if (bc_base64_decode(buffer, &buffer_length, text_tmp, BC_TALK_RAW_BASE64_LENGTH ))
+                {
+                    event.value = buffer;
+                }
+
+                free(text_tmp);
+
+                if (event.value!=NULL)
+                {
+                    callback(&event);
+                }
+
+            }
+            else
+            {
+                event.operation = BC_TALK_OPERATION_LINE_SET;
+                text_tmp = malloc(sizeof(char)*22);
+                for (i = 3; i < tokens[2].size * 2 + 3 && i + 1 < r; i += 2)
+                {
+                    event.param = _bc_talk_token_find_index(line, &tokens[i], bc_talk_lines,
+                                                            sizeof(bc_talk_lines) / sizeof(*bc_talk_lines));
+                    if ( event.param > -1 ){
+
+                        event.value = _bc_talk_token_get_string(line, &tokens[i + 1], text_tmp, 22 );
+                        if (event.value != NULL)
+                        {
+                            callback(&event);
+                        }
+                        else
+                        {
+                            bc_log_error("bc_talk_parse: bad length max 21 char");
+                        }
                     }
                 }
+                free(text_tmp);
             }
         }
     }
@@ -476,11 +510,16 @@ static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s)
 static char *_bc_talk_token_get_string(char *line, jsmntok_t *tok, char* output_str, size_t max_len)
 {
     size_t l = (size_t) (tok->end - tok->start);
-    if (l+1 > max_len) {
+    if (l > max_len) {
         return NULL;
     }
     strncpy(output_str, line+tok->start, l);
-    output_str[l] = 0x00;
+
+    if (max_len > l)
+    {
+        output_str[l] = 0x00;
+    }
+
     return output_str;
 }
 
