@@ -52,6 +52,7 @@ set(SOURCE_FILES
         src/task_relay.c
         src/task_thermometer.c
         src/task_barometer.c
+        src/task_i2c.c
         src/task_manager.c
         src/task_display_oled.c
         )

@@ -7,6 +7,7 @@
 #include "task_barometer.h"
 #include "task_humidity.h"
 #include "task_display_oled.h"
+#include "task_i2c.h"
 #include "bc_log.h"
 #include "bc_talk.h"
 
@@ -36,6 +37,18 @@ void task_manager_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t 
 
         switch (task_info_list[i].type)
         {
+            case TASK_TYPE_I2C:
+            {
+                if (task_info_list[i].parameters == NULL)
+                {
+                    parameters = malloc(sizeof(task_i2c_parameters_t));
+                    ((task_i2c_parameters_t *) parameters)->head = 0;
+                    ((task_i2c_parameters_t *) parameters)->tail = 0;
+                    task_info_list[i].parameters = parameters;
+                }
+                _task_spawn_worker(bridge, &task_info_list[i], task_i2c_worker);
+                break;
+            }
             case TASK_TYPE_LED:
             {
                 if (task_info_list[i].parameters == NULL)

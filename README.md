@@ -29,6 +29,14 @@ Clown.Bridge is a proxy between BigClown's Bridge Module
 ##### List of sensors and actuators 
 
     ["-/-/config/list", {}]
+    
+##### Set led state
+
+    ["led/-/set", {"state":"on"}]
+    ["led/-/set", {"state":"off"}]
+    ["led/-/set", {"state":"1-dot"}]
+    ["led/-/set", {"state":"2-dot"}]
+    ["led/-/set", {"state":"3-dot"}]
 
 ##### Set sensor's measurement interval set 5 seconds
 

@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.0.0] (2016-10-18)
+## [1.0.0] (2016-10-28)
 Support 
 - Temperature TAG
 - Luxmeter TAG
@@ -9,4 +9,5 @@ Support
 - CO2 Module
 - Relay Module
 - OLED I2C Device
+- i2c
     

@@ -7,6 +7,7 @@
 #include "bc_tag_lux_meter.h"
 #include "bc_tag_barometer.h"
 #include "bc_tag_humidity.h"
+#include "task_i2c.h"
 #include "task_manager.h"
 #include "task.h"
 #include "task_display_oled.h"
@@ -17,7 +18,8 @@ bc_bridge_t bridge;
 
 task_info_t task_info_list[] =
     {
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_LED,              BC_BRIDGE_I2C_CHANNEL_0, 0x00 ,                                  NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_LED,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_LED_ADDRESS ,                   NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_I2C,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_I2C_ADDRESS ,                   NULL },
         { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL },
         { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL },
         { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,   NULL },
@@ -106,7 +108,6 @@ void application_loop(bool *quit)
         }
 
         bc_os_task_sleep(1000);
-
     }
 
     bc_log_error("application_loop: device disconnect");
@@ -197,7 +198,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
             {
                 bc_talk_publish_begin_auto_subtopic(task_info.i2c_channel, task_info.device_address, "/config/ok");
                 bc_talk_publish_add_value("publish-interval",
-                                          event->param == BC_TALK_INT_VALUE_NULL ? "null" : "%d", event->param);
+                                          event->param == BC_TALK_UINT_VALUE_NULL ? "null" : "%d", event->param);
                 bc_talk_publish_end();
             }
             break;
@@ -210,7 +211,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
 
             bc_talk_publish_begin_auto_subtopic(task_info.i2c_channel, task_info.device_address, "/config/ok");
             bc_talk_publish_add_value("publish-interval",
-                                      publish_interval == BC_TALK_INT_VALUE_NULL ? "null" : "%d", publish_interval);
+                                      publish_interval == BC_TALK_UINT_VALUE_NULL ? "null" : "%d", publish_interval);
             bc_talk_publish_end();
 
 
@@ -272,6 +273,32 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         case BC_TALK_OPERATION_GET:
         {
             task_semaphore_put(&task_info);
+            break;
+        }
+        case BC_TALK_OPERATION_I2C_SCAN:
+        {
+            task_i2c_set_scan(&task_info, event->param);
+            break;
+        }
+        case BC_TALK_OPERATION_I2C_WRITE:
+        {
+            if (!task_i2c_set_command(&task_info, TASK_I2C_ACTION_TYPE_WRITE, event->value))
+            {
+                free( ((bc_talk_i2c_attributes_t *)event->value)->write.buffer );
+                free( event->value );
+            }
+            break;
+        }
+        case BC_TALK_OPERATION_I2C_READ:
+        {
+            if (!task_i2c_set_command(&task_info, TASK_I2C_ACTION_TYPE_READ, event->value))
+            {
+                if (((bc_talk_i2c_attributes_t *)event->value)->write.buffer != NULL )
+                {
+                    free( ((bc_talk_i2c_attributes_t *)event->value)->write.buffer );
+                }
+                free( event->value );
+            }
             break;
         }
         case BC_TALK_OPERATION_CONFIG_DEVICES_LIST:
@@ -337,7 +364,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
                 strcat(actuators, "\"");
             }
 
-            bc_talk_publish_begin("-/-/config/ok");
+            bc_talk_publish_begin("-/-/config/list/ok");
             bc_talk_publish_add_value("sensors", "[%s]", sensors);
             bc_talk_publish_add_value("actuators", "[%s]", actuators);
             bc_talk_publish_add_value("notifications", "[%s]", "");

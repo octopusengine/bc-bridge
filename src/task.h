@@ -14,6 +14,7 @@ typedef enum
 typedef enum
 {
     TASK_TYPE_LED,
+    TASK_TYPE_I2C,
     TASK_TYPE_TAG_THERMOMETHER,
     TASK_TYPE_TAG_LUX_METER,
     TASK_TYPE_TAG_BAROMETER,
