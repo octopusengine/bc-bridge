@@ -1,3 +1,7 @@
+/**
+ * 8-Bit I2C I/O Expander
+ */
+
 #ifndef _BC_I2C_TCA9534A_H
 #define _BC_I2C_TCA9534A_H
 

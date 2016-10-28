@@ -1,3 +1,7 @@
+/**
+ * 128 x 64 Dot Matrix OLED I2C Driver
+ */
+
 #ifndef BC_I2C_SSD1306_H
 #define BC_I2C_SSD1306_H
 

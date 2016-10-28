@@ -1,3 +1,7 @@
+/**
+ * Single UART with I2C-bus interface, 64 bytes of transmit and receive FIFOs
+ */
+
 #ifndef _BC_I2C_SC16IS740_H
 #define _BC_I2C_SC16IS740_H
 

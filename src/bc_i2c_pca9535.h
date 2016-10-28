@@ -1,3 +1,7 @@
+/**
+ * 16-Bit I2C I/O Expander
+ */
+
 #ifndef _BC_I2C_pca9535_H
 #define _BC_I2C_pca9535_H
 
