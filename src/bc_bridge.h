@@ -4,6 +4,8 @@
 #include "bc_common.h"
 #include "bc_os.h"
 
+#define BC_BRIDGE_I2C_ONLY_READ 0xFF
+
 typedef struct
 {
     char *usb_path;
