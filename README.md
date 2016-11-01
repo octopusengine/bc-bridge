@@ -46,4 +46,42 @@ Clown.Bridge is a proxy between BigClown's Bridge Module
     
     ["relay/i2c0-3b/set", {"state": true}]
     ["relay/i2c0-3b/set", {"state": false}]
+
+
+##### On Segmentation fault
+
+> Find file `core` in folder with bc-bridge program and send on our support email with version info or git info, 
+to obtain info use
+
+    ./bc-bridge -v
+    git rev-parse --verify HEAD
+
+> If folder doesn't contains file `core`, it may be that the core size is set to 0. Try this command 
+
+    ulimit -c
+
+> if 0, set size
+ 
+    ulimit -c unlimited
+
+> try again run bc-bridge 
+
+   
+##### Debuging
+
+> compile with symbols
+
+    cd bc-bridge
+    cmake -DCMAKE_BUILD_TYPE=Debug .
+    cmake --build .
+    
+> interactive
+
+    gdb bc-bridge
+    run -f -l dump
+
+> for segmentation fault
+    
+    gdb bc-bridge core
+
  
