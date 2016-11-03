@@ -46,13 +46,21 @@ static void _bc_bridge_log_bus_error(char *msg, uint8_t bus_status);
 bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
 {
     struct udev *udev;
-    struct udev_enumerate *enumerate, *enumerate_hid;
-    struct udev_list_entry *devices_usb, *entry, *devices_hid, *entry_hid;
+    struct udev_enumerate *enumerate;
+    struct udev_list_entry *entry, *devices_hid;
     struct udev_device *usb_dev;
-    struct udev_device *hid = NULL;
+    struct udev_device *hid_dev;
     uint8_t max_device_count = *device_count;
+    uint8_t i;
 
     *device_count = 0;
+
+    for (i=0; i<max_device_count; i++)
+    {
+        devices[i].usb_path = NULL;
+        devices[i].path_i2c = NULL;
+        devices[i].path_uart = NULL;
+    }
 
     /* Create the udev object */
     udev = udev_new();
@@ -64,74 +72,60 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
         return false;
     }
 
-    //enumerate over usb device
     enumerate = udev_enumerate_new(udev);
-    udev_enumerate_add_match_subsystem(enumerate, "usb");
-    udev_enumerate_add_match_property(enumerate, "DEVTYPE", "usb_device");
+    udev_enumerate_add_match_subsystem(enumerate, "hidraw");
     udev_enumerate_scan_devices(enumerate);
-    devices_usb = udev_enumerate_get_list_entry(enumerate);
+    devices_hid = udev_enumerate_get_list_entry(enumerate);
 
-    udev_list_entry_foreach(entry, devices_usb)
+    udev_list_entry_foreach(entry, devices_hid)
     {
+
+        const char *path;
+        const char *usb_dev_path;
         const char *str_id_vendor;
         const char *str_id_product;
-
         uint16_t id_vendor;
         uint16_t id_product;
 
-        const char *path = udev_list_entry_get_name(entry);
-        const char *path_i2c = NULL;
-        const char *path_uart = NULL;
+        path    = udev_list_entry_get_name(entry);
+        hid_dev = udev_device_new_from_syspath(udev, path);
 
-        usb_dev = udev_device_new_from_syspath(udev, path);
+        usb_dev = udev_device_get_parent_with_subsystem_devtype( hid_dev, "usb", "usb_device");
 
         str_id_vendor = udev_device_get_sysattr_value(usb_dev, "idVendor");
         str_id_product = udev_device_get_sysattr_value(usb_dev, "idProduct");
-
         id_vendor = (uint16_t) ((str_id_vendor) ? strtol(str_id_vendor, NULL, 16) : -1);
         id_product = (uint16_t) ((str_id_product) ? strtol(str_id_product, NULL, 16) : -1);
 
         if (id_vendor == 0x0403 && id_product == 0x6030)
         {
-            enumerate_hid = udev_enumerate_new(udev);
-            udev_enumerate_add_match_parent(enumerate_hid, usb_dev);
-            udev_enumerate_add_match_subsystem(enumerate_hid, "hidraw");
-            udev_enumerate_scan_devices(enumerate_hid);
-            devices_hid = udev_enumerate_get_list_entry(enumerate_hid);
+            usb_dev_path = udev_device_get_devnode(usb_dev);
 
-            udev_list_entry_foreach(entry_hid, devices_hid)
+            for (i=0; i<max_device_count; i++)
             {
-                const char *entry_hid_path = udev_list_entry_get_name(entry_hid);
-                hid = udev_device_new_from_syspath(udev, entry_hid_path);
-
-                if (path_i2c == NULL)
+                if ( (devices[i].usb_path != NULL) && strcmp(devices[i].usb_path, usb_dev_path) == 0)
                 {
-                    path_i2c = udev_device_get_devnode(hid);
-                }
-                else if (path_uart == NULL)
-                {
-                    path_uart = udev_device_get_devnode(hid);
-                }
-                else
-                {
-                    perror("Unexpected hid device");
-                    return false;
+                    devices[i].path_uart = strdup( udev_device_get_devnode(hid_dev) );
+                    break;
                 }
             }
-
-            if ((path_i2c != NULL) && (path_uart != NULL) && (*device_count < max_device_count))
+            if (i==max_device_count)
             {
-
-                devices[*device_count].usb_path = (char *) udev_device_get_devnode(usb_dev);
-                devices[*device_count].path_i2c = (char *) path_i2c;
-                devices[*device_count].path_uart = (char *) path_uart;
-
-                bc_log_debug("bc_bridge_scan: found device %s, %s", path_i2c, path_uart);
+                devices[*device_count].usb_path = strdup(usb_dev_path);
+                devices[*device_count].path_i2c = strdup(udev_device_get_devnode(hid_dev));
 
                 *device_count += 1;
             }
+
         }
+
+        udev_unref(hid_dev);
+        udev_unref(usb_dev);
+
     }
+
+    udev_enumerate_unref(enumerate);
+    udev_unref(udev);
 
     return true;
 }
