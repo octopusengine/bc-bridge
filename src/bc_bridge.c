@@ -119,9 +119,6 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
 
         }
 
-        udev_unref(hid_dev);
-        udev_unref(usb_dev);
-
     }
 
     udev_enumerate_unref(enumerate);
@@ -306,7 +303,8 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     if (!_bc_bridge_ft260_i2c_write(self, transfer->device_address, buffer,
                                     (uint8_t)((transfer->address_16_bit ? 2 : 1) + transfer->length), 0x06, BC_BRIDGE_LOG_ENABLE))
     {
-        bc_log_warning("bc_bridge_i2c_write: call failed: _bc_bridge_ft260_i2c_write");
+        bc_log_warning("bc_bridge_i2c_write: call failed: _bc_bridge_ft260_i2c_write channel 0x%02X, device 0x%02X, address 0x%02X, length %d bytes",
+                       transfer->channel, transfer->device_address, transfer->address, transfer->length);
 
         bc_os_mutex_unlock(&self->_mutex);
 
@@ -369,7 +367,8 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
         if (!_bc_bridge_ft260_i2c_write(self, transfer->device_address, buffer,
                                         (uint8_t) (transfer->address_16_bit ? 2 : 1), 0x02, BC_BRIDGE_LOG_ENABLE))
         {
-            bc_log_warning("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_write");
+            bc_log_warning("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_write channel 0x%02X, device 0x%02X, address 0x%02X",
+                           transfer->channel, transfer->device_address, transfer->address);
 
             bc_os_mutex_unlock(&self->_mutex);
 
@@ -381,7 +380,8 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     if (!_bc_bridge_ft260_i2c_read(self, transfer->device_address, transfer->buffer,
                                    transfer->length))
     {
-        bc_log_warning("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_read");
+        bc_log_warning("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_read channel 0x%02X, device 0x%02X, length %d bytes",
+                       transfer->channel, transfer->device_address, transfer->length);
 
         bc_os_mutex_unlock(&self->_mutex);
 

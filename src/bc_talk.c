@@ -328,7 +328,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         return false;
     }
 
-    if ((payload_length<2))
+    if ((payload_length<3))
     {
         bc_log_error("bc_talk_parse: short topic");
         return false;
