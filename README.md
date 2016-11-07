@@ -12,6 +12,15 @@ Clown.Bridge is a proxy between BigClown's Bridge Module
     cd bc-bridge
     cmake .
     cmake --build .
+    
+##### Run without sudo
+
+> create file /etc/udev/rules.d/99-bc-bridge.rules with this content
+
+    SUBSYSTEM !="usb_device", ACTION !="add", GOTO="device_rules_end"
+    SYSFS{idVendor} =="0403", SYSFS{idProduct} =="6030", SYMLINK+="bc_bridge_device" MODE="0666", TAG+="uaccess"
+    LABEL="device_rules_end"
+
 
 ##### How to run
 
@@ -65,23 +74,3 @@ to obtain info use
     ulimit -c unlimited
 
 > try again run bc-bridge 
-
-   
-##### Debuging
-
-> compile with symbols
-
-    cd bc-bridge
-    cmake -DCMAKE_BUILD_TYPE=Debug .
-    cmake --build .
-    
-> interactive
-
-    gdb bc-bridge
-    run -f -l dump
-
-> for segmentation fault
-    
-    gdb bc-bridge core
-
- 
