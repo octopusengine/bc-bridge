@@ -8,10 +8,11 @@
 
 void *task_barometer_worker(void *task_parameter)
 {
-    float altitude=0;
-    float absolute_pressure=0;
+    float altitude = 0;
+    float absolute_pressure = 0;
     bool altitude_valid = false;
     bool absolute_pressure_valid = false;
+    bc_tick_t one_shot_conversion = 0;
 
     bc_tick_t tick_feed_interval;
     bc_tag_barometer_state_t state;
@@ -84,6 +85,8 @@ void *task_barometer_worker(void *task_parameter)
                     return NULL;
                 }
 
+                one_shot_conversion = self->_tick_last_feed;
+
                 break;
             }
             case BC_TAG_BAROMETER_STATE_RESULT_READY_ALTITUDE:
@@ -104,6 +107,8 @@ void *task_barometer_worker(void *task_parameter)
                     bc_log_error("task_barometer_worker: bc_tag_barometer_one_shot_conversion_pressure");
                     return NULL;
                 }
+
+                one_shot_conversion = self->_tick_last_feed;
 
                 break;
             }
@@ -128,11 +133,16 @@ void *task_barometer_worker(void *task_parameter)
                     return NULL;
                 }
 
+                one_shot_conversion = self->_tick_last_feed;
+
                 break;
             }
             case BC_TAG_BAROMETER_STATE_CONVERSION:
             {
-                break;
+                if ( (one_shot_conversion + 1000) < self->_tick_last_feed )
+                {
+                    bc_tag_barometer_reset_and_power_down(&tag_barometer);
+                }
             }
             default:
             {
