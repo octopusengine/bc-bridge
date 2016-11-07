@@ -15,6 +15,9 @@ const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
 const char *bc_talk_bool[] = { "false", "true" };
 const char *bc_talk_lines[] = { "line-0", "line-1", "line-2", "line-3", "line-4", "line-5", "line-6", "line-7", "line-8" };
 
+const  char bc_talk_on_escape[] = {'\\','"','/','\b','\f','\n','\r','\t'};
+const  char bc_talk_escape[] = {'\\','"','/','b','f','n','r','t'};
+
 
 static bc_os_mutex_t bc_talk_mutex;
 static bc_os_task_t bc_talk_task_stdin;
@@ -739,6 +742,8 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
     data->length = 0;
     data->buffer = NULL;
     data->encoding = BC_TALK_DATA_ENCODING_NULL;
+    size_t i;
+    int j;
 
     if (tok->type != JSMN_STRING)
     {
@@ -762,10 +767,34 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
             return;
         }
         data->encoding = BC_TALK_DATA_ENCODING_ASCII;
-        data->length = l-2;
-        length = data->length;
-        data->buffer = malloc(data->length*sizeof(uint8_t));
-        memcpy(data->buffer, line+tok->start + 1, data->length );
+        data->buffer = malloc((l-2)*sizeof(uint8_t));
+
+        for (i = tok->start+1; i < (tok->end - 1); i++ )
+        {
+            if (line[i] == '\\')
+            {
+                i++;
+                for (j = 0; j < sizeof(bc_talk_escape); j++)
+                {
+                    if (line[i] == bc_talk_escape[j])
+                    {
+                        data->buffer[length++] = bc_talk_on_escape[j];
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                data->buffer[length++] = line[i];
+            }
+
+        }
+
+        if (length != (l-2))
+        {
+            data->buffer = realloc(data->buffer, length);
+        }
+        data->length = length;
 
     }
     else if ( (l < 3) || (line[tok->start+2] == ',') )
@@ -775,7 +804,7 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
         data->buffer = malloc(data->length*sizeof(uint8_t));
 
         char hex[3] = {0,0,0};
-        int i = tok->start;
+        i = tok->start;
 
         while ( length < data->length )
         {
@@ -816,6 +845,7 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
     {
         data->length = 0;
         free(data->buffer);
+        data->buffer = NULL;
     }
 
 }
@@ -825,6 +855,7 @@ static char *_bc_talk_data_to_string(bc_talk_data_t *data)
     char *text=NULL;
     size_t length;
     size_t i;
+    int j;
 
     if (data->length == 0)
     {
@@ -837,17 +868,24 @@ static char *_bc_talk_data_to_string(bc_talk_data_t *data)
     {
 
         int escape = 0; // "
-        for(i=0; i < data->length; i++)
+        for(i = 0; i < data->length; i++)
         {
-            if ( (data->buffer[i] == '\\') || data->buffer[i] == '"' || data->buffer[i] == '\n' || data->buffer[i] == '\t' )
+
+            for (j = 0; j < sizeof(bc_talk_on_escape); j++)
             {
-                escape++;
+                if (data->buffer[i] == bc_talk_on_escape[j])
+                {
+                    escape++;
+                    break;
+                }
             }
-            else if ( (data->buffer[i] > 127) || (data->buffer[i] < 32)  )
+
+            if ( (j == sizeof(bc_talk_on_escape) ) && ( (data->buffer[i] > 127) || (data->buffer[i] < 32) ) )
             {
                 data->encoding = BC_TALK_DATA_ENCODING_HEX;
                 break;
             }
+
         }
 
         if (data->encoding == BC_TALK_DATA_ENCODING_ASCII)
@@ -856,15 +894,26 @@ static char *_bc_talk_data_to_string(bc_talk_data_t *data)
             text = malloc(length);
             text[0] = '(';
             int offset = 1;
-            for(i=0; i < data->length; i++)
+            for(i = 0; i < data->length; i++)
             {
-                if ( (data->buffer[i] == '\\') || data->buffer[i] == '"' || data->buffer[i] == '\n' || data->buffer[i] == '\t' )
+                for (j = 0; j < sizeof(bc_talk_on_escape); j++ )
                 {
-                    text[i+offset] = '\\';
-                    offset++;
+                    if (data->buffer[i] == bc_talk_on_escape[j])
+                    {
+                        break;
+                    }
                 }
 
-                text[i+offset] = (char)data->buffer[i];
+                if (j < sizeof(bc_talk_on_escape)){
+                    text[i+offset] = '\\';
+                    offset++;
+                    text[i+offset] = bc_talk_escape[j];
+                }
+                else
+                {
+                    text[i+offset] = (char)data->buffer[i];
+                }
+
             }
             text[i+offset] = ')';
             text[i+offset+1] = 0x00;
