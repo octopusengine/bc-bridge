@@ -10,8 +10,8 @@
 
 typedef enum
 {
-    BC_MODULE_RELAY_STATE_T = 0,
-    BC_MODULE_RELAY_STATE_F = 1
+    BC_MODULE_RELAY_STATE_TRUE = 0,
+    BC_MODULE_RELAY_STATE_FALSE = 1
 
 } bc_module_relay_state_t;
 
