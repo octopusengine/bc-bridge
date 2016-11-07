@@ -112,6 +112,17 @@ bool bc_tag_barometer_power_down(bc_tag_barometer_t *self)
     return true;
 }
 
+bool bc_tag_barometer_reset_and_power_down(bc_tag_barometer_t *self)
+{
+
+    if (!_bc_tag_barometer_write_register(self, MPL3115A2_CTRL_REG1, MPL3115A2_BIT_RST))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 bool bc_tag_barometer_one_shot_conversion_altitude(bc_tag_barometer_t *self)
 {
     if (!_bc_tag_barometer_write_register(self, MPL3115A2_CTRL_REG1, 0xB8))
