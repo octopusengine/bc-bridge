@@ -1,5 +1,6 @@
 #include "bc_tag_temperature.h"
 #include "chip_tmp112.h"
+#include "bc_bridge.h"
 
 static bool _bc_tag_temperature_write_register(bc_tag_temperature_t *self, uint8_t address, uint16_t value);
 static bool _bc_tag_temperature_read_register(bc_tag_temperature_t *self, uint8_t address, uint16_t *value);
@@ -13,10 +14,12 @@ bool bc_tag_temperature_init(bc_tag_temperature_t *self, bc_i2c_interface_t *int
     self->_communication_fault = true;
     self->_configuration = TMP112_BIT_R1 | TMP112_BIT_R0 | TMP112_BIT_SD | TMP112_BIT_CR1;
 
+    self->disable_log = true;
     if (!bc_tag_temperature_power_down(self))
     {
         return false;
     }
+    self->disable_log = false;
 
     return true;
 }
@@ -178,6 +181,8 @@ static bool _bc_tag_temperature_write_register(bc_tag_temperature_t *self, uint8
     buffer[1] = (uint8_t) value;
 
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
@@ -210,6 +215,8 @@ static bool _bc_tag_temperature_read_register(bc_tag_temperature_t *self, uint8_
     transfer.length = 2;
 
 #ifdef BRIDGE
+
+    transfer.disable_log = self->disable_log;
 
     self->_communication_fault = true;
 

@@ -1,5 +1,6 @@
 #include "bc_i2c_tca9534a.h"
 #include "bc_log.h"
+#include "bc_bridge.h"
 
 static bool _bc_i2c_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t value);
 static bool _bc_i2c_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t address, uint8_t *value);
@@ -14,10 +15,14 @@ bool bc_i2c_tca9534a_init(bc_i2c_tca9534a_t *self, bc_i2c_interface_t *interface
 
     uint8_t direction;
 
+    self->disable_log = true;
+
     if (!_bc_i2c_tca9534a_read_register(self, 0x03, &direction))
     {
         return false;
     }
+
+    self->disable_log = false;
 
     return true;
 }
@@ -191,6 +196,8 @@ static bool _bc_i2c_tca9534a_write_register(bc_i2c_tca9534a_t *self, uint8_t add
 
 #ifdef BRIDGE
 
+    transfer.disable_log = self->disable_log;
+
     self->_communication_fault = true;
 
     transfer.channel = self->_interface->channel;
@@ -228,6 +235,8 @@ static bool _bc_i2c_tca9534a_read_register(bc_i2c_tca9534a_t *self, uint8_t addr
     transfer.length = 1;
 
 #ifdef BRIDGE
+
+    transfer.disable_log = self->disable_log;
 
     self->_communication_fault = true;
 

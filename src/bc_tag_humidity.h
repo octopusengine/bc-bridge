@@ -21,6 +21,7 @@ typedef struct
     uint8_t _device_address;
     bool _communication_fault;
     bool _calibration_not_read;
+    bool disable_log;
 
     int16_t h0_rh;
     int16_t h0_t0_out;

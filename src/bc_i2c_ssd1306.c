@@ -1,4 +1,5 @@
 #include "bc_i2c_ssd1306.h"
+#include "bc_bridge.h"
 
 #define BC_I2C_SSD1306_I2C_ADDRESS  0x3C
 #define BC_I2C_SSD1306_SETCONTRAST  0x81
@@ -53,6 +54,8 @@ bool bc_ic2_ssd1306_init(bc_i2c_ssd1306_t *self, bc_i2c_interface_t *interface, 
     self->length = sizeof(uint8_t)*self->width*self->_pages;
     self->buffer = malloc(self->length);
 
+    self->disable_log = true;
+
     if (_bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_DISPLAYOFF) && // 0xAE
         _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_SETDISPLAYCLOCKDIV) && // 0xD5
         _bc_ic2_ssd1306_command(self, 0x80) && // the suggested ratio 0x80
@@ -81,6 +84,8 @@ bool bc_ic2_ssd1306_init(bc_i2c_ssd1306_t *self, bc_i2c_interface_t *interface, 
     {
         return  true;
     }
+
+    self->disable_log = false;
 
     return false;
 }
@@ -151,6 +156,8 @@ static bool _bc_ic2_ssd1306_command(bc_i2c_ssd1306_t *self, uint8_t command)
     transfer.length = 1;
 
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
     {
@@ -180,6 +187,8 @@ static bool _bc_ic2_ssd1306_send_data(bc_i2c_ssd1306_t *self, uint8_t *buffer, u
     transfer.length = length;
 
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
     {

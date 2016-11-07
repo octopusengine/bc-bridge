@@ -1,5 +1,6 @@
 #include "bc_tag_lux_meter.h"
 #include "chip_opt3001.h"
+#include "bc_bridge.h"
 
 static bool _bc_tag_lux_meter_write_register(bc_tag_lux_meter_t *self, uint8_t address, uint16_t value);
 static bool _bc_tag_lux_meter_read_register(bc_tag_lux_meter_t *self, uint8_t address, uint16_t *value);
@@ -12,6 +13,21 @@ bool bc_tag_lux_meter_init(bc_tag_lux_meter_t *self, bc_i2c_interface_t *interfa
     self->_device_address = device_address;
     self->_communication_fault = true;
     self->_configuration = OPT3001_BIT_RN3 | OPT3001_BIT_RN2 | OPT3001_BIT_CT | OPT3001_BIT_L;
+
+    self->disable_log = true;
+
+    uint16_t device_id;
+    if (!_bc_tag_lux_meter_read_register(self, OPT3001_REG_DEVICE_ID, &device_id))
+    {
+        return  false;
+    }
+
+    if (device_id != OPT3001_REG_DEVICE_ID_RESULT)
+    {
+        return false;
+    }
+
+    self->disable_log = false;
 
     if (!bc_tag_lux_meter_power_down(self))
     {
@@ -144,6 +160,8 @@ static bool _bc_tag_lux_meter_write_register(bc_tag_lux_meter_t *self, uint8_t a
     buffer[0] = (uint8_t) (value >> 8);
     buffer[1] = (uint8_t) value;
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
@@ -176,6 +194,8 @@ static bool _bc_tag_lux_meter_read_register(bc_tag_lux_meter_t *self, uint8_t ad
     transfer.length = 2;
 
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_read(self->_interface->bridge, &transfer))

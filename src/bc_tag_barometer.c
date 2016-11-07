@@ -1,5 +1,6 @@
 #include "bc_tag_barometer.h"
 #include "chip_mpl3115a2.h"
+#include "bc_bridge.h"
 
 static bool _bc_tag_barometer_read_result(bc_tag_barometer_t *self);
 static bool _bc_tag_barometer_write_register(bc_tag_barometer_t *self, uint8_t address, uint8_t value);
@@ -15,6 +16,8 @@ bool bc_tag_barometer_init(bc_tag_barometer_t *self, bc_i2c_interface_t *interfa
     self->_device_address = device_address;
     self->_communication_fault = true;
 
+    self->disable_log = true;
+
     if (!_bc_tag_barometer_read_register(self, MPL3115A2_WHO_AM_I, &who_am_i))
     {
         return false;
@@ -24,6 +27,8 @@ bool bc_tag_barometer_init(bc_tag_barometer_t *self, bc_i2c_interface_t *interfa
     {
         return false;
     }
+
+    self->disable_log = false;
 
     if (!bc_tag_barometer_power_down(self))
     {
@@ -296,6 +301,8 @@ static bool _bc_tag_barometer_write_register(bc_tag_barometer_t *self, uint8_t a
     buffer[0] = value;
 
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
@@ -329,6 +336,10 @@ static bool _bc_tag_barometer_read_register(bc_tag_barometer_t *self, uint8_t ad
     transfer.length = 1;
 
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
+    transfer.disable_log = address == MPL3115A2_WHO_AM_I;
+
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_read(self->_interface->bridge, &transfer))

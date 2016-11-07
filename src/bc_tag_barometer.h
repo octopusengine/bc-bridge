@@ -19,6 +19,7 @@ typedef struct
     bc_i2c_interface_t *_interface;
     uint8_t _device_address;
     bool _communication_fault;
+    bool disable_log;
     uint8_t _out_p_msb;
     uint8_t _out_p_csb;
     uint8_t _out_p_lsb;

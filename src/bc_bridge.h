@@ -39,6 +39,7 @@ typedef struct
     bool address_16_bit;
     uint8_t *buffer;
     uint8_t length;
+    bool disable_log;
 
 } bc_bridge_i2c_transfer_t;
 

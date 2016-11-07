@@ -13,6 +13,7 @@ typedef struct
     bool _communication_fault;
     uint16_t _configuration;
     uint16_t _temperature;
+    bool disable_log;
 
 } bc_tag_temperature_t;
 

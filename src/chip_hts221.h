@@ -2,6 +2,7 @@
 #define _HTS221_H
 
 #define HTS221_WHO_AM_I 0x0F
+#define HTS221_WHO_AM_I_RESULT  0xBC
 #define HTS221_AV_CONF 0x10
 #define HTS221_CTRL_REG1 0x20
 #define HTS221_CTRL_REG2 0x21

@@ -16,6 +16,8 @@ typedef struct
 {
     bc_i2c_interface_t *_interface;
     uint8_t _device_address;
+    bool disable_log;
+
     bc_i2c_ssd1306_size_t size;
     uint8_t width;
     uint8_t height;

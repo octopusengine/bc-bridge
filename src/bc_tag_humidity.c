@@ -1,5 +1,6 @@
 #include "bc_tag_humidity.h"
 #include "chip_hts221.h"
+#include "bc_bridge.h"
 
 static bool _bc_tag_humidity_write_register(bc_tag_humidity_t *self, uint8_t address, uint8_t value);
 static bool _bc_tag_humidity_read_register(bc_tag_humidity_t *self, uint8_t address, uint8_t *value);
@@ -12,6 +13,22 @@ bool bc_tag_humidity_init(bc_tag_humidity_t *self, bc_i2c_interface_t *interface
     self->_device_address = device_address;
     self->_communication_fault = true;
     self->_calibration_not_read = true;
+
+    uint8_t who_am_i;
+
+    self->disable_log = true;
+
+    if (!_bc_tag_humidity_read_register(self, HTS221_WHO_AM_I, &who_am_i))
+    {
+        return false;
+    }
+
+    if (who_am_i != HTS221_WHO_AM_I_RESULT)
+    {
+        return false;
+    }
+
+    self->disable_log = false;
 
     if (!bc_tag_humidity_power_down(self))
     {
@@ -252,6 +269,8 @@ static bool _bc_tag_humidity_write_register(bc_tag_humidity_t *self, uint8_t add
     transfer.length = 1;
 
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_write(self->_interface->bridge, &transfer))
@@ -284,6 +303,8 @@ static bool _bc_tag_humidity_read_register(bc_tag_humidity_t *self, uint8_t addr
     transfer.length = 1;
 
 #ifdef BRIDGE
+    transfer.disable_log = self->disable_log;
+
     self->_communication_fault = true;
     transfer.channel = self->_interface->channel;
     if (!bc_bridge_i2c_read(self->_interface->bridge, &transfer))

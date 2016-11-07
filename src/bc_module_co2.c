@@ -25,7 +25,7 @@ bool bc_module_co2_init(bc_module_co2_t *self, bc_i2c_interface_t *interface)
 
     if (!bc_i2c_tca9534a_init(&self->_tca9534a, interface, BC_MODULE_CO2_I2C_GPIO_EXPANDER_ADDRESS))
     {
-        bc_log_warning("bc_module_co2_init: call failed: bc_ic2_tca9534a_init");
+        bc_log_debug("bc_module_co2_init: call failed: bc_ic2_tca9534a_init");
 
         return false;
     }
