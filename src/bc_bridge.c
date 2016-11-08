@@ -445,7 +445,7 @@ bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint
 
 bool bc_bridge_led_set_state(bc_bridge_t *self, bc_bridge_led_state_t state)
 {
-    uint8_t buffer[5];
+    uint8_t buffer[5] = {0,0,0,0,0};
 
     bc_os_mutex_lock(&self->_mutex);
 
