@@ -1,10 +1,10 @@
 #include "bc_module_relay.h"
 #include "bc_log.h"
 
-#define BC_MODULE_RELAY_POWER_OFF 0x50
-#define BC_MODULE_RELAY_POWER_NO  0xC0
-#define BC_MODULE_RELAY_POWER_NC  0x30
-#define BC_MODULE_RELAY_DELAY     10
+#define BC_MODULE_RELAY_POWER_C 0x50
+#define BC_MODULE_RELAY_POWER_T 0xC0
+#define BC_MODULE_RELAY_POWER_F 0x30
+#define BC_MODULE_RELAY_DELAY   10
 
 bool bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface, uint8_t device_address)
 {
@@ -17,7 +17,7 @@ bool bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface
         return false;
     }
 
-    if (!bc_i2c_tca9534a_write_port(&self->_tca9534a, BC_MODULE_RELAY_POWER_OFF))
+    if (!bc_i2c_tca9534a_write_port(&self->_tca9534a, BC_MODULE_RELAY_POWER_C))
     {
         bc_log_error("bc_module_relay_init: call failed: bc_i2c_tca9534a_write_port");
 
@@ -40,14 +40,14 @@ bool bc_module_relay_set_state(bc_module_relay_t *self, bc_module_relay_state_t 
 
     switch (state)
     {
-        case BC_MODULE_RELAY_STATE_TRUE:
+        case BC_MODULE_RELAY_STATE_T:
         {
-            port = BC_MODULE_RELAY_POWER_NO;
+            port = BC_MODULE_RELAY_POWER_T;
             break;
         }
-        case BC_MODULE_RELAY_STATE_FALSE:
+        case BC_MODULE_RELAY_STATE_F:
         {
-            port = BC_MODULE_RELAY_POWER_NC;
+            port = BC_MODULE_RELAY_POWER_F;
             break;
         }
 
@@ -66,7 +66,7 @@ bool bc_module_relay_set_state(bc_module_relay_t *self, bc_module_relay_state_t 
 
     bc_os_task_sleep(BC_MODULE_RELAY_DELAY);
 
-    if (!bc_i2c_tca9534a_write_port(&self->_tca9534a, BC_MODULE_RELAY_POWER_OFF))
+    if (!bc_i2c_tca9534a_write_port(&self->_tca9534a, BC_MODULE_RELAY_POWER_C))
     {
         bc_log_error("bc_module_relay_set_state: call failed: bc_i2c_tca9534a_write_port");
 

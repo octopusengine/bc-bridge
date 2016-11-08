@@ -67,8 +67,8 @@ void *task_relay_worker(void *task_parameter)
         if (relay_state != TASK_RELAY_STATE_NULL)
         {
 
-            if (!bc_module_relay_set_state(&module_relay, relay_state == TASK_RELAY_STATE_FALSE ? BC_MODULE_RELAY_STATE_TRUE
-                                                                                              : BC_MODULE_RELAY_STATE_FALSE))
+            if (!bc_module_relay_set_state(&module_relay, relay_state == TASK_RELAY_STATE_FALSE ? BC_MODULE_RELAY_STATE_T
+                                                                                              : BC_MODULE_RELAY_STATE_F))
             {
                 bc_log_error("task_relay_worker: bc_module_relay_set_state");
                 break;
