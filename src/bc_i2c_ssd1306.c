@@ -51,8 +51,7 @@ bool bc_ic2_ssd1306_init(bc_i2c_ssd1306_t *self, bc_i2c_interface_t *interface, 
     self->height = 64;
     self->_pages = self->height/8;
 
-    self->length = sizeof(uint8_t)*self->width*self->_pages;
-    self->buffer = malloc(self->length);
+    self->length = self->width*self->_pages;
 
     self->disable_log = true;
 
@@ -82,12 +81,20 @@ bool bc_ic2_ssd1306_init(bc_i2c_ssd1306_t *self, bc_i2c_interface_t *interface, 
         _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_NORMALDISPLAY) && // 0xA6
         _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_DISPLAYON) ) // Turn on the display.
     {
+
+        self->disable_log = false;
+
+        self->buffer = malloc(self->length*sizeof(uint8_t));
+
         return  true;
     }
 
-    self->disable_log = false;
-
     return false;
+}
+
+void bc_ic2_ssd1306_destroy(bc_i2c_ssd1306_t *self)
+{
+    free(self->buffer);
 }
 
 bool bc_ic2_ssd1306_display(bc_i2c_ssd1306_t *self)

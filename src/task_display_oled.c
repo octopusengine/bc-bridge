@@ -48,6 +48,7 @@ void *task_display_oled(void *task_parameter)
 
     if (!bc_ic2_ssd1306_display(&disp))
     {
+        bc_ic2_ssd1306_destroy(&disp);
         return NULL;
     }
 
@@ -78,6 +79,7 @@ void *task_display_oled(void *task_parameter)
 
                 if (!bc_ic2_ssd1306_display(&disp))
                 {
+                    bc_ic2_ssd1306_destroy(&disp);
                     return NULL;
                 }
             }
@@ -99,6 +101,7 @@ void *task_display_oled(void *task_parameter)
                     bc_gfx_text(&gfx, actual_parameters.lines[i] );
                     if (!bc_ic2_ssd1306_display_page(&disp, i))
                     {
+                        bc_ic2_ssd1306_destroy(&disp);
                         return NULL;
                     }
 

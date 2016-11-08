@@ -30,6 +30,7 @@ typedef struct
 } bc_i2c_ssd1306_t;
 
 bool bc_ic2_ssd1306_init(bc_i2c_ssd1306_t *self, bc_i2c_interface_t *interface, uint8_t device_address);
+void bc_ic2_ssd1306_destroy(bc_i2c_ssd1306_t *self);
 bool bc_ic2_ssd1306_display(bc_i2c_ssd1306_t *self);
 bool bc_ic2_ssd1306_display_page(bc_i2c_ssd1306_t *self, uint8_t page);
 
