@@ -63,6 +63,8 @@ void application_init(application_parameters_t *parameters)
 void application_loop(bool *quit)
 {
     bc_bridge_device_info_t devices[10];
+    memset(devices, 0, sizeof(devices) );
+
     uint8_t device_count;
     bc_tick_t last_init = 0;
 
@@ -258,7 +260,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             if (task_info.type == TASK_TYPE_DISPLAY_OLED)
             {
-                task_display_oled_set_line(&task_info, event->param, event->value);
+                task_display_oled_set_line(&task_info, (uint8_t) event->param, event->value);
             }
             break;
         }
@@ -277,7 +279,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         }
         case BC_TALK_OPERATION_I2C_SCAN:
         {
-            task_i2c_set_scan(&task_info, event->param);
+            task_i2c_set_scan(&task_info, (uint8_t) event->param);
             break;
         }
         case BC_TALK_OPERATION_I2C_WRITE:
