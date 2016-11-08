@@ -22,6 +22,7 @@ const  char bc_talk_escape[] = {'\\','"','/','b','f','n','r','t'};
 static bc_os_mutex_t bc_talk_mutex;
 static bc_os_task_t bc_talk_task_stdin;
 static bool bc_talk_add_comma = false;
+static bc_talk_parse_callback bc_talk_callback = NULL;
 
 static bool _bc_talk_schema_check(int r, jsmntok_t *tokens);
 static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s);
@@ -34,25 +35,15 @@ static void *bc_talk_worker_stdin(void *parameter);
 void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data);
 static char *_bc_talk_data_to_string(bc_talk_data_t *data);
 
-typedef struct
-{
-    bc_talk_parse_callback callback;
-
-} bc_talk_worker_param_t;
-
 void bc_talk_init(bc_talk_parse_callback callback)
 {
-    bc_talk_worker_param_t *self;
-    self = (bc_talk_worker_param_t *) malloc(sizeof(bc_talk_worker_param_t));
-    if (self == NULL)
-    {
-        bc_log_fatal("task_thermometer_spawn: call failed: malloc");
-    }
+
     if (callback == NULL)
     {
         bc_log_fatal("task_thermometer_spawn: callback == NULL");
     }
-    self->callback = callback;
+
+    bc_talk_callback = callback;
 
     memset(bc_talk_device_names, 0, sizeof(bc_talk_device_names));
 
@@ -73,7 +64,7 @@ void bc_talk_init(bc_talk_parse_callback callback)
     bc_talk_device_names[BC_TALK_UART_ADDRESS] = "uart";
 
     bc_os_mutex_init(&bc_talk_mutex);
-    bc_os_task_init(&bc_talk_task_stdin, bc_talk_worker_stdin, self);
+    bc_os_task_init(&bc_talk_task_stdin, bc_talk_worker_stdin, NULL);
 }
 
 void bc_talk_publish_begin(char *topic)
@@ -1015,9 +1006,6 @@ static bool _bc_talk_set_i2c(char *str0, char *str1, bc_talk_event_t *event)
 static void *bc_talk_worker_stdin(void *parameter)
 {
 
-    bc_talk_worker_param_t *self;
-    self = (bc_talk_worker_param_t *) parameter;
-
     char *line;
     size_t length;
 
@@ -1027,7 +1015,8 @@ static void *bc_talk_worker_stdin(void *parameter)
 
         if (getline(&line, &length, stdin) != -1)
         {
-            bc_talk_parse(line, length, self->callback);
+            bc_talk_parse(line, length, bc_talk_callback );
+            free(line);
         }
     }
 
