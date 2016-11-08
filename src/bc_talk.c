@@ -35,6 +35,8 @@ static void *bc_talk_worker_stdin(void *parameter);
 void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data);
 static char *_bc_talk_data_to_string(bc_talk_data_t *data);
 
+#define BC_TALK_FREE_PAYLOAD for (i=0; i<payload_length; i++) { free(payload[i]); }
+
 void bc_talk_init(bc_talk_parse_callback callback)
 {
 
@@ -280,7 +282,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
     int r;
     int i;
     char *payload_string;
-    char *payload[BC_TALK_MAX_PAYLOAD_SUBTOPIC];
+    char payload[BC_TALK_MAX_PAYLOAD_SUBTOPIC][32];
     int payload_length = 0;
     char *split;
     char *saveptr;
@@ -311,7 +313,12 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
     split = strtok_r(payload_string, "/", &saveptr);
     while (split && (payload_length <= BC_TALK_MAX_PAYLOAD_SUBTOPIC))
     {
-        payload[payload_length++] = strdup(split);
+        if (strlen(split) > 32)
+        {
+            bc_log_error("bc_talk_parse: too long subtopic");
+            return false;
+        }
+        strcpy(payload[payload_length++], split);
         split = strtok_r(0, "/", &saveptr);
     }
     free(payload_string);
@@ -529,7 +536,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
             {
 
                 i2c_attributes->device_address = 128;
-                i2c_attributes->device_address = (int) strtol(line+tokens[i+1].start, NULL, 16);
+                i2c_attributes->device_address = (uint8_t) strtol(line+tokens[i+1].start, NULL, 16);
                 if (i2c_attributes->device_address > 127)
                 {
                     bc_log_error("bc_talk_parse: bad slave address");
@@ -795,7 +802,7 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
         data->buffer = malloc(data->length*sizeof(uint8_t));
 
         char hex[3] = {0,0,0};
-        i = tok->start;
+        i = (size_t) tok->start;
 
         while ( length < data->length )
         {
