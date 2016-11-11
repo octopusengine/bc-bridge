@@ -257,6 +257,21 @@ void bc_talk_publish_i2c(bc_talk_i2c_attributes_t *attributes)
     bc_talk_publish_end();
 }
 
+void bc_talk_i2c_attributes_destroy(bc_talk_i2c_attributes_t *attributes)
+{
+    if (attributes->write.buffer != NULL)
+    {
+        free(attributes->write.buffer);
+    }
+
+    if (attributes->read.buffer != NULL)
+    {
+        free(attributes->read.buffer);
+    }
+
+    free(attributes);
+}
+
 bool bc_talk_parse_start(char *line, size_t length)
 {
     jsmn_parser parser;
@@ -526,7 +541,10 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         }
         else
         {
+            bc_talk_i2c_attributes_destroy(i2c_attributes);
+
             bc_log_error("bc_talk_parse: bad i2c bus");
+
             return false;
         }
 
@@ -539,6 +557,8 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
                 i2c_attributes->device_address = (uint8_t) strtol(line+tokens[i+1].start, NULL, 16);
                 if (i2c_attributes->device_address > 127)
                 {
+                    bc_talk_i2c_attributes_destroy(i2c_attributes);
+
                     bc_log_error("bc_talk_parse: bad slave address");
 
                     return false;
@@ -551,6 +571,8 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
 
                 if (i2c_attributes->write.encoding == BC_TALK_DATA_ENCODING_NULL)
                 {
+                    bc_talk_i2c_attributes_destroy(i2c_attributes);
+
                     bc_log_error("bc_talk_parse: parse write data");
 
                     return false;
@@ -578,6 +600,8 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
 
             if (i2c_attributes->read_length < 1)
             {
+                bc_talk_i2c_attributes_destroy(i2c_attributes);
+
                 bc_log_error("bc_talk_parse: read-length must be positive number");
 
                 return false;
@@ -587,6 +611,8 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
 
         if ((event.operation == BC_TALK_OPERATION_I2C_READ) && (i2c_attributes->write.length > 2) )
         {
+            bc_talk_i2c_attributes_destroy(i2c_attributes);
+
             bc_log_error("bc_talk_parse: for read register, attribute write max length of 2 bytes");
 
             return false;
@@ -844,6 +870,7 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
         data->length = 0;
         free(data->buffer);
         data->buffer = NULL;
+        data->encoding = BC_TALK_DATA_ENCODING_NULL;
     }
 
 }

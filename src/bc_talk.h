@@ -86,6 +86,8 @@ void bc_talk_publish_led_state(int state);
 void bc_talk_publish_relay(int state, uint8_t device_address);
 void bc_talk_publish_i2c(bc_talk_i2c_attributes_t *attributes);
 
+void bc_talk_i2c_attributes_destroy(bc_talk_i2c_attributes_t *attributes);
+
 bool bc_talk_parse_start(char *line, size_t length);
 bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback);
 

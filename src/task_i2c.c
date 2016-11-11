@@ -97,8 +97,7 @@ void *task_i2c_worker(void *task_parameter)
 
                 bc_talk_publish_i2c(action->attributes);
 
-                free( action->attributes->write.buffer );
-                free( action->attributes );
+                bc_talk_i2c_attributes_destroy( action->attributes );
 
             }
             else if (action->type == TASK_I2C_ACTION_TYPE_READ)
@@ -134,12 +133,7 @@ void *task_i2c_worker(void *task_parameter)
 
                 bc_talk_publish_i2c(action->attributes);
 
-                free( transfer.buffer );
-                if (action->attributes->write.buffer != NULL)
-                {
-                    free(action->attributes->write.buffer);
-                }
-                free( action->attributes );
+                bc_talk_i2c_attributes_destroy( action->attributes );
 
             }
 

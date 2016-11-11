@@ -286,8 +286,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             if (!task_i2c_set_command(&task_info, TASK_I2C_ACTION_TYPE_WRITE, event->value))
             {
-                free( ((bc_talk_i2c_attributes_t *)event->value)->write.buffer );
-                free( event->value );
+                bc_talk_i2c_attributes_destroy( event->value );
             }
             break;
         }
@@ -295,11 +294,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             if (!task_i2c_set_command(&task_info, TASK_I2C_ACTION_TYPE_READ, event->value))
             {
-                if (((bc_talk_i2c_attributes_t *)event->value)->write.buffer != NULL )
-                {
-                    free( ((bc_talk_i2c_attributes_t *)event->value)->write.buffer );
-                }
-                free( event->value );
+                bc_talk_i2c_attributes_destroy( event->value );
             }
             break;
         }
