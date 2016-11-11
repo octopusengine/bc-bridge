@@ -13,7 +13,7 @@
 #include "task_display_oled.h"
 
 
-#define APPLICATION_REINIT_INTERVAL 30000
+#define APPLICATION_REINIT_INTERVAL 5000
 
 bc_bridge_t bridge;
 
@@ -63,6 +63,8 @@ void application_init(application_parameters_t *parameters)
 
 void application_loop(bool *quit)
 {
+    *quit = false;
+
     bc_bridge_device_info_t devices[10];
     memset(devices, 0, sizeof(devices) );
 
@@ -119,7 +121,33 @@ void application_loop(bool *quit)
 
     bc_bridge_close(&bridge);
 
-    *quit = false;
+    if (*quit)
+    {
+        task_manager_destroy_parameters(task_info_list, task_info_list_length);
+
+        int i;
+        for (i=0; i < sizeof(devices)/sizeof(bc_bridge_device_info_t); i++)
+        {
+            if (devices[i].usb_path != NULL)
+            {
+                free(devices[i].usb_path);
+            }
+            devices[i].usb_path = NULL;
+
+            if (devices[i].path_i2c != NULL)
+            {
+                free(devices[i].path_i2c);
+            }
+            devices[i].path_i2c = NULL;
+
+            if (devices[i].path_uart != NULL)
+            {
+                free(devices[i].path_uart);
+            }
+            devices[i].path_uart = NULL;
+        }
+    }
+
 }
 
 static void _application_wait_start_string(void)
