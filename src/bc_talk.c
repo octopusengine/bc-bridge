@@ -1050,7 +1050,6 @@ static void *bc_talk_worker_stdin(void *parameter)
     ssize_t read;
     while ((read = getline(&line, &length, stdin)) != -1)
     {
-        printf("%s", line);
         if (read > 7)
         {
             bc_talk_parse(line, read, bc_talk_callback );
