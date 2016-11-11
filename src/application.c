@@ -13,7 +13,7 @@
 #include "task_display_oled.h"
 
 
-#define APPLICATION_REINIT_INTERVAL 5000
+#define APPLICATION_REINIT_INTERVAL 30000
 
 bc_bridge_t bridge;
 
