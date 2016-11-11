@@ -259,6 +259,11 @@ void bc_talk_publish_i2c(bc_talk_i2c_attributes_t *attributes)
 
 void bc_talk_i2c_attributes_destroy(bc_talk_i2c_attributes_t *attributes)
 {
+    if (attributes == NULL)
+    {
+        return;
+    }
+
     if (attributes->write.buffer != NULL)
     {
         free(attributes->write.buffer);
@@ -1040,18 +1045,21 @@ static bool _bc_talk_set_i2c(char *str0, char *str1, bc_talk_event_t *event)
 static void *bc_talk_worker_stdin(void *parameter)
 {
 
-    char *line;
-    size_t length;
-
-    for (;;)
+    char *line = NULL;
+    size_t length = 0;
+    ssize_t read;
+    while ((read = getline(&line, &length, stdin)) != -1)
     {
-        line = NULL;
-
-        if (getline(&line, &length, stdin) != -1)
+        printf("%s", line);
+        if (read > 7)
         {
-            bc_talk_parse(line, length, bc_talk_callback );
-            free(line);
+            bc_talk_parse(line, read, bc_talk_callback );
         }
+    }
+
+    if (line != NULL)
+    {
+        free(line);
     }
 
     return NULL;
