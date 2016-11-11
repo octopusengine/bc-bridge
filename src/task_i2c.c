@@ -4,7 +4,7 @@
 #include "bc_talk.h"
 #include "bc_bridge.h"
 
-static uint8_t _task_i2c_fifo_size(task_i2c_parameters_t *parameters);
+
 
 void *task_i2c_worker(void *task_parameter)
 {
@@ -150,7 +150,7 @@ bool task_i2c_set_scan(task_info_t *task_info, uint8_t channel)
 
     task_i2c_parameters_t *parameters= (task_i2c_parameters_t *)task_info->parameters;
 
-    if (_task_i2c_fifo_size(parameters) == TASK_I2C_ACTIONS_LENGTH )
+    if (task_i2c_fifo_size(parameters) == TASK_I2C_ACTIONS_LENGTH )
     {
         task_unlock(task_info);
 
@@ -180,7 +180,7 @@ bool task_i2c_set_command(task_info_t *task_info, task_i2c_action_type_t type, b
 
     task_i2c_parameters_t *parameters = (task_i2c_parameters_t *)task_info->parameters;
 
-    if (_task_i2c_fifo_size(parameters) == TASK_I2C_ACTIONS_LENGTH )
+    if (task_i2c_fifo_size(parameters) == TASK_I2C_ACTIONS_LENGTH )
     {
         task_unlock(task_info);
 
@@ -206,7 +206,7 @@ bool task_i2c_set_command(task_info_t *task_info, task_i2c_action_type_t type, b
     return true;
 }
 
-static uint8_t _task_i2c_fifo_size(task_i2c_parameters_t *parameters)
+uint8_t task_i2c_fifo_size(task_i2c_parameters_t *parameters)
 {
     if (parameters->head == parameters->tail)
     {

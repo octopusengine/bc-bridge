@@ -128,6 +128,50 @@ void task_manager_terminate(task_info_t *task_info_list, size_t length)
     }
 }
 
+void task_manager_destroy_parameters(task_info_t *task_info_list, size_t length)
+{
+    int i;
+    for (i = 0; i < length; i++)
+    {
+        if (task_info_list[i].parameters != NULL)
+        {
+            switch (task_info_list[i].type)
+            {
+                case TASK_TYPE_I2C:
+                {
+                    task_i2c_parameters_t *i2c_parameters = ((task_i2c_parameters_t *) task_info_list[i].parameters);
+                    task_i2c_action_t *action;
+                    while (task_i2c_fifo_size(i2c_parameters) > 0)
+                    {
+                        action = &i2c_parameters->actions[i2c_parameters->tail];
+
+                        if(++i2c_parameters->tail > TASK_I2C_ACTIONS_LENGTH-1)
+                        {
+                            i2c_parameters->tail = 0;
+                        }
+
+                        bc_talk_i2c_attributes_destroy(action->attributes);
+
+                    }
+                    break;
+                }
+                case TASK_TYPE_DISPLAY_OLED:
+                {
+                    if (((task_display_oled_parameters_t *) task_info_list[i].parameters)->raw != NULL)
+                    {
+                        free(((task_display_oled_parameters_t *) task_info_list[i].parameters)->raw);
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            free(task_info_list[i].parameters);
+        }
+    }
+}
+
 static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void *(*task_worker)(void *) )
 {
     task_worker_t *self;

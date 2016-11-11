@@ -37,5 +37,6 @@ typedef struct
 void *task_i2c_worker(void *task_parameter);
 bool task_i2c_set_scan(task_info_t *task_info, uint8_t channel);
 bool task_i2c_set_command(task_info_t *task_info, task_i2c_action_type_t type, bc_talk_i2c_attributes_t *value);
+uint8_t task_i2c_fifo_size(task_i2c_parameters_t *parameters);
 
 #endif /* _TASK_I2C_H */
