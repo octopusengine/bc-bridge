@@ -135,6 +135,16 @@ static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void
     bc_log_info("_task_spawn_worker: spawning instance for bus %d, address 0x%02X",
                 (uint8_t) task_info->i2c_channel, task_info->device_address);
 
+    task_lock(task_info);
+
+    if (task_info->worker != NULL)
+    {
+        bc_os_task_destroy(&task_info->worker->task);
+        bc_os_semaphore_destroy(&task_info->worker->semaphore);
+        free(task_info->worker);
+        task_info->worker = NULL;
+    }
+
     self = (task_worker_t *) malloc(sizeof(task_worker_t));
 
     if (self == NULL)
@@ -162,6 +172,8 @@ static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void
                 (uint8_t) task_info->i2c_channel, task_info->device_address);
 
     task_info->worker = self;
+
+    task_unlock(task_info);
 }
 
 static void _task_worker_terminate(task_info_t *task_info)

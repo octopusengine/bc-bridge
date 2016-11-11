@@ -12,7 +12,8 @@
 #include "task.h"
 #include "task_display_oled.h"
 
-#include "bc_base64.h"
+
+#define APPLICATION_REINIT_INTERVAL 30000
 
 bc_bridge_t bridge;
 
@@ -103,7 +104,7 @@ void application_loop(bool *quit)
     while (bc_bridge_is_alive(&bridge))
     {
 
-        if (bc_tick_get() > last_init+30000 )
+        if (bc_tick_get() > last_init+APPLICATION_REINIT_INTERVAL )
         {
             task_manager_init(&bridge, task_info_list, task_info_list_length);
             last_init = bc_tick_get();
