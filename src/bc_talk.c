@@ -4,7 +4,7 @@
 #include "bc_log.h"
 #include "bc_base64.h"
 
-#define BC_TALK_MAX_PAYLOAD_SUBTOPIC 4
+#define BC_TALK_MAX_SUBTOPIC 4
 
 #define BC_TALK_RAW_BASE64_LENGTH 1368
 #define BC_TALK_RAW_BUFFER_LENGTH 1024
@@ -34,8 +34,6 @@ static bool _bc_talk_set_i2c(char *str0, char *str1, bc_talk_event_t *event);
 static void *bc_talk_worker_stdin(void *parameter);
 void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data);
 static char *_bc_talk_data_to_string(bc_talk_data_t *data);
-
-#define BC_TALK_FREE_PAYLOAD for (i=0; i<payload_length; i++) { free(payload[i]); }
 
 void bc_talk_init(bc_talk_parse_callback callback)
 {
@@ -301,9 +299,9 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
     jsmntok_t tokens[20];
     int r;
     int i;
-    char *payload_string;
-    char payload[BC_TALK_MAX_PAYLOAD_SUBTOPIC][32];
-    int payload_length = 0;
+    char *topic_string;
+    char topic[BC_TALK_MAX_SUBTOPIC][32];
+    int topic_length = 0;
     char *split;
     char *saveptr;
     char *text_tmp;
@@ -318,68 +316,72 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         return false;
     }
 
-    payload_string = malloc(sizeof(char) * (tokens[1].end - tokens[1].start + 1));
+    topic_string = malloc(sizeof(char) * (tokens[1].end - tokens[1].start + 1));
 
-    if (payload_string == NULL)
+    if (topic_string == NULL)
     {
         bc_log_fatal("bc_talk_parse: call failed: malloc");
     }
 
-    strncpy(payload_string, line + tokens[1].start, (size_t)(tokens[1].end - tokens[1].start));
-    payload_string[tokens[1].end - tokens[1].start] = 0x00;
+    strncpy(topic_string, line + tokens[1].start, (size_t)(tokens[1].end - tokens[1].start));
+    topic_string[tokens[1].end - tokens[1].start] = 0x00;
 
-    bc_log_debug("bc_talk_parse: payload %s", payload_string);
+    bc_log_debug("bc_talk_parse: topic %s", topic_string);
 
-    split = strtok_r(payload_string, "/", &saveptr);
-    while (split && (payload_length <= BC_TALK_MAX_PAYLOAD_SUBTOPIC))
+    split = strtok_r(topic_string, "/", &saveptr);
+    while (split && (topic_length <= BC_TALK_MAX_SUBTOPIC))
     {
         if (strlen(split) > 32)
         {
             bc_log_error("bc_talk_parse: too long subtopic");
             return false;
         }
-        strcpy(payload[payload_length++], split);
+        strcpy(topic[topic_length++], split);
         split = strtok_r(0, "/", &saveptr);
     }
-    free(payload_string);
 
-    if (payload_length > BC_TALK_MAX_PAYLOAD_SUBTOPIC)
+    if (topic_length > BC_TALK_MAX_SUBTOPIC)
     {
-        bc_log_error("bc_talk_parse: too many subtopic");
+        bc_log_error("bc_talk_parse: too many subtopic, topic: %s ", topic_string);
+        free(topic_string);
         return false;
     }
 
-    if ((payload_length<3))
+    if ((topic_length<3))
     {
-        bc_log_error("bc_talk_parse: short topic");
+        bc_log_error("bc_talk_parse: short topic, topic: %s ", topic_string);
+        free(topic_string);
         return false;
     }
 
-    if (!_bc_talk_set_i2c(payload[0], payload[1], &event))
+    if (!_bc_talk_set_i2c(topic[0], topic[1], &event))
     {
-        bc_log_error("bc_talk_parse: bad i2c address");
+        bc_log_error("bc_talk_parse: bad i2c address, topic: %s", topic_string );
+        free(topic_string);
         return false;
     }
 
-    if ((strcmp(payload[2], "config") == 0) && (payload_length == 4) )
+    free(topic_string);
+
+    if ((strcmp(topic[2], "config") == 0) && (topic_length == 4) )
     {
 
-        if ((strcmp(payload[3], "list") == 0) && (r == 3) && (event.i2c_channel == 0) && (event.device_address == 0))
+        if ((strcmp(topic[3], "list") == 0) && (r == 3) && (event.i2c_channel == 0) && (event.device_address == 0))
         {
             event.operation = BC_TALK_OPERATION_CONFIG_DEVICES_LIST;
             callback(&event);
             return true;
         }
 
-        if ((event.device_address == BC_TALK_I2C_ADDRESS) && (strcmp(payload[3], "scan") == 0) && (r == 3) )
+        if ((event.device_address == BC_TALK_I2C_ADDRESS) && (strcmp(topic[3], "scan") == 0) && (r == 3) )
         {
                 event.operation = BC_TALK_OPERATION_I2C_SCAN;
 
-                if (strcmp(payload[1], "0") == 0)
+                if (strcmp(topic[1], "0") == 0)
                 {
                     event.param = 0;
                 }
-                else if (strcmp(payload[1], "1") == 0)
+                else if (strcmp(topic[1], "1") == 0)
                 {
                     event.param = 1;
                 }
@@ -394,14 +396,14 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         }
 
         text_tmp = malloc(BC_TALK_DEVICE_NAME_SIZE*sizeof(char));
-        if (strcmp(payload[0], bc_talk_get_device_name(event.device_address, text_tmp, BC_TALK_DEVICE_NAME_SIZE )) != 0)
+        if (strcmp(topic[0], bc_talk_get_device_name(event.device_address, text_tmp, BC_TALK_DEVICE_NAME_SIZE )) != 0)
         {
-            bc_log_error("bc_talk_parse: bad payload: contained %s expected %s", payload[2], text_tmp);
+            bc_log_error("bc_talk_parse: bad topic: contained %s expected %s", topic[2], text_tmp);
             return false;
         }
         free(text_tmp);
 
-        if (strcmp(payload[payload_length - 1], "update") == 0)
+        if (strcmp(topic[topic_length - 1], "update") == 0)
         {
 
             for (i = 3; i < tokens[2].size * 2 + 3 && i + 1 < r; i += 2)
@@ -417,12 +419,12 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
                 }
             }
         }
-        else if (strcmp(payload[payload_length - 1], "get") == 0)
+        else if (strcmp(topic[topic_length - 1], "get") == 0)
         {
             event.operation = BC_TALK_OPERATION_CONFIG_GET;
             callback(&event);
         }
-        else if (strcmp(payload[payload_length - 1], "list") == 0)
+        else if (strcmp(topic[topic_length - 1], "list") == 0)
         {
             event.operation = BC_TALK_OPERATION_CONFIG_GET;
             callback(&event);
@@ -431,16 +433,16 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
     }
 
     text_tmp = malloc(BC_TALK_DEVICE_NAME_SIZE*sizeof(char));
-    if (strcmp(payload[0], bc_talk_get_device_name(event.device_address, text_tmp, BC_TALK_DEVICE_NAME_SIZE )) != 0)
+    if (strcmp(topic[0], bc_talk_get_device_name(event.device_address, text_tmp, BC_TALK_DEVICE_NAME_SIZE )) != 0)
     {
-        bc_log_error("bc_talk_parse: bad payload: contained %s expected %s", payload[2], text_tmp);
+        bc_log_error("bc_talk_parse: bad topic: contained %s expected %s", topic[2], text_tmp);
         return false;
     }
     free(text_tmp);
 
-    if ((strcmp(payload[0], "led") == 0) && (payload_length == 3))
+    if ((strcmp(topic[0], "led") == 0) && (topic_length == 3))
     {
-        if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state"))
+        if ((strcmp(topic[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state"))
         {
             event.operation = BC_TALK_OPERATION_LED_SET;
             event.param = _bc_talk_token_find_index(line, &tokens[4], bc_talk_led_state,
@@ -450,16 +452,16 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
                 callback(&event);
             }
         }
-        else if ((strcmp(payload[2], "get") == 0))
+        else if ((strcmp(topic[2], "get") == 0))
         {
             event.operation = BC_TALK_OPERATION_LED_GET;
             callback(&event);
         }
 
     }
-    else if ((strcmp(payload[0], "relay") == 0) && (payload_length == 3))
+    else if ((strcmp(topic[0], "relay") == 0) && (topic_length == 3))
     {
-        if ((strcmp(payload[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state"))
+        if ((strcmp(topic[2], "set") == 0) && _bc_talk_token_cmp(line, &tokens[3], "state"))
         {
             event.operation = BC_TALK_OPERATION_RELAY_SET;
             event.param = _bc_talk_token_get_bool_as_int(line, &tokens[4]);
@@ -468,16 +470,16 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
                 callback(&event);
             }
         }
-        else if ((strcmp(payload[2], "get") == 0))
+        else if ((strcmp(topic[2], "get") == 0))
         {
             event.operation = BC_TALK_OPERATION_RELAY_GET;
             callback(&event);
         }
 
     }
-    else if ((strcmp(payload[0], "display-oled") == 0) && (payload_length == 3))
+    else if ((strcmp(topic[0], "display-oled") == 0) && (topic_length == 3))
     {
-        if (strcmp(payload[2], "set") == 0)
+        if (strcmp(topic[2], "set") == 0)
         {
 
             if (_bc_talk_token_cmp(line, &tokens[3], "raw") && (r==5))
@@ -530,17 +532,17 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
             }
         }
     }
-    else if (strcmp(payload[0], "i2c") == 0)
+    else if (strcmp(topic[0], "i2c") == 0)
     {
 
         bc_talk_i2c_attributes_t *i2c_attributes = malloc(sizeof(bc_talk_i2c_attributes_t));
         memset(i2c_attributes, 0, sizeof(bc_talk_i2c_attributes_t));
 
-        if (strcmp(payload[1], "0") == 0)
+        if (strcmp(topic[1], "0") == 0)
         {
             i2c_attributes->channel = 0;
         }
-        else if (strcmp(payload[1], "1") == 0)
+        else if (strcmp(topic[1], "1") == 0)
         {
             i2c_attributes->channel = 1;
         }
@@ -589,7 +591,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
             }
         }
 
-        if (strcmp(payload[2], "set") == 0)
+        if (strcmp(topic[2], "set") == 0)
         {
             event.operation = BC_TALK_OPERATION_I2C_WRITE;
 
@@ -599,7 +601,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
             }
         }
 
-        if (strcmp(payload[2], "get") == 0)
+        if (strcmp(topic[2], "get") == 0)
         {
             event.operation = BC_TALK_OPERATION_I2C_READ;
 
@@ -627,7 +629,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         callback(&event);
 
     }
-    else if ((strcmp(payload[2], "get") == 0))
+    else if ((strcmp(topic[2], "get") == 0))
     {
         event.operation = BC_TALK_OPERATION_GET;
         callback(&event);
