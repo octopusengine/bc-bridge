@@ -340,24 +340,26 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         split = strtok_r(0, "/", &saveptr);
     }
 
+    free(topic_string);
+
     if (topic_length > BC_TALK_MAX_SUBTOPIC)
     {
-        bc_log_error("bc_talk_parse: too many subtopic, topic: %s ", topic_string);
+        bc_log_error("bc_talk_parse: too many subtopic, line: %s ", line);
         free(topic_string);
         return false;
     }
 
     if ((topic_length<3))
     {
-        bc_log_error("bc_talk_parse: short topic, topic: %s ", topic_string);
+        bc_log_error("bc_talk_parse: short topic, line: %s ", line);
         free(topic_string);
         return false;
     }
 
     if (!_bc_talk_set_i2c(topic[0], topic[1], &event))
     {
-        bc_log_error("bc_talk_parse: bad i2c address, topic: %s", topic_string );
-        free(topic_string);
+        bc_log_error("bc_talk_parse: bad i2c address, line: %s ", line );
+
         return false;
     }
 
