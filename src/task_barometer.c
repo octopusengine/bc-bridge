@@ -139,9 +139,14 @@ void *task_barometer_worker(void *task_parameter)
             }
             case BC_TAG_BAROMETER_STATE_CONVERSION:
             {
-                if ( (one_shot_conversion + 1000) < self->_tick_last_feed )
+                if ( (one_shot_conversion + 3000) < self->_tick_last_feed )
                 {
-                    bc_tag_barometer_reset_and_power_down(&tag_barometer);
+                    if (!bc_tag_barometer_reset_and_power_down(&tag_barometer))
+                    {
+                        bc_log_error("task_barometer_worker: bc_tag_barometer_reset_and_power_down");
+                    }
+
+                    return NULL;
                 }
             }
             default:
