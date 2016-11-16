@@ -19,7 +19,7 @@ bool bc_tag_lux_meter_init(bc_tag_lux_meter_t *self, bc_i2c_interface_t *interfa
     uint16_t device_id;
     if (!_bc_tag_lux_meter_read_register(self, OPT3001_REG_DEVICE_ID, &device_id))
     {
-        return  false;
+        return false;
     }
 
     if (device_id != OPT3001_REG_DEVICE_ID_RESULT)

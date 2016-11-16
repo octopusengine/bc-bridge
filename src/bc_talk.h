@@ -37,7 +37,7 @@ typedef enum
     BC_TALK_DATA_ENCODING_ASCII,
     BC_TALK_DATA_ENCODING_BASE64
 
-}bc_talk_data_encoding_t;
+} bc_talk_data_encoding_t;
 
 typedef struct
 {
@@ -79,7 +79,7 @@ void bc_talk_publish_add_value(char *name, char *value, ...);
 void bc_talk_publish_end(void);
 
 bool bc_talk_is_clown_device(uint8_t device_address);
-char *bc_talk_get_device_name(uint8_t device_address, char* output_str, size_t max_len );
+char *bc_talk_get_device_name(uint8_t device_address, char *output_str, size_t max_len);
 void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic, size_t topic_size);
 
 void bc_talk_publish_led_state(int state);

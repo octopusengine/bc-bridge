@@ -9,24 +9,18 @@
 
 #define BC_BRIDGE_DEBUG 1
 
-#define REPORT_ID_CHIP_CODE 0xA0
-#define REPORT_ID_SYSTEM_SETTING 0xA1
-#define REPORT_ID_GPIO 0xB0
-#define REPORT_ID_I2C_STATUS 0xC0
-#define REPORT_ID_UART_STATUS 0xE0
-
-#define BC_BRIDGE_LOG_ENABLE  false
-#define BC_BRIDGE_LOG_DISABLE true
-
-#define BC_BRIDGE_I2C_SWITCH_ADDRESS 0x70
-
-#define BC_BRIDGE_PIN_LED 0x80
+#define REPORT_ID_CHIP_CODE               0xA0
+#define REPORT_ID_SYSTEM_SETTING          0xA1
+#define REPORT_ID_GPIO                    0xB0
+#define REPORT_ID_I2C_STATUS              0xC0
+#define REPORT_ID_I2C_READ_REQUEST        0xC2
+#define REPORT_ID_UART_STATUS             0xE0
+#define BC_BRIDGE_LOG_ENABLE              false
+#define BC_BRIDGE_LOG_DISABLE             true
+#define BC_BRIDGE_I2C_SWITCH_ADDRESS      0x70
+#define BC_BRIDGE_PIN_LED                 0x80
 #define BC_BRIDGE_I2C_FLAG_START          0x02
 #define BC_BRIDGE_I2C_FLAG_START_AND_STOP 0x06
-
-//
-//BOOT  GPIO5 DIO11   pin 18
-//RESET GPIO4 DIO10   pin 17
 
 typedef enum
 {
@@ -39,7 +33,8 @@ static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_
 static bool _bc_bridge_ft260_i2c_set_clock_speed(bc_bridge_t *self, bc_bridge_i2c_clock_speed_t clock_speed);
 static bool _bc_bridge_ft260_get_i2c_bus_status(bc_bridge_t *self, uint8_t *bus_status);
 static bool
-_bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length, uint8_t flag, bool disable_log);
+_bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length, uint8_t flag,
+                           bool disable_log);
 static bool _bc_bridge_ft260_i2c_read(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length);
 static bool _bc_bridge_ft260_i2c_reset(bc_bridge_t *self);
 static bool _bc_bridge_ft260_get_feature(bc_bridge_t *self, uint8_t *buffer, size_t length);
@@ -63,7 +58,7 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
 
     *device_count = 0;
 
-    for (i=0; i<max_device_count; i++)
+    for (i = 0; i < max_device_count; i++)
     {
         if (devices[i].usb_path != NULL)
         {
@@ -84,7 +79,6 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
         devices[i].path_uart = NULL;
     }
 
-    /* Create the udev object */
     udev = udev_new();
 
     if (udev == NULL)
@@ -105,31 +99,31 @@ bool bc_bridge_scan(bc_bridge_device_info_t *devices, uint8_t *device_count)
         path = (char *) udev_list_entry_get_name(entry);
         hid_dev = udev_device_new_from_syspath(udev, path);
 
-        usb_dev = udev_device_get_parent_with_subsystem_devtype( hid_dev, "usb", "usb_device");
+        usb_dev = udev_device_get_parent_with_subsystem_devtype(hid_dev, "usb", "usb_device");
 
-        str_tmp = (char *)udev_device_get_sysattr_value(usb_dev, "idVendor");
+        str_tmp = (char *) udev_device_get_sysattr_value(usb_dev, "idVendor");
         id_vendor = (uint16_t) ((str_tmp) ? strtol(str_tmp, NULL, 16) : -1);
 
-        str_tmp = (char *)udev_device_get_sysattr_value(usb_dev, "idProduct");
+        str_tmp = (char *) udev_device_get_sysattr_value(usb_dev, "idProduct");
         id_product = (uint16_t) ((str_tmp) ? strtol(str_tmp, NULL, 16) : -1);
 
         if (id_vendor == 0x0403 && id_product == 0x6030)
         {
             usb_dev_path = (char *) udev_device_get_devnode(usb_dev);
 
-            for (i=0; i<max_device_count; i++)
+            for (i = 0; i < max_device_count; i++)
             {
-                if ( (devices[i].usb_path != NULL) && strcmp(devices[i].usb_path, usb_dev_path) == 0)
+                if ((devices[i].usb_path != NULL) && strcmp(devices[i].usb_path, usb_dev_path) == 0)
                 {
-                    devices[i].path_uart =  strdup( udev_device_get_devnode(hid_dev) );
+                    devices[i].path_uart = strdup(udev_device_get_devnode(hid_dev));
                     break;
                 }
 
             }
-            if (i==max_device_count)
+            if (i == max_device_count)
             {
-                devices[*device_count].usb_path = strdup( usb_dev_path );
-                devices[*device_count].path_i2c = strdup( udev_device_get_devnode(hid_dev) );
+                devices[*device_count].usb_path = strdup(usb_dev_path);
+                devices[*device_count].path_i2c = strdup(udev_device_get_devnode(hid_dev));
 
                 *device_count += 1;
             }
@@ -320,12 +314,14 @@ bool bc_bridge_i2c_write(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     }
 
     if (!_bc_bridge_ft260_i2c_write(self, transfer->device_address, buffer,
-                                    (uint8_t)((transfer->address_16_bit ? 2 : 1) + transfer->length), BC_BRIDGE_I2C_FLAG_START_AND_STOP, transfer->disable_log))
+                                    (uint8_t) ((transfer->address_16_bit ? 2 : 1) + transfer->length),
+                                    BC_BRIDGE_I2C_FLAG_START_AND_STOP, transfer->disable_log))
     {
         if (!transfer->disable_log)
         {
-            bc_log_warning("bc_bridge_i2c_write: call failed: _bc_bridge_ft260_i2c_write channel 0x%02X, device 0x%02X, address 0x%02X, length %d bytes",
-                           transfer->channel, transfer->device_address, transfer->address, transfer->length);
+            bc_log_warning(
+                "bc_bridge_i2c_write: call failed: _bc_bridge_ft260_i2c_write channel 0x%02X, device 0x%02X, address 0x%02X, length %d bytes",
+                transfer->channel, transfer->device_address, transfer->address, transfer->length);
         }
 
         bc_os_mutex_unlock(&self->_mutex);
@@ -387,12 +383,14 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
         }
 
         if (!_bc_bridge_ft260_i2c_write(self, transfer->device_address, buffer,
-                                        (uint8_t) (transfer->address_16_bit ? 2 : 1), BC_BRIDGE_I2C_FLAG_START, transfer->disable_log ))
+                                        (uint8_t) (transfer->address_16_bit ? 2 : 1), BC_BRIDGE_I2C_FLAG_START,
+                                        transfer->disable_log))
         {
             if (!transfer->disable_log)
             {
-                bc_log_warning("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_write channel 0x%02X, device 0x%02X, address 0x%02X",
-                               transfer->channel, transfer->device_address, transfer->address);
+                bc_log_warning(
+                    "bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_write channel 0x%02X, device 0x%02X, address 0x%02X",
+                    transfer->channel, transfer->device_address, transfer->address);
             }
 
             bc_os_mutex_unlock(&self->_mutex);
@@ -405,8 +403,9 @@ bool bc_bridge_i2c_read(bc_bridge_t *self, bc_bridge_i2c_transfer_t *transfer)
     if (!_bc_bridge_ft260_i2c_read(self, transfer->device_address, transfer->buffer,
                                    transfer->length))
     {
-        bc_log_warning("bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_read channel 0x%02X, device 0x%02X, length %d bytes",
-                       transfer->channel, transfer->device_address, transfer->length);
+        bc_log_warning(
+            "bc_bridge_i2c_read: call failed: _bc_bridge_ft260_i2c_read channel 0x%02X, device 0x%02X, length %d bytes",
+            transfer->channel, transfer->device_address, transfer->length);
 
         bc_os_mutex_unlock(&self->_mutex);
 
@@ -436,7 +435,8 @@ bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint
         return false;
     }
 
-    bool result = _bc_bridge_ft260_i2c_write(self, device_address, buffer, 1, BC_BRIDGE_I2C_FLAG_START, BC_BRIDGE_LOG_DISABLE);
+    bool result = _bc_bridge_ft260_i2c_write(self, device_address, buffer, 1, BC_BRIDGE_I2C_FLAG_START,
+                                             BC_BRIDGE_LOG_DISABLE);
 
     bc_os_mutex_unlock(&self->_mutex);
 
@@ -445,7 +445,7 @@ bool bc_bridge_i2c_ping(bc_bridge_t *self, bc_bridge_i2c_channel_t channel, uint
 
 bool bc_bridge_led_set_state(bc_bridge_t *self, bc_bridge_led_state_t state)
 {
-    uint8_t buffer[5] = {0,0,0,0,0};
+    uint8_t buffer[5] = { 0, 0, 0, 0, 0 };
 
     bc_os_mutex_lock(&self->_mutex);
 
@@ -531,7 +531,8 @@ static bool _bc_bridge_i2c_set_channel(bc_bridge_t *self, bc_bridge_i2c_channel_
         }
     }
 
-    if (_bc_bridge_ft260_i2c_write(self, BC_BRIDGE_I2C_SWITCH_ADDRESS, buffer, sizeof(buffer), BC_BRIDGE_I2C_FLAG_START_AND_STOP, BC_BRIDGE_LOG_ENABLE))
+    if (_bc_bridge_ft260_i2c_write(self, BC_BRIDGE_I2C_SWITCH_ADDRESS, buffer, sizeof(buffer),
+                                   BC_BRIDGE_I2C_FLAG_START_AND_STOP, BC_BRIDGE_LOG_ENABLE))
     {
         self->_i2c_channel = i2c_channel;
 
@@ -635,7 +636,7 @@ static bool _bc_bridge_ft260_i2c_set_clock_speed(bc_bridge_t *self, bc_bridge_i2
 
 static bool _bc_bridge_ft260_get_i2c_bus_status(bc_bridge_t *self, uint8_t *bus_status)
 {
-    uint8_t report[5] = {REPORT_ID_I2C_STATUS, 0, 0, 0, 0};
+    uint8_t report[5] = { REPORT_ID_I2C_STATUS, 0, 0, 0, 0 };
 
     if (!_bc_bridge_ft260_get_feature(self, report, sizeof(report)))
     {
@@ -650,7 +651,8 @@ static bool _bc_bridge_ft260_get_i2c_bus_status(bc_bridge_t *self, uint8_t *bus_
 }
 
 static bool
-_bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length, uint8_t flag, bool disable_log)
+_bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, uint8_t length, uint8_t flag,
+                           bool disable_log)
 {
     uint8_t report[64];
     uint8_t bus_status = 0;
@@ -671,8 +673,8 @@ _bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, 
 
     memcpy(&report[4], buffer, length);
 
-    report[0] = (uint8_t) (0xD0 + ((length - 1) / 4)); /* I2C write */
-    report[1] = address; /* Slave address */
+    report[0] = (uint8_t) (0xD0 + ((length - 1) / 4));
+    report[1] = address;
     report[2] = flag;
     report[3] = length;
 
@@ -686,7 +688,7 @@ _bc_bridge_ft260_i2c_write(bc_bridge_t *self, uint8_t address, uint8_t *buffer, 
     while (true)
     {
 
-        res = write(self->_fd_i2c, report, to_send );
+        res = write(self->_fd_i2c, report, to_send);
 
         if (res != to_send)
         {
@@ -784,8 +786,8 @@ static bool _bc_bridge_ft260_i2c_read(bc_bridge_t *self, uint8_t address, uint8_
         return false;
     }
 
-    report[0] = 0xC2; /* I2C write */
-    report[1] = address; /* Slave address */
+    report[0] = REPORT_ID_I2C_READ_REQUEST;
+    report[1] = address;
     report[2] = BC_BRIDGE_I2C_FLAG_START_AND_STOP;
     report[3] = length;
     report[4] = 0;
@@ -800,7 +802,7 @@ static bool _bc_bridge_ft260_i2c_read(bc_bridge_t *self, uint8_t address, uint8_
     while (true)
     {
 
-        res = write(self->_fd_i2c, report, to_send );
+        res = write(self->_fd_i2c, report, to_send);
 
         if (res != to_send)
         {
@@ -993,31 +995,31 @@ static bool _bc_bridge_ft260_set_feature(bc_bridge_t *self, uint8_t *buffer, siz
 static void _bc_bridge_log_bus_error(char *msg, uint8_t address, uint8_t bus_status)
 {
     bc_log_error("%s: device 0x%02X: bus error 0x%X", msg, address, bus_status);
-    if( (bus_status & 0x01) != 0 )
+    if ((bus_status & 0x01) != 0)
     {
         bc_log_debug("    bit 0 = controller busy: all other status bits invalid");
     }
-    if( (bus_status & 0x02) != 0 )
+    if ((bus_status & 0x02) != 0)
     {
         bc_log_debug("    bit 1 = error condition");
     }
-    if( (bus_status & 0x04) != 0 )
+    if ((bus_status & 0x04) != 0)
     {
         bc_log_debug("    bit 2 = slave address was not acknowledged during last");
     }
-    if( (bus_status & 0x08) != 0 )
+    if ((bus_status & 0x08) != 0)
     {
         bc_log_debug("    bit 3 = data not acknowledged during last operation");
     }
-    if( (bus_status & 0x10) != 0 )
+    if ((bus_status & 0x10) != 0)
     {
         bc_log_debug("    bit 4 = arbitration lost during last operation");
     }
-    if( (bus_status & 0x20) != 0 )
+    if ((bus_status & 0x20) != 0)
     {
         bc_log_debug("    bit 5 = controller idle");
     }
-    if( (bus_status & 0x40) != 0 )
+    if ((bus_status & 0x40) != 0)
     {
         bc_log_debug("    bit 6 = bus busy");
     }

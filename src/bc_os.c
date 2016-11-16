@@ -40,7 +40,7 @@ void bc_os_task_destroy(bc_os_task_t *task)
 
 bool bc_os_task_is_alive(bc_os_task_t *task)
 {
-    return pthread_kill( *(pthread_t *)task->_task, 0) == 0 ? true : false;
+    return pthread_kill(*(pthread_t *) task->_task, 0) == 0 ? true : false;
 }
 
 

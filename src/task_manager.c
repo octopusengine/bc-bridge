@@ -11,7 +11,7 @@
 #include "bc_log.h"
 #include "bc_talk.h"
 
-static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void *(*task_worker)(void *) );
+static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void *(*task_worker)(void *));
 static void _task_worker_terminate(task_info_t *task_info);
 
 void task_manager_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t length)
@@ -102,11 +102,12 @@ void task_manager_init(bc_bridge_t *bridge, task_info_t *task_info_list, size_t 
                 if (task_info_list[i].parameters == NULL)
                 {
                     parameters = malloc(sizeof(task_display_oled_parameters_t));
-                    memset(parameters, 0x00, sizeof(task_display_oled_parameters_t) );
-                    strcpy( ((task_display_oled_parameters_t *) parameters)->lines[0], "BigClown");
+                    memset(parameters, 0x00, sizeof(task_display_oled_parameters_t));
+                    strcpy(((task_display_oled_parameters_t *) parameters)->lines[0], "BigClown");
                     char topic[21] = "";
-                    bc_talk_make_topic(task_info_list[i].i2c_channel, task_info_list[i].device_address, topic, sizeof(topic));
-                    strcpy( ((task_display_oled_parameters_t *) parameters)->lines[2], topic);
+                    bc_talk_make_topic(task_info_list[i].i2c_channel, task_info_list[i].device_address, topic,
+                                       sizeof(topic));
+                    strcpy(((task_display_oled_parameters_t *) parameters)->lines[2], topic);
                     task_info_list[i].parameters = parameters;
                 }
                 _task_spawn_worker(bridge, &task_info_list[i], task_display_oled);
@@ -145,7 +146,7 @@ void task_manager_destroy_parameters(task_info_t *task_info_list, size_t length)
                     {
                         action = &i2c_parameters->actions[i2c_parameters->tail];
 
-                        if(++i2c_parameters->tail > TASK_I2C_ACTIONS_LENGTH-1)
+                        if (++i2c_parameters->tail > TASK_I2C_ACTIONS_LENGTH - 1)
                         {
                             i2c_parameters->tail = 0;
                         }
@@ -172,7 +173,7 @@ void task_manager_destroy_parameters(task_info_t *task_info_list, size_t length)
     }
 }
 
-static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void *(*task_worker)(void *) )
+static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void *(*task_worker)(void *))
 {
     task_worker_t *self;
 
@@ -210,7 +211,7 @@ static void _task_spawn_worker(bc_bridge_t *bridge, task_info_t *task_info, void
 
     self->_tick_feed_interval = 1000;
 
-    bc_os_task_init(&self->task, task_worker, self );
+    bc_os_task_init(&self->task, task_worker, self);
 
     bc_log_info("_task_spawn_worker: spawned instance for bus %d, address 0x%02X",
                 (uint8_t) task_info->i2c_channel, task_info->device_address);

@@ -8,7 +8,8 @@
 #include "bc_common.h"
 #include "bc_i2c.h"
 
-typedef enum {
+typedef enum
+{
     BC_I2C_SSD1306_128_64
 } bc_i2c_ssd1306_size_t;
 

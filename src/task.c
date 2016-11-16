@@ -10,7 +10,7 @@
 
 bool task_is_alive(task_info_t *task_info)
 {
-    if (task_info->worker == NULL )
+    if (task_info->worker == NULL)
     {
         return false;
     }
@@ -104,7 +104,7 @@ void task_worker_get_interval(task_worker_t *self, bc_tick_t *interval)
 {
     bc_os_mutex_lock(self->mutex);
 
-    *interval = *self->publish_interval*1000;
+    *interval = *self->publish_interval * 1000;
 
     bc_os_mutex_unlock(self->mutex);
 }

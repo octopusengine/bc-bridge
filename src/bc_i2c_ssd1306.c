@@ -49,9 +49,9 @@ bool bc_ic2_ssd1306_init(bc_i2c_ssd1306_t *self, bc_i2c_interface_t *interface, 
 
     self->width = 128;
     self->height = 64;
-    self->_pages = self->height/8;
+    self->_pages = self->height / 8;
 
-    self->length = self->width*self->_pages;
+    self->length = self->width * self->_pages;
 
     self->disable_log = true;
 
@@ -62,7 +62,7 @@ bool bc_ic2_ssd1306_init(bc_i2c_ssd1306_t *self, bc_i2c_interface_t *interface, 
         _bc_ic2_ssd1306_command(self, 0x3F) &&
         _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_SETDISPLAYOFFSET) && // 0xD3
         _bc_ic2_ssd1306_command(self, 0x0) && // no offset
-        _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_SETSTARTLINE | 0x0)&& // line #0
+        _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_SETSTARTLINE | 0x0) && // line #0
         _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_CHARGEPUMP) && // 0x8D
         _bc_ic2_ssd1306_command(self, 0x14) &&
         _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_MEMORYMODE) && // 0x20
@@ -79,14 +79,14 @@ bool bc_ic2_ssd1306_init(bc_i2c_ssd1306_t *self, bc_i2c_interface_t *interface, 
         _bc_ic2_ssd1306_command(self, 0x40) &&
         _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_DISPLAYALLON_RESUME) && // 0xA4
         _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_NORMALDISPLAY) && // 0xA6
-        _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_DISPLAYON) ) // Turn on the display.
+        _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_DISPLAYON)) // Turn on the display.
     {
 
         self->disable_log = false;
 
-        self->buffer = malloc(self->length*sizeof(uint8_t));
+        self->buffer = malloc(self->length * sizeof(uint8_t));
 
-        return  true;
+        return true;
     }
 
     return false;
@@ -102,16 +102,16 @@ bool bc_ic2_ssd1306_display(bc_i2c_ssd1306_t *self)
     int i;
 
     if (_bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_COLUMNADDR) &&
-    _bc_ic2_ssd1306_command(self, 0) &&        // Column start address. (0 = reset)
-    _bc_ic2_ssd1306_command(self, self->width-1 ) &&    // Column end address.
-    _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_PAGEADDR) &&
-        _bc_ic2_ssd1306_command(self, 0)  &&        // Page start address. (0 = reset)
-    _bc_ic2_ssd1306_command(self, self->_pages-1) ) // Page end address.
+        _bc_ic2_ssd1306_command(self, 0) &&        // Column start address. (0 = reset)
+        _bc_ic2_ssd1306_command(self, self->width - 1) &&    // Column end address.
+        _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_PAGEADDR) &&
+        _bc_ic2_ssd1306_command(self, 0) &&        // Page start address. (0 = reset)
+        _bc_ic2_ssd1306_command(self, self->_pages - 1)) // Page end address.
     {
 
-        for (i=0; i<self->length; i+=8)
+        for (i = 0; i < self->length; i += 8)
         {
-            if (!_bc_ic2_ssd1306_send_data(self, self->buffer+i, 8 ))
+            if (!_bc_ic2_ssd1306_send_data(self, self->buffer + i, 8))
             {
                 return false;
             }
@@ -129,14 +129,14 @@ bool bc_ic2_ssd1306_display_page(bc_i2c_ssd1306_t *self, uint8_t page)
 
     if (_bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_COLUMNADDR) &&
         _bc_ic2_ssd1306_command(self, 0) &&       // Column start address. (0 = reset)
-        _bc_ic2_ssd1306_command(self, self->width-1 )  &&    // Column end address.
-        _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_PAGEADDR)  &&
-        _bc_ic2_ssd1306_command(self, page)  &&       // Page start address. (0 = reset)
-        _bc_ic2_ssd1306_command(self, page+1) ) // Page end address.
+        _bc_ic2_ssd1306_command(self, self->width - 1) &&    // Column end address.
+        _bc_ic2_ssd1306_command(self, BC_I2C_SSD1306_PAGEADDR) &&
+        _bc_ic2_ssd1306_command(self, page) &&       // Page start address. (0 = reset)
+        _bc_ic2_ssd1306_command(self, page + 1)) // Page end address.
     {
-        for (i=page*self->width; i<(page+1)*self->width; i+=8)
+        for (i = page * self->width; i < (page + 1) * self->width; i += 8)
         {
-            if (!_bc_ic2_ssd1306_send_data(self, self->buffer+i, 8 ))
+            if (!_bc_ic2_ssd1306_send_data(self, self->buffer + i, 8))
             {
                 return false;
             }

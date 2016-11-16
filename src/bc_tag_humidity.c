@@ -119,9 +119,9 @@ bool bc_tag_humidity_load_calibration(bc_tag_humidity_t *self)
         }
     }
 
-    self->h0_rh = (int16_t)calibration[0];
+    self->h0_rh = (int16_t) calibration[0];
     self->h0_rh >>= 1;
-    h1_rh = (int16_t)calibration[1];
+    h1_rh = (int16_t) calibration[1];
     h1_rh >>= 1;
 
     self->h0_t0_out = (int16_t) calibration[6];
@@ -135,15 +135,15 @@ bool bc_tag_humidity_load_calibration(bc_tag_humidity_t *self)
         return false;
     }
 
-    self->h_grad = (float)(h1_rh - self->h0_rh) / (float)(h1_t0_out - self->h0_t0_out);
+    self->h_grad = (float) (h1_rh - self->h0_rh) / (float) (h1_t0_out - self->h0_t0_out);
 
-    uint16_t t0_degC = (int16_t)calibration[2];
-    t0_degC |= (int16_t)(0x03 & calibration[5]) << 8;
+    uint16_t t0_degC = (int16_t) calibration[2];
+    t0_degC |= (int16_t) (0x03 & calibration[5]) << 8;
     t0_degC >>= 3; // /= 8.0
 
-    uint16_t t1_degC = (int16_t)calibration[3];
-    t1_degC |= (int16_t)(0x0C & calibration[5]) << 6;
-    t1_degC  >>= 3;
+    uint16_t t1_degC = (int16_t) calibration[3];
+    t1_degC |= (int16_t) (0x0C & calibration[5]) << 6;
+    t1_degC >>= 3;
 
     self->_calibration_not_read = false;
 
@@ -190,7 +190,7 @@ bool bc_tag_humidity_power_down(bc_tag_humidity_t *self)
 
 bool bc_tag_humidity_one_shot_conversion(bc_tag_humidity_t *self)
 {
-    if (!_bc_tag_humidity_write_register(self, HTS221_CTRL_REG1, HTS221_BIT_PD|HTS221_BIT_BDU ))
+    if (!_bc_tag_humidity_write_register(self, HTS221_CTRL_REG1, HTS221_BIT_PD | HTS221_BIT_BDU))
     {
         return false;
     }
@@ -244,7 +244,7 @@ bool bc_tag_humidity_get_relative_humidity(bc_tag_humidity_t *self, float *humid
     h_out = (int16_t) humidity_out_lsb;
     h_out |= ((int16_t) humidity_out_msb) << 8;
 
-    *humidity = self->h0_rh + ((h_out - self->h0_t0_out) * self->h_grad );
+    *humidity = self->h0_rh + ((h_out - self->h0_t0_out) * self->h_grad);
 
     if (*humidity >= 100.f)
     {

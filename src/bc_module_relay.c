@@ -4,7 +4,7 @@
 #define BC_MODULE_RELAY_POWER_C 0x50
 #define BC_MODULE_RELAY_POWER_T 0xC0
 #define BC_MODULE_RELAY_POWER_F 0x30
-#define BC_MODULE_RELAY_DELAY   10
+#define BC_MODULE_RELAY_DELAY 10
 
 bool bc_module_relay_init(bc_module_relay_t *self, bc_i2c_interface_t *interface, uint8_t device_address)
 {

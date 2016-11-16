@@ -5,11 +5,10 @@
 #include "bc_bridge.h"
 
 
-
 void *task_i2c_worker(void *task_parameter)
 {
     task_worker_t *self = (task_worker_t *) task_parameter;
-    task_i2c_parameters_t *parameters = (task_i2c_parameters_t *)self->parameters;
+    task_i2c_parameters_t *parameters = (task_i2c_parameters_t *) self->parameters;
 
     bc_log_info("task_i2c_worker: started instance ");
 
@@ -38,12 +37,12 @@ void *task_i2c_worker(void *task_parameter)
             break;
         }
 
-        if ((parameters->head - parameters->tail) != 0 )
+        if ((parameters->head - parameters->tail) != 0)
         {
 
             action = &parameters->actions[parameters->tail];
 
-            if(++parameters->tail > TASK_I2C_ACTIONS_LENGTH-1)
+            if (++parameters->tail > TASK_I2C_ACTIONS_LENGTH - 1)
             {
                 parameters->tail = 0;
             }
@@ -51,7 +50,7 @@ void *task_i2c_worker(void *task_parameter)
             if (action->type == TASK_I2C_ACTION_TYPE_SCAN)
             {
 
-                add_comma=false;
+                add_comma = false;
                 slaves[0] = 0x00;
 
                 for (address = 1; address < 128; address++)
@@ -90,14 +89,14 @@ void *task_i2c_worker(void *task_parameter)
                 transfer.channel = action->attributes->channel;
                 transfer.device_address = action->attributes->device_address;
                 transfer.address = action->attributes->write.buffer[0];
-                transfer.buffer = action->attributes->write.buffer+1;
-                transfer.length = action->attributes->write.length-1;
+                transfer.buffer = action->attributes->write.buffer + 1;
+                transfer.length = action->attributes->write.length - 1;
 
                 bc_bridge_i2c_write(self->_bridge, &transfer);
 
                 bc_talk_publish_i2c(action->attributes);
 
-                bc_talk_i2c_attributes_destroy( action->attributes );
+                bc_talk_i2c_attributes_destroy(action->attributes);
 
             }
             else if (action->type == TASK_I2C_ACTION_TYPE_READ)
@@ -116,7 +115,7 @@ void *task_i2c_worker(void *task_parameter)
 
                     if (action->attributes->write.length == 2)
                     {
-                        transfer.address |= ((uint16_t)action->attributes->write.buffer[1]) << 8;
+                        transfer.address |= ((uint16_t) action->attributes->write.buffer[1]) << 8;
                         transfer.address_16_bit = true;
                     }
 
@@ -124,7 +123,7 @@ void *task_i2c_worker(void *task_parameter)
                 }
 
                 transfer.length = action->attributes->read_length;
-                transfer.buffer = malloc( transfer.length * sizeof(uint8_t) );
+                transfer.buffer = malloc(transfer.length * sizeof(uint8_t));
 
                 bc_bridge_i2c_read(self->_bridge, &transfer);
 
@@ -133,7 +132,7 @@ void *task_i2c_worker(void *task_parameter)
 
                 bc_talk_publish_i2c(action->attributes);
 
-                bc_talk_i2c_attributes_destroy( action->attributes );
+                bc_talk_i2c_attributes_destroy(action->attributes);
 
             }
 
@@ -148,9 +147,9 @@ bool task_i2c_set_scan(task_info_t *task_info, uint8_t channel)
 {
     task_lock(task_info);
 
-    task_i2c_parameters_t *parameters= (task_i2c_parameters_t *)task_info->parameters;
+    task_i2c_parameters_t *parameters = (task_i2c_parameters_t *) task_info->parameters;
 
-    if (task_i2c_fifo_size(parameters) == TASK_I2C_ACTIONS_LENGTH )
+    if (task_i2c_fifo_size(parameters) == TASK_I2C_ACTIONS_LENGTH)
     {
         task_unlock(task_info);
 
@@ -162,7 +161,7 @@ bool task_i2c_set_scan(task_info_t *task_info, uint8_t channel)
     parameters->actions[parameters->head].type = TASK_I2C_ACTION_TYPE_SCAN;
     parameters->actions[parameters->head].channel = channel;
 
-    if(++parameters->head > TASK_I2C_ACTIONS_LENGTH-1)
+    if (++parameters->head > TASK_I2C_ACTIONS_LENGTH - 1)
     {
         parameters->head = 0;
     }
@@ -178,9 +177,9 @@ bool task_i2c_set_command(task_info_t *task_info, task_i2c_action_type_t type, b
 {
     task_lock(task_info);
 
-    task_i2c_parameters_t *parameters = (task_i2c_parameters_t *)task_info->parameters;
+    task_i2c_parameters_t *parameters = (task_i2c_parameters_t *) task_info->parameters;
 
-    if (task_i2c_fifo_size(parameters) == TASK_I2C_ACTIONS_LENGTH )
+    if (task_i2c_fifo_size(parameters) == TASK_I2C_ACTIONS_LENGTH)
     {
         task_unlock(task_info);
 
@@ -193,7 +192,7 @@ bool task_i2c_set_command(task_info_t *task_info, task_i2c_action_type_t type, b
     parameters->actions[parameters->head].attributes = attributes;
 
 
-    if(++parameters->head > TASK_I2C_ACTIONS_LENGTH-1)
+    if (++parameters->head > TASK_I2C_ACTIONS_LENGTH - 1)
     {
         parameters->head = 0;
     }
@@ -212,7 +211,8 @@ uint8_t task_i2c_fifo_size(task_i2c_parameters_t *parameters)
     {
         return 0;
     }
-    else if ((parameters->head == (TASK_I2C_ACTIONS_LENGTH - 1) && parameters->tail == 0) || (parameters->head == (parameters->tail - 1)))
+    else if ((parameters->head == (TASK_I2C_ACTIONS_LENGTH - 1) && parameters->tail == 0) ||
+             (parameters->head == (parameters->tail - 1)))
     {
         return TASK_I2C_ACTIONS_LENGTH;
     }

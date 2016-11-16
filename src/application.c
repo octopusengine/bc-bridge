@@ -19,8 +19,8 @@ bc_bridge_t bridge;
 
 task_info_t task_info_list[] =
     {
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_LED,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_LED_ADDRESS ,                   NULL },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_I2C,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_I2C_ADDRESS ,                   NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_LED,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_LED_ADDRESS,                    NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_I2C,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_I2C_ADDRESS,                    NULL },
         { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL },
         { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL },
         { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,   NULL },
@@ -40,7 +40,7 @@ task_info_t task_info_list[] =
         { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_0, 0x3D,                                   NULL },
         { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_1, 0x3C,                                   NULL },
         { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_1, 0x3D,                                   NULL },
-   };
+    };
 
 size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);
 
@@ -66,7 +66,7 @@ void application_loop(bool *quit)
     *quit = false;
 
     bc_bridge_device_info_t devices[10];
-    memset(devices, 0, sizeof(devices) );
+    memset(devices, 0, sizeof(devices));
 
     uint8_t device_count;
     bc_tick_t last_init = 0;
@@ -75,7 +75,7 @@ void application_loop(bool *quit)
     while (true)
     {
 
-        device_count = sizeof(devices)/sizeof(bc_bridge_device_info_t);
+        device_count = sizeof(devices) / sizeof(bc_bridge_device_info_t);
 
         if (!bc_bridge_scan(devices, &device_count))
         {
@@ -106,7 +106,7 @@ void application_loop(bool *quit)
     while (bc_bridge_is_alive(&bridge))
     {
 
-        if (bc_tick_get() > last_init+APPLICATION_REINIT_INTERVAL )
+        if (bc_tick_get() > last_init + APPLICATION_REINIT_INTERVAL)
         {
             task_manager_init(&bridge, task_info_list, task_info_list_length);
             last_init = bc_tick_get();
@@ -126,7 +126,7 @@ void application_loop(bool *quit)
         task_manager_destroy_parameters(task_info_list, task_info_list_length);
 
         int i;
-        for (i=0; i < sizeof(devices)/sizeof(bc_bridge_device_info_t); i++)
+        for (i = 0; i < sizeof(devices) / sizeof(bc_bridge_device_info_t); i++)
         {
             if (devices[i].usb_path != NULL)
             {
@@ -315,7 +315,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             if (!task_i2c_set_command(&task_info, TASK_I2C_ACTION_TYPE_WRITE, event->value))
             {
-                bc_talk_i2c_attributes_destroy( event->value );
+                bc_talk_i2c_attributes_destroy(event->value);
             }
             break;
         }
@@ -323,7 +323,7 @@ static void _application_bc_talk_callback(bc_talk_event_t *event)
         {
             if (!task_i2c_set_command(&task_info, TASK_I2C_ACTION_TYPE_READ, event->value))
             {
-                bc_talk_i2c_attributes_destroy( event->value );
+                bc_talk_i2c_attributes_destroy(event->value);
             }
             break;
         }

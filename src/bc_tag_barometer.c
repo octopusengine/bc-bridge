@@ -135,7 +135,8 @@ bool bc_tag_barometer_one_shot_conversion_altitude(bc_tag_barometer_t *self)
         return false;
     }
 
-    if (!_bc_tag_barometer_write_register(self, MPL3115A2_PT_DATA_CFG, MPL3115A2_BIT_TDEFE|MPL3115A2_BIT_PDEFE|MPL3115A2_BIT_DREM))
+    if (!_bc_tag_barometer_write_register(self, MPL3115A2_PT_DATA_CFG,
+                                          MPL3115A2_BIT_TDEFE | MPL3115A2_BIT_PDEFE | MPL3115A2_BIT_DREM))
     {
         return false;
     }
@@ -155,7 +156,8 @@ bool bc_tag_barometer_one_shot_conversion_pressure(bc_tag_barometer_t *self)
         return false;
     }
 
-    if (!_bc_tag_barometer_write_register(self, MPL3115A2_PT_DATA_CFG, MPL3115A2_BIT_TDEFE|MPL3115A2_BIT_PDEFE|MPL3115A2_BIT_DREM))
+    if (!_bc_tag_barometer_write_register(self, MPL3115A2_PT_DATA_CFG,
+                                          MPL3115A2_BIT_TDEFE | MPL3115A2_BIT_PDEFE | MPL3115A2_BIT_DREM))
     {
         return false;
     }
@@ -175,7 +177,8 @@ bool bc_tag_barometer_continuous_conversion_altitude(bc_tag_barometer_t *self)
         return false;
     }
 
-    if (!_bc_tag_barometer_write_register(self, MPL3115A2_PT_DATA_CFG, MPL3115A2_BIT_TDEFE|MPL3115A2_BIT_PDEFE|MPL3115A2_BIT_DREM))
+    if (!_bc_tag_barometer_write_register(self, MPL3115A2_PT_DATA_CFG,
+                                          MPL3115A2_BIT_TDEFE | MPL3115A2_BIT_PDEFE | MPL3115A2_BIT_DREM))
     {
         return false;
     }
@@ -195,7 +198,8 @@ bool bc_tag_barometer_continuous_conversion_pressure(bc_tag_barometer_t *self)
         return false;
     }
 
-    if (!_bc_tag_barometer_write_register(self, MPL3115A2_PT_DATA_CFG, MPL3115A2_BIT_TDEFE|MPL3115A2_BIT_PDEFE|MPL3115A2_BIT_DREM))
+    if (!_bc_tag_barometer_write_register(self, MPL3115A2_PT_DATA_CFG,
+                                          MPL3115A2_BIT_TDEFE | MPL3115A2_BIT_PDEFE | MPL3115A2_BIT_DREM))
     {
         return false;
     }

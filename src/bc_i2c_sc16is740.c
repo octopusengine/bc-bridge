@@ -17,11 +17,9 @@
 #define BC_I2C_SC16IS740_REG_RXLVL               0x09
 #define BC_I2C_SC16IS740_REG_IOCONTROL           0x0E
 #define BC_I2C_SC16IS740_BIT_UART_SOFTWARE_RESET 0x08
-
 #define BC_I2C_SC16IS740_LCR_SPECIAL_REGISTER    0x80
 #define BC_I2C_SC16IS740_SPECIAL_REG_DLL         0x00
 #define BC_I2C_SC16IS740_SPECIAL_REG_DLH         0x01
-
 #define BC_I2C_SC16IS740_LCR_SPECIAL_ENHANCED_REGISTER  0xBF
 #define BC_I2C_SC16IS740_ENHANCED_REG_EFR        0x02
 
@@ -85,7 +83,6 @@ bool bc_ic2_sc16is740_available(bc_i2c_sc16is740_t *self)
 
 bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t length, bc_tick_t timeout)
 {
-    uint8_t register_rhr;
     uint8_t read_length = 0;
     bc_tick_t stop = bc_tick_get() + timeout;
     uint8_t register_rxlvl;
@@ -109,7 +106,8 @@ bool bc_ic2_sc16is740_read(bc_i2c_sc16is740_t *self, uint8_t *data, uint8_t leng
         if (register_rxlvl != 0)
         {
 
-            bc_log_debug("register_rhr length: %d register_rhr: %d read_length: %d", length, register_rxlvl, read_length);
+            bc_log_debug("register_rhr length: %d register_rhr: %d read_length: %d", length, register_rxlvl,
+                         read_length);
 
             transfer.buffer = data + read_length;
             transfer.length = length - read_length;

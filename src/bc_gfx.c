@@ -267,15 +267,15 @@ void bc_gfx_init(bc_gfx_t *self, uint8_t width, uint8_t height, uint8_t *buffer)
     self->_width = width;
     self->_height = height;
     self->_buffer = buffer;
-    self->_pages = self->_height/8;
-    self->_length = sizeof(uint8_t)*self->_width*self->_pages;
+    self->_pages = self->_height / 8;
+    self->_length = sizeof(uint8_t) * self->_width * self->_pages;
 
     self->_cursor = 0;
 }
 
 void bc_gfx_clean(bc_gfx_t *self)
 {
-    memset(self->_buffer, 0x00, self->_length );
+    memset(self->_buffer, 0x00, self->_length);
     self->_cursor = 0;
 }
 
@@ -283,16 +283,16 @@ void bc_gfx_text(bc_gfx_t *self, char *text)
 {
     int i;
 
-    for(i=0; i<strlen(text); i++ )
+    for (i = 0; i < strlen(text); i++)
     {
-        if (text[i]=='\n')
+        if (text[i] == '\n')
         {
             bc_gfx_newline(self);
             continue;
         }
-        for(int j=0; j<5; j++)
+        for (int j = 0; j < 5; j++)
         {
-            self->_buffer[self->_cursor++] = fonts[(uint8_t)text[i]*5+j];
+            self->_buffer[self->_cursor++] = fonts[(uint8_t) text[i] * 5 + j];
         }
         self->_cursor++;
     }
@@ -300,7 +300,7 @@ void bc_gfx_text(bc_gfx_t *self, char *text)
 
 void bc_gfx_newline(bc_gfx_t *self)
 {
-    self->_cursor = ((self->_cursor / self->_width) + 1 ) * self->_width;
+    self->_cursor = ((self->_cursor / self->_width) + 1) * self->_width;
     if (self->_cursor > self->_length)
     {
         self->_cursor = 0;
@@ -319,6 +319,6 @@ void bc_gfx_set_line(bc_gfx_t *self, uint8_t line)
 void bc_gfx_clean_line(bc_gfx_t *self, uint8_t line)
 {
     bc_gfx_set_line(self, line);
-    memset(self->_buffer+self->_cursor, 0x00, self->_width );
+    memset(self->_buffer + self->_cursor, 0x00, self->_width);
     bc_gfx_set_line(self, line);
 }

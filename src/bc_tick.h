@@ -2,6 +2,7 @@
 #define _BC_TICK_H
 
 #include "bc_common.h"
+
 typedef int64_t bc_tick_t;
 
 void bc_tick_init(void);

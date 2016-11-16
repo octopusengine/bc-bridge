@@ -11,12 +11,12 @@ void *task_led_worker(void *task_parameter)
     int blink_cnt = 0;
 
     task_worker_t *self = (task_worker_t *) task_parameter;
-    task_led_parameters_t *parameters = (task_led_parameters_t *)self->parameters;
+    task_led_parameters_t *parameters = (task_led_parameters_t *) self->parameters;
 
     bc_log_info("task_led_worker: started instance ");
 
     bc_os_mutex_lock(self->mutex);
-    if (last_state!=parameters->state)
+    if (last_state != parameters->state)
     {
         bc_os_semaphore_put(&self->semaphore);
     }
@@ -123,7 +123,7 @@ void *task_led_worker(void *task_parameter)
 void task_led_set_state(task_info_t *task_info, task_led_state_t state)
 {
     task_lock(task_info);
-    ((task_led_parameters_t *)task_info->parameters)->state = state;
+    ((task_led_parameters_t *) task_info->parameters)->state = state;
     task_unlock(task_info);
 
     task_semaphore_put(task_info);
@@ -132,6 +132,6 @@ void task_led_set_state(task_info_t *task_info, task_led_state_t state)
 void task_led_get_state(task_info_t *task_info, task_led_state_t *state)
 {
     task_lock(task_info);
-    *state = ((task_led_parameters_t *)task_info->parameters)->state;
+    *state = ((task_led_parameters_t *) task_info->parameters)->state;
     task_unlock(task_info);
 }

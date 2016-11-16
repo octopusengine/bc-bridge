@@ -5,7 +5,7 @@
 void task_relay_set_state(task_info_t *task_info, task_relay_state_t state)
 {
     task_lock(task_info);
-    ((task_relay_parameters_t *)task_info->parameters)->state = state;
+    ((task_relay_parameters_t *) task_info->parameters)->state = state;
     task_unlock(task_info);
 
     task_semaphore_put(task_info);
@@ -14,7 +14,7 @@ void task_relay_set_state(task_info_t *task_info, task_relay_state_t state)
 void task_relay_get_state(task_info_t *task_info, task_relay_state_t *state)
 {
     task_lock(task_info);
-    *state = ((task_relay_parameters_t *)task_info->parameters)->state;
+    *state = ((task_relay_parameters_t *) task_info->parameters)->state;
     task_unlock(task_info);
 }
 
@@ -22,7 +22,7 @@ void *task_relay_worker(void *task_parameter)
 {
 
     task_worker_t *self = (task_worker_t *) task_parameter;
-    task_relay_parameters_t *parameters = (task_relay_parameters_t *)self->parameters;
+    task_relay_parameters_t *parameters = (task_relay_parameters_t *) self->parameters;
 
     task_relay_state_t relay_state;
 
@@ -67,15 +67,16 @@ void *task_relay_worker(void *task_parameter)
         if (relay_state != TASK_RELAY_STATE_NULL)
         {
 
-            if (!bc_module_relay_set_state(&module_relay, relay_state == TASK_RELAY_STATE_FALSE ? BC_MODULE_RELAY_STATE_T
-                                                                                              : BC_MODULE_RELAY_STATE_F))
+            if (!bc_module_relay_set_state(&module_relay,
+                                           relay_state == TASK_RELAY_STATE_FALSE ? BC_MODULE_RELAY_STATE_T
+                                                                                 : BC_MODULE_RELAY_STATE_F))
             {
                 bc_log_error("task_relay_worker: bc_module_relay_set_state");
                 break;
             }
 
             bc_talk_publish_relay((int) relay_state, self->_device_address);
-            bc_os_task_sleep( 100L - (bc_tick_get() - self->_tick_last_feed) ); // click one per 100 ms
+            bc_os_task_sleep(100L - (bc_tick_get() - self->_tick_last_feed)); // click one per 100 ms
         }
 
     }

@@ -13,10 +13,12 @@ static char *bc_talk_device_names[256];
 
 const char *bc_talk_led_state[] = { "off", "on", "1-dot", "2-dot", "3-dot" };
 const char *bc_talk_bool[] = { "false", "true" };
-const char *bc_talk_lines[] = { "line-0", "line-1", "line-2", "line-3", "line-4", "line-5", "line-6", "line-7", "line-8" };
+const char *bc_talk_lines[] = {
+    "line-0", "line-1", "line-2", "line-3", "line-4", "line-5", "line-6", "line-7", "line-8"
+};
 
-const  char bc_talk_on_escape[] = {'\\','"','/','\b','\f','\n','\r','\t'};
-const  char bc_talk_escape[] = {'\\','"','/','b','f','n','r','t'};
+const char bc_talk_on_escape[] = { '\\', '"', '/', '\b', '\f', '\n', '\r', '\t' };
+const char bc_talk_escape[] = { '\\', '"', '/', 'b', 'f', 'n', 'r', 't' };
 
 
 static bc_os_mutex_t bc_talk_mutex;
@@ -26,7 +28,7 @@ static bc_talk_parse_callback bc_talk_callback = NULL;
 
 static bool _bc_talk_schema_check(int r, jsmntok_t *tokens);
 static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s);
-static char *_bc_talk_token_get_string(char *line, jsmntok_t *tok, char* output_str, size_t max_len);
+static char *_bc_talk_token_get_string(char *line, jsmntok_t *tok, char *output_str, size_t max_len);
 static int _bc_talk_token_get_uint(char *line, jsmntok_t *tok);
 static int _bc_talk_token_get_bool_as_int(char *line, jsmntok_t *tok);
 static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, const char *list[], size_t length);
@@ -144,7 +146,7 @@ bool bc_talk_is_clown_device(uint8_t device_address)
     return bc_talk_device_names[device_address] != NULL;
 }
 
-char *bc_talk_get_device_name(uint8_t device_address, char* output_str, size_t max_len )
+char *bc_talk_get_device_name(uint8_t device_address, char *output_str, size_t max_len)
 {
     char *str;
 
@@ -158,7 +160,8 @@ char *bc_talk_get_device_name(uint8_t device_address, char* output_str, size_t m
     }
 
     size_t l = strlen(str);
-    if (l+1 > max_len) {
+    if (l + 1 > max_len)
+    {
         return NULL;
     }
 
@@ -170,7 +173,7 @@ void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic
 {
     char name[BC_TALK_DEVICE_NAME_SIZE];
 
-    bc_talk_get_device_name(device_address, name, BC_TALK_DEVICE_NAME_SIZE );
+    bc_talk_get_device_name(device_address, name, BC_TALK_DEVICE_NAME_SIZE);
 
     if (name[0] == '!')
     {
@@ -180,11 +183,11 @@ void bc_talk_make_topic(uint8_t i2c_channel, uint8_t device_address, char *topic
     {
         if (device_address == BC_TALK_I2C_ADDRESS)
         {
-            snprintf(topic, topic_size, "%s/%d", name, i2c_channel );
+            snprintf(topic, topic_size, "%s/%d", name, i2c_channel);
         }
         else
         {
-            snprintf(topic, topic_size, "%s/-", name );
+            snprintf(topic, topic_size, "%s/-", name);
         }
     }
     else
@@ -232,7 +235,7 @@ void bc_talk_publish_i2c(bc_talk_i2c_attributes_t *attributes)
 
     char *data_string;
 
-    if ( attributes->write.buffer != NULL)
+    if (attributes->write.buffer != NULL)
     {
         data_string = _bc_talk_data_to_string(&attributes->write);
         if (data_string != NULL)
@@ -242,7 +245,7 @@ void bc_talk_publish_i2c(bc_talk_i2c_attributes_t *attributes)
         }
     }
 
-    if ( attributes->read.buffer != NULL)
+    if (attributes->read.buffer != NULL)
     {
         data_string = _bc_talk_data_to_string(&attributes->read);
         if (data_string != NULL)
@@ -289,7 +292,7 @@ bool bc_talk_parse_start(char *line, size_t length)
         return false;
     }
 
-    return _bc_talk_token_cmp(line, &tokens[1], "clown.talk/-/config/set" );
+    return _bc_talk_token_cmp(line, &tokens[1], "clown.talk/-/config/set");
 
 }
 
@@ -323,7 +326,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         bc_log_fatal("bc_talk_parse: call failed: malloc");
     }
 
-    strncpy(topic_string, line + tokens[1].start, (size_t)(tokens[1].end - tokens[1].start));
+    strncpy(topic_string, line + tokens[1].start, (size_t) (tokens[1].end - tokens[1].start));
     topic_string[tokens[1].end - tokens[1].start] = 0x00;
 
     bc_log_debug("bc_talk_parse: topic %s", topic_string);
@@ -349,7 +352,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         return false;
     }
 
-    if ((topic_length<3))
+    if ((topic_length < 3))
     {
         bc_log_error("bc_talk_parse: short topic, line: %s ", line);
         free(topic_string);
@@ -358,14 +361,14 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
 
     if (!_bc_talk_set_i2c(topic[0], topic[1], &event))
     {
-        bc_log_error("bc_talk_parse: bad i2c address, line: %s ", line );
+        bc_log_error("bc_talk_parse: bad i2c address, line: %s ", line);
 
         return false;
     }
 
     free(topic_string);
 
-    if ((strcmp(topic[2], "config") == 0) && (topic_length == 4) )
+    if ((strcmp(topic[2], "config") == 0) && (topic_length == 4))
     {
 
         if ((strcmp(topic[3], "list") == 0) && (r == 3) && (event.i2c_channel == 0) && (event.device_address == 0))
@@ -375,30 +378,30 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
             return true;
         }
 
-        if ((event.device_address == BC_TALK_I2C_ADDRESS) && (strcmp(topic[3], "scan") == 0) && (r == 3) )
+        if ((event.device_address == BC_TALK_I2C_ADDRESS) && (strcmp(topic[3], "scan") == 0) && (r == 3))
         {
-                event.operation = BC_TALK_OPERATION_I2C_SCAN;
+            event.operation = BC_TALK_OPERATION_I2C_SCAN;
 
-                if (strcmp(topic[1], "0") == 0)
-                {
-                    event.param = 0;
-                }
-                else if (strcmp(topic[1], "1") == 0)
-                {
-                    event.param = 1;
-                }
-                else
-                {
-                    bc_log_error("bc_talk_parse: bad i2c bus");
-                    return false;
-                }
+            if (strcmp(topic[1], "0") == 0)
+            {
+                event.param = 0;
+            }
+            else if (strcmp(topic[1], "1") == 0)
+            {
+                event.param = 1;
+            }
+            else
+            {
+                bc_log_error("bc_talk_parse: bad i2c bus");
+                return false;
+            }
 
-                callback(&event);
-                return true;
+            callback(&event);
+            return true;
         }
 
-        text_tmp = malloc(BC_TALK_DEVICE_NAME_SIZE*sizeof(char));
-        if (strcmp(topic[0], bc_talk_get_device_name(event.device_address, text_tmp, BC_TALK_DEVICE_NAME_SIZE )) != 0)
+        text_tmp = malloc(BC_TALK_DEVICE_NAME_SIZE * sizeof(char));
+        if (strcmp(topic[0], bc_talk_get_device_name(event.device_address, text_tmp, BC_TALK_DEVICE_NAME_SIZE)) != 0)
         {
             bc_log_error("bc_talk_parse: bad topic: contained %s expected %s", topic[2], text_tmp);
             return false;
@@ -434,8 +437,8 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         return true;
     }
 
-    text_tmp = malloc(BC_TALK_DEVICE_NAME_SIZE*sizeof(char));
-    if (strcmp(topic[0], bc_talk_get_device_name(event.device_address, text_tmp, BC_TALK_DEVICE_NAME_SIZE )) != 0)
+    text_tmp = malloc(BC_TALK_DEVICE_NAME_SIZE * sizeof(char));
+    if (strcmp(topic[0], bc_talk_get_device_name(event.device_address, text_tmp, BC_TALK_DEVICE_NAME_SIZE)) != 0)
     {
         bc_log_error("bc_talk_parse: bad topic: contained %s expected %s", topic[2], text_tmp);
         return false;
@@ -484,26 +487,26 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
         if (strcmp(topic[2], "set") == 0)
         {
 
-            if (_bc_talk_token_cmp(line, &tokens[3], "raw") && (r==5))
+            if (_bc_talk_token_cmp(line, &tokens[3], "raw") && (r == 5))
             {
                 event.operation = BC_TALK_OPERATION_RAW_SET;
 
-                text_tmp = malloc(sizeof(char)*BC_TALK_RAW_BASE64_LENGTH);
+                text_tmp = malloc(sizeof(char) * BC_TALK_RAW_BASE64_LENGTH);
                 uint8_t *buffer;
-                size_t buffer_length = sizeof(uint8_t)*BC_TALK_RAW_BUFFER_LENGTH;
+                size_t buffer_length = sizeof(uint8_t) * BC_TALK_RAW_BUFFER_LENGTH;
                 buffer = malloc(buffer_length);
 
-                _bc_talk_token_get_string(line, &tokens[4], text_tmp, BC_TALK_RAW_BASE64_LENGTH );
+                _bc_talk_token_get_string(line, &tokens[4], text_tmp, BC_TALK_RAW_BASE64_LENGTH);
                 bc_log_debug("base %s", text_tmp);
 
-                if (bc_base64_decode(buffer, &buffer_length, text_tmp, BC_TALK_RAW_BASE64_LENGTH ))
+                if (bc_base64_decode(buffer, &buffer_length, text_tmp, BC_TALK_RAW_BASE64_LENGTH))
                 {
                     event.value = buffer;
                 }
 
                 free(text_tmp);
 
-                if (event.value!=NULL)
+                if (event.value != NULL)
                 {
                     callback(&event);
                 }
@@ -512,14 +515,15 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
             else
             {
                 event.operation = BC_TALK_OPERATION_LINE_SET;
-                text_tmp = malloc(sizeof(char)*22);
+                text_tmp = malloc(sizeof(char) * 22);
                 for (i = 3; i < tokens[2].size * 2 + 3 && i + 1 < r; i += 2)
                 {
                     event.param = _bc_talk_token_find_index(line, &tokens[i], bc_talk_lines,
                                                             sizeof(bc_talk_lines) / sizeof(*bc_talk_lines));
-                    if ( event.param > -1 ){
+                    if (event.param > -1)
+                    {
 
-                        event.value = _bc_talk_token_get_string(line, &tokens[i + 1], text_tmp, 22 );
+                        event.value = _bc_talk_token_get_string(line, &tokens[i + 1], text_tmp, 22);
                         if (event.value != NULL)
                         {
                             callback(&event);
@@ -559,11 +563,11 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
 
         for (i = 3; i < tokens[2].size * 2 + 3 && i + 1 < r; i += 2)
         {
-            if (_bc_talk_token_cmp(line, &tokens[i], "address") && (tokens[i+1].type == JSMN_STRING))
+            if (_bc_talk_token_cmp(line, &tokens[i], "address") && (tokens[i + 1].type == JSMN_STRING))
             {
 
                 i2c_attributes->device_address = 128;
-                i2c_attributes->device_address = (uint8_t) strtol(line+tokens[i+1].start, NULL, 16);
+                i2c_attributes->device_address = (uint8_t) strtol(line + tokens[i + 1].start, NULL, 16);
                 if (i2c_attributes->device_address > 127)
                 {
                     bc_talk_i2c_attributes_destroy(i2c_attributes);
@@ -574,9 +578,9 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
                 }
 
             }
-            else if (_bc_talk_token_cmp(line, &tokens[i], "write") && (tokens[i+1].type == JSMN_STRING))
+            else if (_bc_talk_token_cmp(line, &tokens[i], "write") && (tokens[i + 1].type == JSMN_STRING))
             {
-                _bc_talk_token_get_data(line, &tokens[i+1], &i2c_attributes->write );
+                _bc_talk_token_get_data(line, &tokens[i + 1], &i2c_attributes->write);
 
                 if (i2c_attributes->write.encoding == BC_TALK_DATA_ENCODING_NULL)
                 {
@@ -587,9 +591,9 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
                     return false;
                 }
             }
-            else if (_bc_talk_token_cmp(line, &tokens[i], "read-length") && (tokens[i+1].type == JSMN_PRIMITIVE))
+            else if (_bc_talk_token_cmp(line, &tokens[i], "read-length") && (tokens[i + 1].type == JSMN_PRIMITIVE))
             {
-                i2c_attributes->read_length = _bc_talk_token_get_uint(line, &tokens[i+1]);
+                i2c_attributes->read_length = _bc_talk_token_get_uint(line, &tokens[i + 1]);
             }
         }
 
@@ -618,7 +622,7 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
 
         }
 
-        if ((event.operation == BC_TALK_OPERATION_I2C_READ) && (i2c_attributes->write.length > 2) )
+        if ((event.operation == BC_TALK_OPERATION_I2C_READ) && (i2c_attributes->write.length > 2))
         {
             bc_talk_i2c_attributes_destroy(i2c_attributes);
 
@@ -678,20 +682,21 @@ static bool _bc_talk_schema_check(int r, jsmntok_t *tokens)
 static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s)
 {
     if ((tok->type == JSMN_STRING) && ((int) strlen(s) == tok->end - tok->start) &&
-        (strncmp(line + tok->start, s, (size_t)(tok->end - tok->start)) == 0))
+        (strncmp(line + tok->start, s, (size_t) (tok->end - tok->start)) == 0))
     {
         return true;
     }
     return false;
 }
 
-static char *_bc_talk_token_get_string(char *line, jsmntok_t *tok, char* output_str, size_t max_len)
+static char *_bc_talk_token_get_string(char *line, jsmntok_t *tok, char *output_str, size_t max_len)
 {
     size_t l = (size_t) (tok->end - tok->start);
-    if (l > max_len) {
+    if (l > max_len)
+    {
         return NULL;
     }
-    strncpy(output_str, line+tok->start, l);
+    strncpy(output_str, line + tok->start, l);
 
     if (max_len > l)
     {
@@ -756,7 +761,7 @@ static int _bc_talk_token_find_index(char *line, jsmntok_t *tok, const char *lis
     }
 
     temp[temp_length] = 0x00;
-    strncpy(temp, line + tok->start, (size_t)temp_length);
+    strncpy(temp, line + tok->start, (size_t) temp_length);
 
     for (i = 0; i < length; i++)
     {
@@ -794,15 +799,15 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
 
     if (line[tok->start] == '(')
     {
-        if (line[tok->end - 1] != ')' )
+        if (line[tok->end - 1] != ')')
         {
             bc_log_error("_bc_talk_token_get_data: ascii expect )");
             return;
         }
         data->encoding = BC_TALK_DATA_ENCODING_ASCII;
-        data->buffer = malloc((l-2)*sizeof(uint8_t));
+        data->buffer = malloc((l - 2) * sizeof(uint8_t));
 
-        for (i = tok->start+1; i < (tok->end - 1); i++ )
+        for (i = tok->start + 1; i < (tok->end - 1); i++)
         {
             if (line[i] == '\\')
             {
@@ -823,36 +828,36 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
 
         }
 
-        if (length != (l-2))
+        if (length != (l - 2))
         {
             data->buffer = realloc(data->buffer, length);
         }
         data->length = length;
 
     }
-    else if ( (l < 3) || (line[tok->start+2] == ',') )
+    else if ((l < 3) || (line[tok->start + 2] == ','))
     {
         data->encoding = BC_TALK_DATA_ENCODING_HEX;
-        data->length = (l+1) / 3;
-        data->buffer = malloc(data->length*sizeof(uint8_t));
+        data->length = (l + 1) / 3;
+        data->buffer = malloc(data->length * sizeof(uint8_t));
 
-        char hex[3] = {0,0,0};
+        char hex[3] = { 0, 0, 0 };
         i = (size_t) tok->start;
 
-        while ( length < data->length )
+        while (length < data->length)
         {
             hex[0] = line[i];
-            hex[1] = line[i+1];
+            hex[1] = line[i + 1];
             data->buffer[length++] = (uint8_t) strtol(hex, NULL, 16);
 
-            if (i+3 > tok->end)
+            if (i + 3 > tok->end)
             {
                 break;
             }
 
-            if (line[i+2] != ',')
+            if (line[i + 2] != ',')
             {
-                bc_log_error("_bc_talk_token_get_data: hex encoding expect delimiter , get %c", line[i+2]);
+                bc_log_error("_bc_talk_token_get_data: hex encoding expect delimiter , get %c", line[i + 2]);
                 break;
             }
 
@@ -863,11 +868,11 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
     else
     {
         data->encoding = BC_TALK_DATA_ENCODING_BASE64;
-        data->length = bc_base64_calculate_decode_length(line+tok->start, l);
-        data->buffer = malloc(data->length*sizeof(uint8_t));
+        data->length = bc_base64_calculate_decode_length(line + tok->start, l);
+        data->buffer = malloc(data->length * sizeof(uint8_t));
         length = data->length;
 
-        if (!bc_base64_decode(data->buffer, &length, line+tok->start, l))
+        if (!bc_base64_decode(data->buffer, &length, line + tok->start, l))
         {
             data->length = 0;
         }
@@ -886,7 +891,7 @@ void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data)
 
 static char *_bc_talk_data_to_string(bc_talk_data_t *data)
 {
-    char *text=NULL;
+    char *text = NULL;
     size_t length;
     size_t i;
     int j;
@@ -902,7 +907,7 @@ static char *_bc_talk_data_to_string(bc_talk_data_t *data)
     {
 
         int escape = 0; // "
-        for(i = 0; i < data->length; i++)
+        for (i = 0; i < data->length; i++)
         {
 
             for (j = 0; j < sizeof(bc_talk_on_escape); j++)
@@ -914,7 +919,7 @@ static char *_bc_talk_data_to_string(bc_talk_data_t *data)
                 }
             }
 
-            if ( (j == sizeof(bc_talk_on_escape) ) && ( (data->buffer[i] > 127) || (data->buffer[i] < 32) ) )
+            if ((j == sizeof(bc_talk_on_escape)) && ((data->buffer[i] > 127) || (data->buffer[i] < 32)))
             {
                 data->encoding = BC_TALK_DATA_ENCODING_HEX;
                 break;
@@ -928,9 +933,9 @@ static char *_bc_talk_data_to_string(bc_talk_data_t *data)
             text = malloc(length);
             text[0] = '(';
             int offset = 1;
-            for(i = 0; i < data->length; i++)
+            for (i = 0; i < data->length; i++)
             {
-                for (j = 0; j < sizeof(bc_talk_on_escape); j++ )
+                for (j = 0; j < sizeof(bc_talk_on_escape); j++)
                 {
                     if (data->buffer[i] == bc_talk_on_escape[j])
                     {
@@ -938,19 +943,20 @@ static char *_bc_talk_data_to_string(bc_talk_data_t *data)
                     }
                 }
 
-                if (j < sizeof(bc_talk_on_escape)){
-                    text[i+offset] = '\\';
+                if (j < sizeof(bc_talk_on_escape))
+                {
+                    text[i + offset] = '\\';
                     offset++;
-                    text[i+offset] = bc_talk_escape[j];
+                    text[i + offset] = bc_talk_escape[j];
                 }
                 else
                 {
-                    text[i+offset] = (char)data->buffer[i];
+                    text[i + offset] = (char) data->buffer[i];
                 }
 
             }
-            text[i+offset] = ')';
-            text[i+offset+1] = 0x00;
+            text[i + offset] = ')';
+            text[i + offset + 1] = 0x00;
         }
     }
 
@@ -962,7 +968,7 @@ static char *_bc_talk_data_to_string(bc_talk_data_t *data)
 
         text[0] = 0x00;
 
-        for(i=0; i < data->length-1; i++)
+        for (i = 0; i < data->length - 1; i++)
         {
             snprintf(tmp, 4, "%02X,", data->buffer[i]);
             strcat(text, tmp);
@@ -1056,7 +1062,7 @@ static void *bc_talk_worker_stdin(void *parameter)
     {
         if (read > 7)
         {
-            bc_talk_parse(line, read, bc_talk_callback );
+            bc_talk_parse(line, read, bc_talk_callback);
         }
     }
 
