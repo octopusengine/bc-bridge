@@ -30,11 +30,6 @@ bool bc_tag_barometer_init(bc_tag_barometer_t *self, bc_i2c_interface_t *interfa
 
     self->disable_log = false;
 
-    if (!bc_tag_barometer_power_down(self))
-    {
-        return false;
-    }
-
     return true;
 }
 
