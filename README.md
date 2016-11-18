@@ -1,3 +1,5 @@
+# bc-bridge
+=======
 # Clown.Bridge
 
 Clown.Bridge is a proxy between BigClown's Bridge Module
@@ -55,6 +57,10 @@ Clown.Bridge is a proxy between BigClown's Bridge Module
     
     ["relay/i2c0-3b/set", {"state": true}]
     ["relay/i2c0-3b/set", {"state": false}]
+    
+##### Get actuator's state
+
+    ["relay/i2c0-3b/get", {}]
 
 
 ##### On Segmentation fault
