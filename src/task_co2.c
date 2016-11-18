@@ -10,6 +10,10 @@ void *task_co2_worker(void *task_parameter)
 {
     int16_t value;
     bc_tick_t tick_feed_interval;
+    bc_tick_t tick_publish_interval;
+    bc_tick_t tick_last_publish = 0;
+    bc_tick_t tick_feed_interval_publish;
+
     bc_module_co2_t module_co2;
 
     task_worker_t *self = (task_worker_t *) task_parameter;
@@ -30,15 +34,24 @@ void *task_co2_worker(void *task_parameter)
 
     task_worker_set_init_done(self);
 
+    self->_tick_last_feed = bc_tick_get();
+
+    bc_module_co2_task_set_calibration_request(&module_co2, BC_MODULE_CO2_CALIBRATION_ABC_RF);
+
     while (true)
     {
-        task_worker_get_interval(self, &tick_feed_interval);
+        task_worker_get_interval(self, &tick_publish_interval);
 
-        if (tick_feed_interval < 0)
+        bc_module_co2_task_get_feed_interval(&module_co2, &tick_feed_interval);
+
+        tick_feed_interval_publish = tick_publish_interval - (self->_tick_last_feed - tick_last_publish);
+
+        if ((tick_feed_interval_publish > 0) && (tick_feed_interval_publish < tick_feed_interval))
         {
-            bc_os_semaphore_get(&self->semaphore);
+            tick_feed_interval = tick_feed_interval_publish;
         }
-        else
+
+        if (tick_feed_interval > 0)
         {
             bc_os_semaphore_timed_get(&self->semaphore, tick_feed_interval);
         }
@@ -51,18 +64,23 @@ void *task_co2_worker(void *task_parameter)
             break;
         }
 
-        self->_tick_last_feed = bc_tick_get();
-
         bc_module_co2_task(&module_co2);
 
-        if (bc_module_co2_get_concentration(&module_co2, &value))
-        {
+        self->_tick_last_feed = bc_tick_get();
 
-            bc_log_info("task_co2_worker: concentration = %d ppm", value);
+        if (bc_module_co2_task_is_state_error(&module_co2))
+        {
+            return NULL;
+        }
+
+        if (bc_module_co2_task_get_concentration(&module_co2, &value) &&
+            ((tick_last_publish + tick_publish_interval) < self->_tick_last_feed))
+        {
             bc_talk_publish_begin("co2-sensor/i2c0-38");
             bc_talk_publish_add_quantity("concentration", "ppm", "%d", value);
             bc_talk_publish_end();
 
+            tick_last_publish = self->_tick_last_feed;
         }
 
     }
