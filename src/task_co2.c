@@ -13,6 +13,7 @@ void *task_co2_worker(void *task_parameter)
     bc_tick_t tick_publish_interval;
     bc_tick_t tick_last_publish = 0;
     bc_tick_t tick_feed_interval_publish;
+    bc_tick_t tick_next_calibration_request = 0;
 
     bc_module_co2_t module_co2;
 
@@ -35,8 +36,6 @@ void *task_co2_worker(void *task_parameter)
     task_worker_set_init_done(self);
 
     self->_tick_last_feed = bc_tick_get();
-
-    bc_module_co2_task_set_calibration_request(&module_co2, BC_MODULE_CO2_CALIBRATION_ABC_RF);
 
     while (true)
     {
@@ -81,6 +80,12 @@ void *task_co2_worker(void *task_parameter)
             bc_talk_publish_end();
 
             tick_last_publish = self->_tick_last_feed;
+        }
+
+        if (tick_next_calibration_request < self->_tick_last_feed)
+        {
+            bc_module_co2_task_set_calibration_request(&module_co2, BC_MODULE_CO2_CALIBRATION_ABC_RF);
+            tick_next_calibration_request = self->_tick_feed_interval + (7*24*3600*1000);
         }
 
     }
