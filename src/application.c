@@ -11,6 +11,7 @@
 #include "task_manager.h"
 #include "task.h"
 #include "task_display_oled.h"
+#include "bc_module_co2.h"
 
 
 #define APPLICATION_REINIT_INTERVAL 30000
@@ -35,7 +36,7 @@ task_info_t task_info_list[] =
         { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT, NULL },
         { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_DEFAULT,        NULL },
         { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_ALTERNATE,      NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_MODULE_CO2,       BC_BRIDGE_I2C_CHANNEL_0, 0x38,                                   NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_MODULE_CO2,       BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_CO2_I2C_GPIO_EXPANDER_ADDRESS,                                   NULL },
         { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_0, 0x3C,                                   NULL },
         { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_0, 0x3D,                                   NULL },
         { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_1, 0x3C,                                   NULL },
