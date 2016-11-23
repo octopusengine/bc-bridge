@@ -1,6 +1,10 @@
 # Change Log
 
-## [1.0.0] (2016-10-28)
+## [1.0.1] 2016-11-23
+Fixed bugs:
+- Fix Segmentation fault in bc_talk
+
+## [1.0.0] 2016-11-19
 Support 
 - Temperature TAG
 - Luxmeter TAG
@@ -10,4 +14,3 @@ Support
 - Relay Module
 - OLED I2C Device
 - i2c
-    
