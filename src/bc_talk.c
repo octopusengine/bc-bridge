@@ -348,14 +348,12 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
     if (topic_length > BC_TALK_MAX_SUBTOPIC)
     {
         bc_log_error("bc_talk_parse: too many subtopic, line: %s ", line);
-        free(topic_string);
         return false;
     }
 
     if ((topic_length < 3))
     {
         bc_log_error("bc_talk_parse: short topic, line: %s ", line);
-        free(topic_string);
         return false;
     }
 
@@ -365,8 +363,6 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
 
         return false;
     }
-
-    free(topic_string);
 
     if ((strcmp(topic[2], "config") == 0) && (topic_length == 4))
     {
