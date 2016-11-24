@@ -10,7 +10,7 @@
 #define BC_TALK_I2C_ADDRESS  0x81
 #define BC_TALK_UART_ADDRESS 0x82
 
-#define BC_TALK_DEVICE_NAME_SIZE 16
+#define BC_TALK_DEVICE_NAME_SIZE 21
 
 typedef enum
 {

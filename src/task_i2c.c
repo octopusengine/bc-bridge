@@ -17,7 +17,7 @@ void *task_i2c_worker(void *task_parameter)
     task_i2c_action_t *action;
 
     char slaves[1024] = "";
-    char address_text[3];
+    char address_text[45];
     char topic[32];
     bool add_comma;
     uint8_t address;
