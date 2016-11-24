@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(bc-bridge LANGUAGES C)
-set(PROJECT_VERSION 1.0.0)
+set(PROJECT_VERSION 1.0.2)
 
 set(CMAKE_BUILD_TYPE Debug)
 #set(CMAKE_VERBOSE_MAKEFILE on)
