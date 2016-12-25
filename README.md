@@ -11,8 +11,9 @@ Clown.Bridge is a proxy between BigClown's Bridge Module
 
     sudo apt-get install build-essential cmake git libudev-dev 
     git clone --recursive https://github.com/bigclownlabs/bc-bridge.git
-    cd bc-bridge
-    cmake .
+    mkdir -p bc-bridge/build
+    cd bc-bridge/build
+    cmake ..
     cmake --build .
     
 ##### Run without sudo
