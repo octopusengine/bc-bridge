@@ -3,7 +3,10 @@ cmake_minimum_required(VERSION 2.8)
 project(bc-bridge LANGUAGES C)
 set(PROJECT_VERSION 1.0.2)
 
-set(CMAKE_BUILD_TYPE Debug)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
 #set(CMAKE_VERBOSE_MAKEFILE on)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -std=gnu99")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/)
