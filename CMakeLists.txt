@@ -20,6 +20,17 @@ add_definitions(-D_BSD_SOURCE)
 add_definitions(-D_REENTRANT)
 add_definitions(-DTHREADSAFE)
 
+option(BUILD_STATIC "Build statically linked executable" FALSE)
+
+if(BUILD_STATIC)
+    set(BUILD_SHARED_LIBRARIES FALSE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static -fno-pie")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -no-pie")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+
+    find_library(LIBC libc.a c)
+endif()
+
 find_package(argp REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Libudev REQUIRED)
@@ -64,13 +75,18 @@ set(SOURCE_FILES
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} src/main.c)
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBUDEV_LIBRARIES} ${ARGP_LIBRARIES})
+if(BUILD_STATIC)
+    target_link_libraries(${PROJECT_NAME} ${LIBC})
+endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "bigclown")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libudev1")
 set(CPACK_MONOLITHIC_INSTALL 1)
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
+if(NOT BUILD_STATIC)
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libudev1")
+endif()
 
 include(CPack)
