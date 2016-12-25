@@ -1,0 +1,24 @@
+= Change Log
+:gh-url: https://github.com/bigclownlabs/bc-bridge
+
+== link:{gh-url}/tree/v1.0.2[1.0.2] (2016-11-24)
+
+Fixed::
+* Fix Clown.Talk response for i2c scan
+
+== link:{gh-url}/tree/v1.0.1[1.0.1] (2016-11-23)
+
+Fixed::
+* Fix Segmentation fault in bc_talk
+
+== link:{gh-url}/tree/v1.0.0[1.0.0] (2016-10-28)
+
+Added::
+* Temperature TAG
+* Luxmeter TAG
+* Humidity TAG
+* Barometer TAG
+* CO2 Module
+* Relay Module
+* OLED I2C Device
+* i2c
