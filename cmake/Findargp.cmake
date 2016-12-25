@@ -29,26 +29,26 @@ set(CMAKE_REQUIRED_QUIET TRUE)
 
 check_function_exists("argp_parse" ARGP_IN_LIBC)
 if (ARGP_IN_LIBC)
-	set(ARGP_LIBRARIES "c" CACHE STRING "ARGP libraries.")
+    set(ARGP_LIBRARIES "c" CACHE STRING "ARGP libraries.")
 
 elseif (NOT ARGP_IN_LIBC)
-	unset(ARGP_IN_LIBC CACHE)
+    unset(ARGP_IN_LIBC CACHE)
 
-	find_library(ARGP_LIB "argp")
-	mark_as_advanced(ARGP_LIB)
-	if (ARGP_LIB)
-		set(CMAKE_REQUIRED_LIBRARIES "${ARGP_LIB}")
-		check_function_exists("argp_parse" ARGP_EXTERNAL)
-		if (ARGP_EXTERNAL)
-			set(ARGP_LIBRARIES "${ARGP_LIB}" CACHE STRING "ARGP libraries.")
-		endif ()
-	endif ()
+    find_library(ARGP_LIB "argp")
+    mark_as_advanced(ARGP_LIB)
+    if (ARGP_LIB)
+        set(CMAKE_REQUIRED_LIBRARIES "${ARGP_LIB}")
+        check_function_exists("argp_parse" ARGP_EXTERNAL)
+        if (ARGP_EXTERNAL)
+            set(ARGP_LIBRARIES "${ARGP_LIB}" CACHE STRING "ARGP libraries.")
+        endif ()
+    endif ()
 endif ()
 
 set(CMAKE_REQUIRED_QUIET ${CMAKE_REQUIRED_QUIET_SAVE})
 
 
 find_package_handle_standard_args(argp
-	FOUND_VAR ARGP_FOUND
-	REQUIRED_VARS ARGP_LIBRARIES
+    FOUND_VAR ARGP_FOUND
+    REQUIRED_VARS ARGP_LIBRARIES
 )
