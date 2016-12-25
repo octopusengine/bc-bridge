@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
+cmake_policy(SET CMP0048 NEW)
 
-project(bc-bridge LANGUAGES C)
-set(PROJECT_VERSION 1.0.2)
+project(bc-bridge VERSION 1.0.2 LANGUAGES C)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
