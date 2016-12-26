@@ -1,0 +1,15 @@
+sudo: required
+dist: trusty
+language: c
+compiler: gcc
+env:
+  global:
+    - CHROOT_DIR=/alpine
+  matrix:
+    - ARCH=x86_64 LIBC=gnu
+    - ARCH=x86_64 LIBC=musl
+    - ARCH=armhf LIBC=musl
+install:
+  - sudo ./script/ci-install
+script:
+  - ./script/ci-build

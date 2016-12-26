@@ -1,0 +1,68 @@
+#!/bin/sh
+# vim: set ts=4:
+set -eu
+
+BINARY_NAME='bc-bridge'
+
+cd "$(dirname "$0")/.."
+. script/utils.sh
+
+
+if [ "$LIBC" = 'musl' ] && [ ! -f /enter-chroot ]; then
+	einfo 'Entering Alpine chroot'
+	exec "$CHROOT_DIR"/enter-chroot "$USER" "$0" "$@"
+fi
+
+
+if [ "$LIBC" = 'musl' ]; then
+	build_static='TRUE'
+	ctarget="$ARCH-linux-musl-static"
+	binary_type='statically linked'
+else
+	build_static='FALSE'
+	ctarget="$ARCH-linux-gnu"
+	binary_type='dynamically linked'
+fi
+
+mkdir -p build && cd build
+
+
+einfo 'Printing system information'
+
+run uname -a
+run gcc --version
+
+
+einfo "Building project for $ctarget"
+
+cmake .. \
+	-DCMAKE_BUILD_TYPE='RelWithDebInfo' \
+	-DCMAKE_C_FLAGS='-Os' \
+	-DBUILD_STATIC="$build_static" \
+	-DCPACK_SYSTEM_NAME="$ctarget" \
+	-DCMAKE_VERBOSE_MAKEFILE='TRUE' \
+	|| {
+		run cat CMakeFiles/CMakeError.log
+		die 'cmake failed'
+	}
+cmake --build .
+
+
+einfo 'Listing build directory'
+
+ls -lh
+
+
+einfo 'Checking built binary'
+
+run file $BINARY_NAME
+file $BINARY_NAME | grep -q "$binary_type" \
+	|| die "Binary is not $binary_type!"
+run ldd $BINARY_NAME || true
+
+run ./$BINARY_NAME --version
+
+
+einfo 'Creating packages'
+
+make package

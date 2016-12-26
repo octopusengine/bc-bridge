@@ -1,0 +1,39 @@
+#!/bin/sh
+# vim: set ts=4:
+set -eu
+
+cd "$(dirname "$0")/.."
+. script/utils.sh
+
+
+# Note: QEMU on Travis is ancient and doesn't support syscall getrandom on
+# arm (384), so we install newer version.
+if [ "$ARCH" = 'armhf' ]; then
+	ubuntu_release='yakkety'
+
+	einfo "Adding repository of ubuntu $ubuntu_release"
+	add-apt-repository "deb http://archive.ubuntu.com/ubuntu $ubuntu_release main universe"
+	cat > /etc/apt/preferences.d/$ubuntu_release <<-EOF
+		Package: *
+		Pin: release n=$ubuntu_release
+		Pin-Priority: -1
+	EOF
+	apt-get update
+
+	einfo "Installing qemu-user-static from $ubuntu_release"
+	apt-get install -t $ubuntu_release qemu-user-static
+fi
+
+if [ "$LIBC" = 'musl' ]; then
+	einfo 'Downloading alpine-chroot-install'
+	wgets 'https://raw.githubusercontent.com/jirutka/alpine-chroot-install/v0.1.1/alpine-chroot-install' \
+		'53b3d58c6c8dfb9e5a08f462ae762a9d09efbec33b5ac85bb7280d688c29928b'
+
+	sh alpine-chroot-install \
+		-a "$ARCH" -b v3.5 -k 'ARCH LIBC' -d "$CHROOT_DIR" \
+		-p 'build-base argp-standalone cmake eudev-dev file linux-headers'
+fi
+
+if [ "$LIBC" = 'gnu' ]; then
+	apt-get install libudev-dev
+fi
