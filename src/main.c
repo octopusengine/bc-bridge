@@ -62,8 +62,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         }
         case 'v':
         {
-            printf("version bc-bridge " FIRMWARE_RELEASE " " FIRMWARE_DATETIME " \n");
-            printf("support <support@bigclown.com> \n");
+            printf("bc-bridge " FIRMWARE_RELEASE " (built at " FIRMWARE_DATETIME ")\n");
             exit(EXIT_SUCCESS);
         }
         case 'l':
