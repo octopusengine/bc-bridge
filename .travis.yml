@@ -13,3 +13,12 @@ install:
   - sudo ./script/ci-install
 script:
   - ./script/ci-build
+deploy:
+  provider: releases
+  api_key:
+    secure: "pdRyPqnaNmN2xe74wYbNnB9OuVKgH+goMTQW1ald5BTAyTuS82OLBmuqhFucbPUTslgEl5HwDH0LWf0UqYyhmnOCY7dzw46VZHZR0jcdph9lXkIXM8/YaPjeM4z0myx/A/5LDj6s5XEYWkUAZru5zE3Aj8qViQYymPb4pb/rFBVjd4I52B8v9Ff74GJlPdMBKnoKgm7itjX1ppdsIb7zT24oNCkZoGRXb71KdgLEjarWoBxLJC3IH+XeZQMAWP6X43Nj0Mw1ECUtdT0NOyS2lr7NrK1NcyYpHVLsvpyYWFC6cEyp418TzDit3JYyi3EwhmzVSzzmGkYYNnAgbB6UXNrl4A3TQ6GEcZ0BFZpbfVjf2zTpuveLArcx93TfF873FGvuHm7eAkzxBQkxdh+Q/X9hj0kAfdC8dRH9KW8qNm8t3HuHyHbeiG3Nbn9SDcPRlyRyWiQtLsc0lIxDoRMQD9VcjPlFE5vqAwXJRATGp5OYJH/EyaIPkRyE53we0VrUJH2SFEXdT7CPLsbgVmeebR9ILacnaxZRYmWU8mDOmTtOj/rA9F3ji+508q9bX+v0EsslR0H2m4v5/lWUdUZnPkzzDJsd3AG3QwvQOjBr2LS6d2OZEQwrS2Fco/EDXy6KESjArQxdmy6+qzf9u0ekoLqNKPiuIVORv93UPsWJdZc="
+  file: build/bc-bridge-*.tar.gz
+  file_glob: true
+  skip_cleanup: true
+  on:
+    tags: true
