@@ -79,6 +79,21 @@ if(BUILD_STATIC)
     target_link_libraries(${PROJECT_NAME} ${LIBC})
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo AND CMAKE_OBJCOPY)
+    set(strip_scope "debug")
+    if(BUILD_STATIC)
+        set(strip_scope "all")
+    endif()
+
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMENT "Detaching debugging information from ${PROJECT_NAME} into separate file ${PROJECT_NAME}.debug"
+        COMMAND ${CMAKE_OBJCOPY} --only-keep-debug $<TARGET_FILE:${PROJECT_NAME}> $<TARGET_FILE:${PROJECT_NAME}>.debug
+        COMMAND ${CMAKE_OBJCOPY} --strip-${strip_scope} $<TARGET_FILE:${PROJECT_NAME}>
+        COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=$<TARGET_FILE_NAME:${PROJECT_NAME}>.debug $<TARGET_FILE:${PROJECT_NAME}>)
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.debug DESTINATION bin)
+endif()
+
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR "DEB")
