@@ -1,6 +1,8 @@
 #include "application.h"
 #include <argp.h>
 
+const char *argp_program_bug_address = "<support@bigclown.com>";
+
 static error_t parse_opt(int key, char *arg, struct argp_state *state);
 
 int main(int argc, char **argv)
