@@ -1,6 +1,15 @@
 = Change Log
 :gh-url: https://github.com/bigclownlabs/bc-bridge
 
+== link:{gh-url}/tree/v1.0.3[1.0.3] (unreleased)
+
+Infrastructure::
+* Fix `CMAKE_C_FLAGS` and `CMAKE_MODULE_PATH` to preserve old values.
+* Do not hardcode `CMAKE_BUILD_TYPE` in CMakeLists.txt.
+* Add CMake option `BUILD_STATIC` for building statically linked executable.
+* Strip binary and detach debug info into `.debug` file when using build type `RelWithDebInfo`.
+* Set up Travis CI to build binaries and upload them to GitHub Releases.
+
 == link:{gh-url}/tree/v1.0.2[1.0.2] (2016-11-24)
 
 Fixed::
