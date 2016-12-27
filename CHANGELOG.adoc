@@ -1,7 +1,10 @@
 = Change Log
 :gh-url: https://github.com/bigclownlabs/bc-bridge
 
-== link:{gh-url}/tree/v1.0.3[1.0.3] (unreleased)
+== link:{gh-url}/tree/v1.1.0[1.1.0] (unreleased)
+
+Changed::
+* Change `--version` message to follow more common format (e.g. `bc-bridge 1.0.2 (built at 2016-12-26T17:58:02Z)`) and move our support email to `--help` message.
 
 Infrastructure::
 * Fix `CMAKE_C_FLAGS` and `CMAKE_MODULE_PATH` to preserve old values.
