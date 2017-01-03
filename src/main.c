@@ -2,7 +2,7 @@
 #include <argp.h>
 
 #define OPTION_LIST 1000
-#define OPTION_ID   1001
+#define OPTION_NUM  1001
 #define OPTION_PATH 1002
 
 const char *argp_program_bug_address = "<support@bigclown.com>";
@@ -20,9 +20,9 @@ int main(int argc, char **argv)
 
     static struct argp_option options[] =
         {
-            { "list", OPTION_LIST, 0,       0, "Show list of available devices" },
-            { "id",   OPTION_ID,   "id",    0, "Select device by ID" },
-            { "path", OPTION_PATH, "path",  0, "Select device by path" },
+            { "dev-list", OPTION_LIST, 0,       0, "Show list of available devices" },
+            { "dev-num",  OPTION_NUM,   "NUM",   0, "Select device by NUM (this identifier is not stable!)" },
+            { "dev-path", OPTION_PATH, "PATH",  0, "Select device by PATH" },
             { "furious", 'f',      0,       0, "Do not wait for the initial start string" },
             { "log",     'l',      "level", 0, "dump|debug|info|warning|error|fatal" },
             { "version", 'v',      0,       0, "Show version" },
@@ -114,7 +114,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
             application_parameters->show_list = true;
             break;
         }
-        case OPTION_ID:
+        case OPTION_NUM:
         {
             char *end;
             application_parameters->order = (int) strtol(arg, &end, 10);

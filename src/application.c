@@ -72,10 +72,10 @@ void application_init(application_parameters_t *parameters)
             exit(EXIT_FAILURE);
         }
         int i;
-        printf("id path \n");
+        printf("NUM PATH\n");
         for (i = 0; i < device_count; i++)
         {
-            printf("% 2d %s \n", i, devices[i].usb_path);
+            printf("% 2d  %s\n", i, devices[i].usb_path);
         }
         exit(EXIT_SUCCESS);
     }
