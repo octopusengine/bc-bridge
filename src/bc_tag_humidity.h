@@ -4,6 +4,8 @@
 #include "bc_i2c.h"
 
 #define BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT 0x5F
+#define BC_TAG_HUMIDITY_DEVICE_2_ADDRESS_DEFAULT 0x40
+#define BC_TAG_HUMIDITY_DEVICE_2_ADDRESS_ALTERNATE 0x41
 
 typedef enum
 {
@@ -22,7 +24,7 @@ typedef struct
     bool _communication_fault;
     bool _calibration_not_read;
     bool disable_log;
-
+    bool is_hts221;
     int16_t h0_rh;
     int16_t h0_t0_out;
     float h_grad;

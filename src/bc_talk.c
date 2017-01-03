@@ -53,6 +53,8 @@ void bc_talk_init(bc_talk_parse_callback callback)
     bc_talk_device_names[0x3B] = "relay";
     bc_talk_device_names[0x3C] = "display-oled";
     bc_talk_device_names[0x3F] = "relay";
+    bc_talk_device_names[0x40] = "humidity-sensor";
+    bc_talk_device_names[0x41] = "humidity-sensor";
     bc_talk_device_names[0x44] = "lux-meter";
     bc_talk_device_names[0x45] = "lux-meter";
     bc_talk_device_names[0x48] = "thermometer";
