@@ -47,6 +47,7 @@ size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);
 
 static void _application_wait_start_string(void);
 static void _application_bc_talk_callback(bc_talk_event_t *event);
+static void _application_bridge_led_flashes(bc_bridge_t *bridge, int count);
 
 void application_init(application_parameters_t *parameters)
 {
@@ -100,6 +101,8 @@ void application_loop(bool *quit)
 
         return;
     }
+
+    _application_bridge_led_flashes(&bridge, 3);
 
     task_manager_init(&bridge, task_info_list, task_info_list_length);
     last_init = bc_tick_get();
@@ -172,6 +175,21 @@ static void _application_wait_start_string(void)
             }
 
         }
+    }
+}
+
+static void _application_bridge_led_flashes(bc_bridge_t *bridge, int count)
+{
+    int i;
+
+    bc_bridge_led_set_state(bridge, BC_BRIDGE_LED_STATE_OFF);
+
+    for (i=0; i<count; i++)
+    {
+        bc_os_task_sleep(200);
+        bc_bridge_led_set_state(bridge, BC_BRIDGE_LED_STATE_ON);
+        bc_os_task_sleep(200);
+        bc_bridge_led_set_state(bridge, BC_BRIDGE_LED_STATE_OFF);
     }
 }
 
