@@ -1,8 +1,11 @@
 #include "application.h"
 #include <argp.h>
 
-const char *argp_program_bug_address = "<support@bigclown.com>";
+#define OPTION_LIST 1000
+#define OPTION_ID   1001
+#define OPTION_PATH 1002
 
+const char *argp_program_bug_address = "<support@bigclown.com>";
 static error_t parse_opt(int key, char *arg, struct argp_state *state);
 
 int main(int argc, char **argv)
@@ -17,9 +20,12 @@ int main(int argc, char **argv)
 
     static struct argp_option options[] =
         {
-            { "furious", 'f', 0,       0, "Do not wait for the initial start string" },
-            { "log",     'l', "level", 0, "dump|debug|info|warning|error|fatal" },
-            { "version", 'v', 0,       0, "Show version" },
+            { "list", OPTION_LIST, 0,       0, "Show list of available devices" },
+            { "id",   OPTION_ID,   "id",    0, "Select device by ID" },
+            { "path", OPTION_PATH, "path",  0, "Select device by path" },
+            { "furious", 'f',      0,       0, "Do not wait for the initial start string" },
+            { "log",     'l',      "level", 0, "dump|debug|info|warning|error|fatal" },
+            { "version", 'v',      0,       0, "Show version" },
             { 0 }
         };
 
@@ -33,7 +39,10 @@ int main(int argc, char **argv)
     application_parameters_t application_parameters =
         {
             .furious_mode = false,
-            .log_level = BC_LOG_LEVEL_WARNING
+            .log_level = BC_LOG_LEVEL_WARNING,
+            .show_list = false,
+            .order = -1,
+            .path = NULL
         };
 
     argp_parse(&argp, argc, argv, 0, 0, &application_parameters);
@@ -44,7 +53,7 @@ int main(int argc, char **argv)
 
     while (!quit)
     {
-        application_loop(&quit);
+        application_loop(&quit, &application_parameters);
         sleep(1);
     }
 
@@ -98,6 +107,26 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
                 return ARGP_ERR_UNKNOWN;
             }
 
+            break;
+        }
+        case OPTION_LIST:
+        {
+            application_parameters->show_list = true;
+            break;
+        }
+        case OPTION_ID:
+        {
+            char *end;
+            application_parameters->order = (int) strtol(arg, &end, 10);
+            if (*end != '\0')
+            {
+                return ARGP_ERR_UNKNOWN;
+            }
+            break;
+        }
+        case OPTION_PATH:
+        {
+            application_parameters->path = strdup(arg);
             break;
         }
         default:

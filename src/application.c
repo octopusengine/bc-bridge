@@ -12,6 +12,7 @@
 #include "task.h"
 #include "task_display_oled.h"
 #include "bc_module_co2.h"
+#include "bc_bridge.h"
 
 
 #define APPLICATION_REINIT_INTERVAL 30000
@@ -20,27 +21,27 @@ bc_bridge_t bridge;
 
 task_info_t task_info_list[] =
     {
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_LED,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_LED_ADDRESS,                    NULL },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_I2C,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_I2C_ADDRESS,                    NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,     NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,   NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,   NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_DEFAULT,       NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_DEFAULT,       NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_ALTERNATE,     NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_ALTERNATE,     NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_BAROMETER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_BAROMETER_ADDRESS_DEFAULT,       NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_BAROMETER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_BAROMETER_ADDRESS_DEFAULT,       NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT, NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT, NULL },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_DEFAULT,        NULL },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_ALTERNATE,      NULL },
-        { TASK_CLASS_SENSOR,   TASK_TYPE_MODULE_CO2,       BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_CO2_I2C_GPIO_EXPANDER_ADDRESS,                                   NULL },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_0, 0x3C,                                   NULL },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_0, 0x3D,                                   NULL },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_1, 0x3C,                                   NULL },
-        { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_1, 0x3D,                                   NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_LED,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_LED_ADDRESS,                     NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_I2C,              BC_BRIDGE_I2C_CHANNEL_0, BC_TALK_I2C_ADDRESS,                     NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,      NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_DEFAULT,      NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,    NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_THERMOMETHER, BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_TEMPERATURE_ADDRESS_ALTERNATE,    NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_DEFAULT,        NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_DEFAULT,        NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_LUX_METER_ADDRESS_ALTERNATE,      NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_LUX_METER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_LUX_METER_ADDRESS_ALTERNATE,      NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_BAROMETER,    BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_BAROMETER_ADDRESS_DEFAULT,        NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_BAROMETER,    BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_BAROMETER_ADDRESS_DEFAULT,        NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_0, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT,  NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_TAG_HUMIDITY,     BC_BRIDGE_I2C_CHANNEL_1, BC_TAG_HUMIDITY_DEVICE_ADDRESS_DEFAULT,  NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_DEFAULT,         NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_MODULE_RELAY,     BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_RELAY_ADDRESS_ALTERNATE,       NULL },
+        { TASK_CLASS_SENSOR,   TASK_TYPE_MODULE_CO2,       BC_BRIDGE_I2C_CHANNEL_0, BC_MODULE_CO2_I2C_GPIO_EXPANDER_ADDRESS, NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_0, 0x3C,                                    NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_0, 0x3D,                                    NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_1, 0x3C,                                    NULL },
+        { TASK_CLASS_ACTUATOR, TASK_TYPE_DISPLAY_OLED,     BC_BRIDGE_I2C_CHANNEL_1, 0x3D,                                    NULL },
     };
 
 size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);
@@ -55,6 +56,26 @@ void application_init(application_parameters_t *parameters)
     bc_tick_init();
     bc_talk_init(_application_bc_talk_callback);
 
+    if (parameters->show_list)
+    {
+        bc_bridge_device_info_t devices[16];
+        memset(devices, 0, sizeof(devices));
+        uint8_t device_count = sizeof(devices) / sizeof(bc_bridge_device_info_t);
+
+        if (!bc_bridge_scan(devices, &device_count))
+        {
+            bc_log_error("application_loop: call failed: bc_bridge_scan");
+            exit(EXIT_FAILURE);
+        }
+        int i;
+        printf("id path \n");
+        for (i = 0; i < device_count; i++)
+        {
+            printf("% 2d %s \n", i, devices[i].usb_path);
+        }
+        exit(EXIT_SUCCESS);
+    }
+
     if (!parameters->furious_mode)
     {
         _application_wait_start_string();
@@ -63,21 +84,24 @@ void application_init(application_parameters_t *parameters)
     memset(&bridge, 0, sizeof(bridge));
 }
 
-void application_loop(bool *quit)
+void application_loop(bool *quit, application_parameters_t *parameters)
 {
     *quit = false;
 
-    bc_bridge_device_info_t devices[10];
+    bc_bridge_device_info_t devices[16];
     memset(devices, 0, sizeof(devices));
 
     uint8_t device_count;
+    int selected_devices;
     bc_tick_t last_init = 0;
+    int i;
 
     bc_log_info("application_loop: searching device");
     while (true)
     {
 
         device_count = sizeof(devices) / sizeof(bc_bridge_device_info_t);
+        selected_devices = -1;
 
         if (!bc_bridge_scan(devices, &device_count))
         {
@@ -88,6 +112,32 @@ void application_loop(bool *quit)
 
         if (device_count > 0)
         {
+            if (parameters->order > -1)
+            {
+                if (parameters->order < device_count)
+                {
+                    selected_devices = parameters->order;
+                }
+            }
+            else if (parameters->path != NULL)
+            {
+                for (i = 0; i < device_count; i++)
+                {
+                    if (strcmp(devices[i].usb_path, parameters->path) != -1)
+                    {
+                        selected_devices = i;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                selected_devices = 0;
+            }
+        }
+
+        if (selected_devices > -1)
+        {
             break;
         }
 
@@ -95,7 +145,7 @@ void application_loop(bool *quit)
 
     }
 
-    if (!bc_bridge_open(&bridge, &devices[0]))
+    if (!bc_bridge_open(&bridge, &devices[selected_devices]))
     {
         bc_log_error("application_loop: call failed: bc_bridge_open");
 
@@ -129,7 +179,6 @@ void application_loop(bool *quit)
     {
         task_manager_destroy_parameters(task_info_list, task_info_list_length);
 
-        int i;
         for (i = 0; i < sizeof(devices) / sizeof(bc_bridge_device_info_t); i++)
         {
             if (devices[i].usb_path != NULL)
@@ -184,7 +233,7 @@ static void _application_bridge_led_flashes(bc_bridge_t *bridge, int count)
 
     bc_bridge_led_set_state(bridge, BC_BRIDGE_LED_STATE_OFF);
 
-    for (i=0; i<count; i++)
+    for (i = 0; i < count; i++)
     {
         bc_os_task_sleep(200);
         bc_bridge_led_set_state(bridge, BC_BRIDGE_LED_STATE_ON);
