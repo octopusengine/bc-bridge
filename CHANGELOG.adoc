@@ -12,6 +12,7 @@ Infrastructure::
 * Add CMake option `BUILD_STATIC` for building statically linked executable.
 * Strip binary and detach debug info into `.debug` file when using build type `RelWithDebInfo`.
 * Set up Travis CI to build binaries and upload them to GitHub Releases.
+* Set up Travis CI to make Debian packages and upload them to our repository.
 
 == link:{gh-url}/tree/v1.0.2[1.0.2] (2016-11-24)
 
