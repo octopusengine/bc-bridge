@@ -35,5 +35,5 @@ if [ "$LIBC" = 'musl' ]; then
 fi
 
 if [ "$LIBC" = 'gnu' ]; then
-	apt-get install libudev-dev
+	apt-get install build-essential cmake pkg-config libudev-dev
 fi
