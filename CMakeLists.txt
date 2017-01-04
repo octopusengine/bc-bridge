@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 cmake_policy(SET CMP0048 NEW)
 
 project(bc-bridge VERSION 1.0.2 LANGUAGES C)
@@ -91,18 +91,51 @@ if(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo AND CMAKE_OBJCOPY)
         COMMAND ${CMAKE_OBJCOPY} --strip-${strip_scope} $<TARGET_FILE:${PROJECT_NAME}>
         COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=$<TARGET_FILE_NAME:${PROJECT_NAME}>.debug $<TARGET_FILE:${PROJECT_NAME}>)
 
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.debug DESTINATION bin)
+    set(debug_file ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.debug)
+
+    install(FILES ${debug_file} DESTINATION bin COMPONENT debug)
+    # This is used only for DEB package, see cmake/CPackProjectConfig.cmake.
+    install(FILES ${debug_file} DESTINATION lib/debug/usr/bin COMPONENT dbg EXCLUDE_FROM_ALL)
 endif()
 
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin COMPONENT main)
 
+
+################################################################################
+# Configure CPack                                                              #
+################################################################################
+
+# Common properties
 set(CPACK_GENERATOR "TGZ;DEB")
+set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_SOURCE_DIR}/cmake/CPackProjectConfig.cmake)
+
+set(CPACK_PACKAGE_CONTACT "BigClown Labs <support@bigclown.com>")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Software interface between Clown.Hub and Bridge Module")
+set(CPACK_PACKAGE_VENDOR "BigClown Labs")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "bigclown")
-set(CPACK_MONOLITHIC_INSTALL 1)
-set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
+
+# Debian packages
+set(CPACK_DEB_COMPONENT_INSTALL ON)
+set(CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS TRUE)
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/bigclownlabs/bc-bridge")
+
+set(CPACK_DEBIAN_MAIN_PACKAGE_NAME ${PROJECT_NAME})
+set(CPACK_DEBIAN_MAIN_PACKAGE_SECTION comm)
 if(NOT BUILD_STATIC)
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libudev1")
+    set(CPACK_DEBIAN_MAIN_PACKAGE_DEPENDS "libudev1")
+endif()
+
+set(CPACK_DEBIAN_DBG_PACKAGE_DESCRIPTION_SUMMARY "${CPACK_PACKAGE_DESCRIPTION_SUMMARY} (debug symbols)")
+set(CPACK_DEBIAN_DBG_PACKAGE_PRIORITY extra)
+set(CPACK_DEBIAN_DBG_PACKAGE_SECTION debug)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE amd64)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "armhf|armv7")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE armhf)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|armv8|arm64")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE arm64)
 endif()
 
 include(CPack)
