@@ -24,7 +24,7 @@ else
 	binary_type='dynamically linked'
 fi
 
-mkdir -p build && cd build
+mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
 
 
 einfo 'Printing system information'

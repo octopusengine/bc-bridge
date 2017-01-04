@@ -1,4 +1,5 @@
 /build
+.deploykey
 
 # Default template for CMake projects
 CMakeCache.txt

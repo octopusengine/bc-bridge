@@ -1,5 +1,8 @@
 # vim: set ts=4:
 
+: ${BUILD_DIR:="$(pwd)/build"}
+
+
 die() {
 	# bold red
 	printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2

@@ -1,0 +1,30 @@
+#!/bin/sh
+# vim: set ts=4:
+set -eu
+
+cd "$(dirname "$0")/.."
+. script/utils.sh
+
+DEPLOY_REMOTE='deployer@repo.bigclown.com'
+: ${DEBIAN_RELEASE:="jessie"}
+
+
+if [ -z "$(ls "$BUILD_DIR"/*.deb)" ]; then
+	die "Directory $BUILD_DIR does not contain any *.deb files!"
+fi
+
+if [ -n "${TRAVIS:-}" ]; then
+	./script/travis-decrypt
+fi
+
+einfo 'Uploading deb packages to repository'
+rsync --verbose \
+	--ignore-existing \
+	--chmod og=rw \
+	--rsh='ssh -i .deploykey -o StrictHostKeyChecking=no' \
+	"$BUILD_DIR"/*.deb \
+	"$DEPLOY_REMOTE":/var/lib/freight/apt/$DEBIAN_RELEASE/
+
+einfo 'Rebuilding package repository'
+# Note: GPG_PASS is encrypted in .travis.yml
+ssh -i .deploykey "$DEPLOY_REMOTE" GPG_PASS="$GPG_PASS" rebuild-repo
