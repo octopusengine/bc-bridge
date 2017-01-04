@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.0)
 cmake_policy(SET CMP0048 NEW)
 
 project(bc-bridge VERSION 1.0.2 LANGUAGES C)
@@ -94,8 +94,12 @@ if(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo AND CMAKE_OBJCOPY)
     set(debug_file ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.debug)
 
     install(FILES ${debug_file} DESTINATION bin COMPONENT debug)
-    # This is used only for DEB package, see cmake/CPackProjectConfig.cmake.
-    install(FILES ${debug_file} DESTINATION lib/debug/usr/bin COMPONENT dbg EXCLUDE_FROM_ALL)
+
+    # To keep this file compatible with old CMake...
+    if(NOT CMAKE_VERSION VERSION_LESS 3.5)
+        # This is used only for DEB package, see cmake/CPackProjectConfig.cmake.
+        install(FILES ${debug_file} DESTINATION lib/debug/usr/bin COMPONENT dbg EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin COMPONENT main)
@@ -106,8 +110,13 @@ install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin COMPONENT main)
 ################################################################################
 
 # Common properties
-set(CPACK_GENERATOR "TGZ;DEB")
-set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_SOURCE_DIR}/cmake/CPackProjectConfig.cmake)
+if(CMAKE_VERSION VERSION_LESS 3.5)
+    set(CPACK_GENERATOR "TGZ")
+    message(WARNING "DEB packages will not be generated (requires CMake >=3.5).")
+else()
+    set(CPACK_GENERATOR "TGZ;DEB")
+    set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_SOURCE_DIR}/cmake/CPackProjectConfig.cmake)
+endif()
 
 set(CPACK_PACKAGE_CONTACT "BigClown Labs <support@bigclown.com>")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Software interface between Clown.Hub and Bridge Module")
