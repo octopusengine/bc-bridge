@@ -5,9 +5,8 @@
 Added::
 * Support for Humidity TAG R2.1
 * New command options:
-** `--dev-list` Show list of available devices
-** `--dev-num`  Select device by NUM (this identifier is not stable!)
-** `--dev-path` Select device by PATH
+** `--list` Show list of available devices
+** `--dev` Select device by ID or PATH (beware that ID may change with USB ports' manipulation)
 
 Changed::
 * Change `--version` message to follow more common format (e.g. `bc-bridge 1.0.2 (built at 2016-12-26T17:58:02Z)`) and move our support email to `--help` message.
