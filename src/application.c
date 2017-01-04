@@ -52,7 +52,7 @@ size_t task_info_list_length = sizeof(task_info_list) / sizeof(task_info_t);
 
 static void _application_wait_start_string(void);
 static void _application_bc_talk_callback(bc_talk_event_t *event);
-static void _application_bridge_led_flashes(bc_bridge_t *bridge, int count);
+static void _application_bridge_flash_led(bc_bridge_t *bridge, int count);
 
 void application_init(application_parameters_t *parameters)
 {
@@ -60,22 +60,20 @@ void application_init(application_parameters_t *parameters)
     bc_tick_init();
     bc_talk_init(_application_bc_talk_callback);
 
-    if (parameters->show_list)
+    if (parameters->dev_list)
     {
         bc_bridge_device_info_t devices[16];
         memset(devices, 0, sizeof(devices));
-        uint8_t device_count = sizeof(devices) / sizeof(bc_bridge_device_info_t);
+        uint8_t devices_count = sizeof(devices) / sizeof(bc_bridge_device_info_t);
 
-        if (!bc_bridge_scan(devices, &device_count))
+        if (!bc_bridge_scan(devices, &devices_count))
         {
             bc_log_error("application_loop: call failed: bc_bridge_scan");
             exit(EXIT_FAILURE);
         }
-        int i;
-        printf("NUM PATH\n");
-        for (i = 0; i < device_count; i++)
+        for (int i = 0; i < devices_count; i++)
         {
-            printf("% 2d  %s\n", i, devices[i].usb_path);
+            printf("% 2d: %s\n", i, devices[i].usb_path);
         }
         exit(EXIT_SUCCESS);
     }
@@ -95,8 +93,8 @@ void application_loop(bool *quit, application_parameters_t *parameters)
     bc_bridge_device_info_t devices[16];
     memset(devices, 0, sizeof(devices));
 
-    uint8_t device_count;
-    int selected_devices;
+    uint8_t devices_count;
+    int selected_device;
     bc_tick_t last_init = 0;
     int i;
 
@@ -104,43 +102,43 @@ void application_loop(bool *quit, application_parameters_t *parameters)
     while (true)
     {
 
-        device_count = sizeof(devices) / sizeof(bc_bridge_device_info_t);
-        selected_devices = -1;
+        devices_count = sizeof(devices) / sizeof(bc_bridge_device_info_t);
+        selected_device = -1;
 
-        if (!bc_bridge_scan(devices, &device_count))
+        if (!bc_bridge_scan(devices, &devices_count))
         {
             bc_log_error("application_loop: call failed: bc_bridge_scan");
 
             return;
         }
 
-        if (device_count > 0)
+        if (devices_count > 0)
         {
-            if (parameters->order > -1)
+            if (parameters->dev_num > -1)
             {
-                if (parameters->order < device_count)
+                if (parameters->dev_num < devices_count)
                 {
-                    selected_devices = parameters->order;
+                    selected_device = parameters->dev_num;
                 }
             }
-            else if (parameters->path != NULL)
+            else if (parameters->dev_path != NULL)
             {
-                for (i = 0; i < device_count; i++)
+                for (i = 0; i < devices_count; i++)
                 {
-                    if (strcmp(devices[i].usb_path, parameters->path) != -1)
+                    if (strcmp(devices[i].usb_path, parameters->dev_path) == 0)
                     {
-                        selected_devices = i;
+                        selected_device = i;
                         break;
                     }
                 }
             }
             else
             {
-                selected_devices = 0;
+                selected_device = 0;
             }
         }
 
-        if (selected_devices > -1)
+        if (selected_device > -1)
         {
             break;
         }
@@ -149,14 +147,14 @@ void application_loop(bool *quit, application_parameters_t *parameters)
 
     }
 
-    if (!bc_bridge_open(&bridge, &devices[selected_devices]))
+    if (!bc_bridge_open(&bridge, &devices[selected_device]))
     {
         bc_log_error("application_loop: call failed: bc_bridge_open");
 
         return;
     }
 
-    _application_bridge_led_flashes(&bridge, 3);
+    _application_bridge_flash_led(&bridge, 3);
 
     task_manager_init(&bridge, task_info_list, task_info_list_length);
     last_init = bc_tick_get();
@@ -231,7 +229,7 @@ static void _application_wait_start_string(void)
     }
 }
 
-static void _application_bridge_led_flashes(bc_bridge_t *bridge, int count)
+static void _application_bridge_flash_led(bc_bridge_t *bridge, int count)
 {
     int i;
 

@@ -8,9 +8,9 @@ typedef struct
 {
     bool furious_mode;
     bc_log_level_t log_level;
-    bool show_list;
-    int order;
-    char *path;
+    bool dev_list;
+    int dev_num;
+    char *dev_path;
 
 } application_parameters_t;
 

@@ -2,8 +2,7 @@
 #include <argp.h>
 
 #define OPTION_LIST 1000
-#define OPTION_NUM  1001
-#define OPTION_PATH 1002
+#define OPTION_DEV  1001
 
 const char *argp_program_bug_address = "<support@bigclown.com>";
 static error_t parse_opt(int key, char *arg, struct argp_state *state);
@@ -20,12 +19,11 @@ int main(int argc, char **argv)
 
     static struct argp_option options[] =
         {
-            { "dev-list", OPTION_LIST, 0,       0, "Show list of available devices" },
-            { "dev-num",  OPTION_NUM,   "NUM",   0, "Select device by NUM (this identifier is not stable!)" },
-            { "dev-path", OPTION_PATH, "PATH",  0, "Select device by PATH" },
-            { "furious", 'f',      0,       0, "Do not wait for the initial start string" },
-            { "log",     'l',      "level", 0, "dump|debug|info|warning|error|fatal" },
-            { "version", 'v',      0,       0, "Show version" },
+            { "list", OPTION_LIST, 0,         0, "Show list of available devices" },
+            { "dev",  OPTION_DEV,  "ID|PATH", 0, "Select device by ID or PATH (beware that ID may change with USB ports' manipulation)" },
+            { "furious", 'f',      0,         0, "Do not wait for the initial start string" },
+            { "log",     'L',      "level",   0, "Set desired log level to one of the following options: dump|debug|info|warning|error|fatal" },
+            { "version", 'v',      0,         0, "Give version information" },
             { 0 }
         };
 
@@ -40,9 +38,9 @@ int main(int argc, char **argv)
         {
             .furious_mode = false,
             .log_level = BC_LOG_LEVEL_WARNING,
-            .show_list = false,
-            .order = -1,
-            .path = NULL
+            .dev_list = false,
+            .dev_num = -1,
+            .dev_path = NULL
         };
 
     argp_parse(&argp, argc, argv, 0, 0, &application_parameters);
@@ -111,22 +109,18 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         }
         case OPTION_LIST:
         {
-            application_parameters->show_list = true;
+            application_parameters->dev_list = true;
             break;
         }
-        case OPTION_NUM:
+        case OPTION_DEV:
         {
             char *end;
-            application_parameters->order = (int) strtol(arg, &end, 10);
+            application_parameters->dev_num = (int) strtol(arg, &end, 10);
             if (*end != '\0')
             {
-                return ARGP_ERR_UNKNOWN;
+                application_parameters->dev_path = strdup(arg);
+                application_parameters->dev_num = -1;
             }
-            break;
-        }
-        case OPTION_PATH:
-        {
-            application_parameters->path = strdup(arg);
             break;
         }
         default:
