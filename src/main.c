@@ -39,7 +39,7 @@ int main(int argc, char **argv)
             .furious_mode = false,
             .log_level = BC_LOG_LEVEL_WARNING,
             .dev_list = false,
-            .dev_num = -1,
+            .dev_id = -1,
             .dev_path = NULL
         };
 
@@ -115,11 +115,11 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         case OPTION_DEV:
         {
             char *end;
-            application_parameters->dev_num = (int) strtol(arg, &end, 10);
+            application_parameters->dev_id = (int) strtol(arg, &end, 10);
             if (*end != '\0')
             {
                 application_parameters->dev_path = strdup(arg);
-                application_parameters->dev_num = -1;
+                application_parameters->dev_id = -1;
             }
             break;
         }

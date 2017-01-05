@@ -114,11 +114,11 @@ void application_loop(bool *quit, application_parameters_t *parameters)
 
         if (devices_count > 0)
         {
-            if (parameters->dev_num > -1)
+            if (parameters->dev_id > -1)
             {
-                if (parameters->dev_num < devices_count)
+                if (parameters->dev_id < devices_count)
                 {
-                    selected_device = parameters->dev_num;
+                    selected_device = parameters->dev_id;
                 }
             }
             else if (parameters->dev_path != NULL)
