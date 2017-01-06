@@ -11,6 +11,9 @@ typedef struct
     bool dev_list;
     int dev_id;
     char *dev_path;
+    char *host;
+    int port;
+    char *prefix;
 
 } application_parameters_t;
 

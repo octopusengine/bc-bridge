@@ -12,8 +12,6 @@
 #include "task.h"
 #include "task_display_oled.h"
 #include "bc_module_co2.h"
-#include "bc_bridge.h"
-
 
 #define APPLICATION_REINIT_INTERVAL 30000
 
@@ -58,7 +56,16 @@ void application_init(application_parameters_t *parameters)
 {
     bc_log_init(parameters->log_level);
     bc_tick_init();
-    bc_talk_init(_application_bc_talk_callback);
+
+    if ((parameters->host != NULL) && (parameters->prefix != NULL))
+    {
+        bc_talk_init_mqtt(_application_bc_talk_callback, parameters->host, parameters->port, parameters->prefix);
+        parameters->furious_mode = true;
+    }
+    else
+    {
+        bc_talk_init_std(_application_bc_talk_callback);
+    }
 
     if (parameters->dev_list)
     {
@@ -201,6 +208,8 @@ void application_loop(bool *quit, application_parameters_t *parameters)
             }
             devices[i].path_uart = NULL;
         }
+
+        bc_talk_destroy();
     }
 
 }
