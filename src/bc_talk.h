@@ -69,7 +69,10 @@ typedef struct
 
 typedef void (*bc_talk_parse_callback)(bc_talk_event_t *event);
 
-void bc_talk_init(bc_talk_parse_callback callback);
+void bc_talk_init_std(bc_talk_parse_callback callback);
+void bc_talk_init_mqtt(bc_talk_parse_callback callback, char *host, int port, char *prefix);
+void bc_talk_destroy(void);
+
 void bc_talk_publish_begin(char *topic);
 void bc_talk_publish_begin_auto(uint8_t i2c_channel, uint8_t device_address);
 void bc_talk_publish_begin_auto_subtopic(uint8_t i2c_channel, uint8_t device_address, char *subtopic);

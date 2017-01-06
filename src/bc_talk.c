@@ -3,6 +3,7 @@
 #include <jsmn.h>
 #include "bc_log.h"
 #include "bc_base64.h"
+#include <MQTTAsync.h>
 
 #define BC_TALK_MAX_SUBTOPIC 4
 
@@ -20,12 +21,27 @@ const char *bc_talk_lines[] = {
 const char bc_talk_on_escape[] = { '\\', '"', '/', '\b', '\f', '\n', '\r', '\t' };
 const char bc_talk_escape[] = { '\\', '"', '/', 'b', 'f', 'n', 'r', 't' };
 
+static struct
+{
+    char topic[256];
+    char payload[BC_TALK_RAW_BASE64_LENGTH + 512];
+    size_t length;
+
+} bc_talk_msq;
 
 static bc_os_mutex_t bc_talk_mutex;
 static bc_os_task_t bc_talk_task_stdin;
+
+static bool bc_talk_mqtt = false;
+static MQTTAsync bc_talk_mqtt_client;
+static char *bc_talk_mqtt_prefix = NULL;
+static size_t bc_talk_mqtt_prefix_length = -1;
+static char bc_talk_mqtt_talk_buffer[BC_TALK_RAW_BASE64_LENGTH + 1024];
+
 static bool bc_talk_add_comma = false;
 static bc_talk_parse_callback bc_talk_callback = NULL;
 
+static void _bc_talk_init(bc_talk_parse_callback callback);
 static bool _bc_talk_schema_check(int r, jsmntok_t *tokens);
 static bool _bc_talk_token_cmp(char *line, jsmntok_t *tok, const char *s);
 static char *_bc_talk_token_get_string(char *line, jsmntok_t *tok, char *output_str, size_t max_len);
@@ -37,45 +53,70 @@ static void *bc_talk_worker_stdin(void *parameter);
 void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data);
 static char *_bc_talk_data_to_string(bc_talk_data_t *data);
 
-void bc_talk_init(bc_talk_parse_callback callback)
-{
+static void _bc_talk_mqtt_connect_callback(void* context, MQTTAsync_successData* response);
+static int _bc_talk_mqtt_message_callback(void *context, char *topic, int length, MQTTAsync_message *message);
 
-    if (callback == NULL)
+static void _bc_talk_mqtt_connection_lost_callback(void *context, char *cause);
+void _bc_talk_mqtt_connect_failure_callback(void* context, MQTTAsync_failureData* response);
+static void _bc_talk_mqtt_subscribe_failure_callback(void* context, MQTTAsync_failureData* response);
+
+void bc_talk_init_std(bc_talk_parse_callback callback)
+{
+    _bc_talk_init(callback);
+
+    bc_os_task_init(&bc_talk_task_stdin, bc_talk_worker_stdin, NULL);
+}
+
+void bc_talk_init_mqtt(bc_talk_parse_callback callback, char *host, int port, char *prefix)
+{
+    _bc_talk_init(callback);
+
+    bc_talk_mqtt = true;
+    bc_talk_mqtt_prefix = prefix;
+    strcpy(bc_talk_msq.topic, bc_talk_mqtt_prefix);
+    strcat(bc_talk_msq.topic, "/");
+    bc_talk_mqtt_prefix_length = strlen(bc_talk_mqtt_prefix);
+
+    char serverURI[64];
+    sprintf(serverURI, "tcp://%s:%d", host, port);
+
+    MQTTAsync_create(&bc_talk_mqtt_client, serverURI, "clientID", MQTTCLIENT_PERSISTENCE_NONE, NULL);
+
+    MQTTAsync_setCallbacks(bc_talk_mqtt_client, NULL, _bc_talk_mqtt_connection_lost_callback,
+                           _bc_talk_mqtt_message_callback, NULL);
+
+    MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
+    conn_opts.keepAliveInterval = 20;
+    conn_opts.cleansession = 1;
+    conn_opts.onSuccess = _bc_talk_mqtt_connect_callback;
+    conn_opts.onFailure = _bc_talk_mqtt_connect_failure_callback;
+    conn_opts.context = bc_talk_mqtt_client;
+    conn_opts.automaticReconnect = 5;
+    conn_opts.maxRetryInterval = 1;
+
+    if (MQTTAsync_connect(bc_talk_mqtt_client, &conn_opts) != MQTTASYNC_SUCCESS)
     {
-        bc_log_fatal("task_thermometer_spawn: callback == NULL");
+        bc_log_fatal("bc_talk_init_mqtt: Unable to connect.");
     }
 
-    bc_talk_callback = callback;
+}
 
-    memset(bc_talk_device_names, 0, sizeof(bc_talk_device_names));
-
-    bc_talk_device_names[0x38] = "co2-sensor";
-    bc_talk_device_names[0x3B] = "relay";
-    bc_talk_device_names[0x3C] = "display-oled";
-    bc_talk_device_names[0x3F] = "relay";
-    bc_talk_device_names[0x40] = "humidity-sensor";
-    bc_talk_device_names[0x41] = "humidity-sensor";
-    bc_talk_device_names[0x44] = "lux-meter";
-    bc_talk_device_names[0x45] = "lux-meter";
-    bc_talk_device_names[0x48] = "thermometer";
-    bc_talk_device_names[0x49] = "thermometer";
-    bc_talk_device_names[0x4D] = "!co2-sensor-i2c-uart";
-    bc_talk_device_names[0x5F] = "humidity-sensor";
-    bc_talk_device_names[0x60] = "barometer";
-    bc_talk_device_names[0x70] = "!i2c-selector";
-    bc_talk_device_names[BC_TALK_LED_ADDRESS] = "led";
-    bc_talk_device_names[BC_TALK_I2C_ADDRESS] = "i2c";
-    bc_talk_device_names[BC_TALK_UART_ADDRESS] = "uart";
-
-    bc_os_mutex_init(&bc_talk_mutex);
-    bc_os_task_init(&bc_talk_task_stdin, bc_talk_worker_stdin, NULL);
+void bc_talk_destroy(void)
+{
+    if (bc_talk_mqtt)
+    {
+        MQTTAsync_destroy(&bc_talk_mqtt_client);
+    }
 }
 
 void bc_talk_publish_begin(char *topic)
 {
     bc_os_mutex_lock(&bc_talk_mutex);
     bc_talk_add_comma = false;
-    fprintf(stdout, "[\"%s\", {", topic);
+
+    strcpy(bc_talk_msq.topic + bc_talk_mqtt_prefix_length + 1, topic);
+    strcpy(bc_talk_msq.payload, "{");
+    bc_talk_msq.length = 1;
 }
 
 void bc_talk_publish_begin_auto(uint8_t i2c_channel, uint8_t device_address)
@@ -100,20 +141,19 @@ void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...)
 
     if (bc_talk_add_comma)
     {
-        fprintf(stdout, ", ");
+        strcat(bc_talk_msq.payload, ", ");
+        bc_talk_msq.length += 2;
     }
 
-    fprintf(stdout, "\"%s\": [", name);
-
+    bc_talk_msq.length += sprintf(bc_talk_msq.payload + bc_talk_msq.length, "\"%s\": [", name);
 
     va_start(ap, value);
-    vfprintf(stdout, value, ap);
+    bc_talk_msq.length += vsprintf(bc_talk_msq.payload + bc_talk_msq.length, value, ap);
     va_end(ap);
 
-    fprintf(stdout, ", \"%s\"]", unit);
+    bc_talk_msq.length += sprintf(bc_talk_msq.payload + bc_talk_msq.length, ", \"%s\"]", unit);
 
     bc_talk_add_comma = true;
-
 }
 
 void bc_talk_publish_add_value(char *name, char *value, ...)
@@ -122,13 +162,14 @@ void bc_talk_publish_add_value(char *name, char *value, ...)
 
     if (bc_talk_add_comma)
     {
-        fprintf(stdout, ", ");
+        strcat(bc_talk_msq.payload, ", ");
+        bc_talk_msq.length += 2;
     }
 
-    fprintf(stdout, "\"%s\": ", name);
+    bc_talk_msq.length += sprintf(bc_talk_msq.payload + bc_talk_msq.length, "\"%s\": ", name);
 
     va_start(ap, value);
-    vfprintf(stdout, value, ap);
+    bc_talk_msq.length += vsprintf(bc_talk_msq.payload + bc_talk_msq.length, value, ap);
     va_end(ap);
 
     bc_talk_add_comma = true;
@@ -137,7 +178,23 @@ void bc_talk_publish_add_value(char *name, char *value, ...)
 
 void bc_talk_publish_end(void)
 {
-    fprintf(stdout, "}]\n");
+    strcat(bc_talk_msq.payload, "}");
+    bc_talk_msq.length++;
+
+    if (bc_talk_mqtt)
+    {
+        MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
+
+        pubmsg.payload = bc_talk_msq.payload;
+        pubmsg.payloadlen = strlen(bc_talk_msq.payload);
+
+        if (MQTTAsync_sendMessage(bc_talk_mqtt_client, bc_talk_msq.topic, &pubmsg, NULL) != MQTTASYNC_SUCCESS)
+        {
+            bc_log_warning("Mqtt failed to start send message");
+        }
+    }
+
+    fprintf(stdout, "[\"%s\", %s]\n", bc_talk_msq.topic, bc_talk_msq.payload);
     fflush(stdout);
 
     bc_os_mutex_unlock(&bc_talk_mutex);
@@ -642,6 +699,39 @@ bool bc_talk_parse(char *line, size_t length, bc_talk_parse_callback callback)
     return true;
 }
 
+static void _bc_talk_init(bc_talk_parse_callback callback)
+{
+
+    if (callback == NULL)
+    {
+        bc_log_fatal("_bc_talk_init: callback == NULL");
+    }
+
+    bc_talk_callback = callback;
+
+    memset(bc_talk_device_names, 0, sizeof(bc_talk_device_names));
+
+    bc_talk_device_names[0x38] = "co2-sensor";
+    bc_talk_device_names[0x3B] = "relay";
+    bc_talk_device_names[0x3C] = "display-oled";
+    bc_talk_device_names[0x3F] = "relay";
+    bc_talk_device_names[0x40] = "humidity-sensor";
+    bc_talk_device_names[0x41] = "humidity-sensor";
+    bc_talk_device_names[0x44] = "lux-meter";
+    bc_talk_device_names[0x45] = "lux-meter";
+    bc_talk_device_names[0x48] = "thermometer";
+    bc_talk_device_names[0x49] = "thermometer";
+    bc_talk_device_names[0x4D] = "!co2-sensor-i2c-uart";
+    bc_talk_device_names[0x5F] = "humidity-sensor";
+    bc_talk_device_names[0x60] = "barometer";
+    bc_talk_device_names[0x70] = "!i2c-selector";
+    bc_talk_device_names[BC_TALK_LED_ADDRESS] = "led";
+    bc_talk_device_names[BC_TALK_I2C_ADDRESS] = "i2c";
+    bc_talk_device_names[BC_TALK_UART_ADDRESS] = "uart";
+
+    bc_os_mutex_init(&bc_talk_mutex);
+}
+
 static bool _bc_talk_schema_check(int r, jsmntok_t *tokens)
 {
     if (r < 0)
@@ -1070,4 +1160,73 @@ static void *bc_talk_worker_stdin(void *parameter)
     }
 
     return NULL;
+}
+
+void _bc_talk_mqtt_connect_callback(void* context, MQTTAsync_successData* response)
+{
+    MQTTAsync client = (MQTTAsync)context;
+    MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
+
+    bc_log_info("Mqtt successful connection");
+
+    opts.onFailure = _bc_talk_mqtt_subscribe_failure_callback;
+    opts.context = client;
+
+    char topic[128];
+
+    sprintf(topic, "%s/+/+/+", bc_talk_mqtt_prefix);
+    if (MQTTAsync_subscribe(client, topic, 0, &opts) != MQTTASYNC_SUCCESS)
+    {
+        bc_log_fatal("Mqtt failed to start subscribe");
+    }
+
+    sprintf(topic, "%s/+/+/+/+", bc_talk_mqtt_prefix);
+    if (MQTTAsync_subscribe(client,  topic, 0, &opts) != MQTTASYNC_SUCCESS)
+    {
+        bc_log_fatal("Mqtt failed to start subscribe");
+    }
+}
+
+static int _bc_talk_mqtt_message_callback(void *context, char *topic, int length, MQTTAsync_message *message)
+{
+    if (message->payloadlen)
+    {
+        if (strlen(message->payload) > message->payloadlen)
+        {
+            ((char *) message->payload)[message->payloadlen] = 0x00;
+        }
+
+        bc_log_info("mqtt message %s %s\n", topic, (char *) message->payload);
+
+        if ((strncmp(topic, bc_talk_mqtt_prefix, bc_talk_mqtt_prefix_length) == 0) && (bc_talk_mqtt_prefix_length + 2 < length))
+        {
+            size_t length = sprintf(bc_talk_mqtt_talk_buffer, "[\"%s\",%s]", topic + bc_talk_mqtt_prefix_length + 1, (char *) message->payload);
+
+            bc_talk_parse(bc_talk_mqtt_talk_buffer, length, bc_talk_callback);
+        }
+    }
+    else
+    {
+        bc_log_info("mqtt message %s (null)\n", topic);
+    }
+
+    MQTTAsync_freeMessage(&message);
+    MQTTAsync_free(topic);
+
+    return 1;
+}
+
+static void _bc_talk_mqtt_connection_lost_callback(void *context, char *cause)
+{
+    bc_log_warning("Mqtt connection lost, cause: %s", cause);
+}
+
+void _bc_talk_mqtt_connect_failure_callback(void* context, MQTTAsync_failureData* response)
+{
+    bc_log_warning("Mqtt connect failed, rc %d", response ? response->code : 0);
+}
+
+static void _bc_talk_mqtt_subscribe_failure_callback(void* context, MQTTAsync_failureData* response)
+{
+    bc_log_warning("Mqtt subscribe failed, rc %d", response ? response->code : 0);
 }
