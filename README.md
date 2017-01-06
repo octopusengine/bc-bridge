@@ -20,9 +20,7 @@ Clown.Bridge is a proxy between BigClown's Bridge Module
 
 > create file /etc/udev/rules.d/99-bc-bridge.rules with this content
 
-    SUBSYSTEM !="usb_device", ACTION !="add", GOTO="device_rules_end"
-    SYSFS{idVendor} =="0403", SYSFS{idProduct} =="6030", SYMLINK+="bc_bridge_device" MODE="0666", TAG+="uaccess"
-    LABEL="device_rules_end"
+    ACTION=="add", KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6030", TAG+="uaccess"
 
 
 ##### How to run
