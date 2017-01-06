@@ -1,8 +1,11 @@
 #include "application.h"
 #include <argp.h>
 
-#define OPTION_LIST 1000
-#define OPTION_DEV  1001
+#define OPTION_LIST    1000
+#define OPTION_DEV     1001
+#define OPTION_HOST    1002
+#define OPTION_PORT    1003
+#define OPTION_PREFIX  1004
 
 const char *argp_program_bug_address = "<support@bigclown.com>";
 static error_t parse_opt(int key, char *arg, struct argp_state *state);
@@ -19,11 +22,14 @@ int main(int argc, char **argv)
 
     static struct argp_option options[] =
         {
-            { "list", OPTION_LIST, 0,         0, "Show list of available devices" },
-            { "dev",  OPTION_DEV,  "ID|PATH", 0, "Select device by ID or PATH (beware that ID may change with USB ports' manipulation)" },
-            { "furious", 'f',      0,         0, "Do not wait for the initial start string" },
-            { "log",     'L',      "level",   0, "Set desired log level to one of the following options: dump|debug|info|warning|error|fatal" },
-            { "version", 'v',      0,         0, "Give version information" },
+            { "list",   OPTION_LIST,   0,         0, "Show list of available devices" },
+            { "dev",    OPTION_DEV,    "ID|PATH", 0, "Select device by ID or PATH (beware that ID may change with USB ports' manipulation)" },
+            { "host",   OPTION_HOST,   "HOST",    0, "MQTT host to connect to" },
+            { "port",   OPTION_PORT,   "PORT",    0, "MQTT port to connect to (default is 1883)" },
+            { "prefix", OPTION_PREFIX, "PREFIX",  0, "MQTT prefix topic" },
+            { "furious", 'f',          0,         0, "Do not wait for the initial start string" },
+            { "log",     'L',          "level",   0, "Set desired log level to one of the following options: dump|debug|info|warning|error|fatal" },
+            { "version", 'v',          0,         0, "Give version information" },
             { 0 }
         };
 
@@ -40,7 +46,10 @@ int main(int argc, char **argv)
             .log_level = BC_LOG_LEVEL_WARNING,
             .dev_list = false,
             .dev_id = -1,
-            .dev_path = NULL
+            .dev_path = NULL,
+            .host = NULL,
+            .port = 1883,
+            .prefix = NULL
         };
 
     argp_parse(&argp, argc, argv, 0, 0, &application_parameters);
@@ -74,7 +83,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
             printf("bc-bridge " FIRMWARE_RELEASE " (built at " FIRMWARE_DATETIME ")\n");
             exit(EXIT_SUCCESS);
         }
-        case 'l':
+        case 'L':
         {
             if (strcmp(arg, "dump") == 0)
             {
@@ -121,6 +130,26 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
                 application_parameters->dev_path = strdup(arg);
                 application_parameters->dev_id = -1;
             }
+            break;
+        }
+        case OPTION_HOST:
+        {
+            application_parameters->host = strdup(arg);
+            break;
+        }
+        case OPTION_PORT:
+        {
+            char *end;
+            application_parameters->port = (int) strtol(arg, &end, 10);
+            if (*end != '\0')
+            {
+                return ARGP_ERR_UNKNOWN;
+            }
+            break;
+        }
+        case OPTION_PREFIX:
+        {
+            application_parameters->prefix = strdup(arg);
             break;
         }
         default:
