@@ -38,7 +38,7 @@ find_package(Libudev REQUIRED)
 include_directories(jsmn)
 include_directories(src)
 
-ADD_SUBDIRECTORY(paho.mqtt.c/src)
+ADD_SUBDIRECTORY(paho.mqtt.c)
 include_directories(paho.mqtt.c/src)
 
 set(SOURCE_FILES

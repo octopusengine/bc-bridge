@@ -7,6 +7,9 @@ BINARY_NAME='bc-bridge'
 cd "$(dirname "$0")/.."
 . script/utils.sh
 
+if [ "$LIBC" = 'musl' ]; then
+    patch paho.mqtt.c/src/CMakeLists.txt paho-mqtt-src-CMakeLists.txt.diff
+fi
 
 if [ "$LIBC" = 'musl' ] && [ ! -f /enter-chroot ]; then
 	einfo 'Entering Alpine chroot'
