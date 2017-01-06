@@ -4,9 +4,13 @@
 == link:{gh-url}/tree/v1.1.0[1.1.0] (unreleased)
 Added::
 * Support for Humidity TAG R2.1
+* Support mqtt
 * New command options:
 ** `--list` Show list of available devices
 ** `--dev` Select device by ID or PATH (beware that ID may change with USB ports' manipulation)
+** `--host` MQTT host to connect to
+** `--prefix` MQTT prefix topic
+** `--port` MQTT port to connect to (default is 1883)"
 
 Changed::
 * Change `--version` message to follow more common format (e.g. `bc-bridge 1.0.2 (built at 2016-12-26T17:58:02Z)`) and move our support email to `--help` message.
