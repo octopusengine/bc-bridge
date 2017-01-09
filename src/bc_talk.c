@@ -27,7 +27,7 @@ static struct
     char payload[BC_TALK_RAW_BASE64_LENGTH + 512];
     size_t length;
 
-} bc_talk_msq;
+} bc_talk_msg;
 
 static bc_os_mutex_t bc_talk_mutex;
 static bc_os_task_t bc_talk_task_stdin;
@@ -74,12 +74,12 @@ void bc_talk_init_mqtt(bc_talk_parse_callback callback, char *host, int port, ch
     bc_talk_mqtt = true;
     bc_talk_mqtt_prefix = prefix;
     bc_talk_mqtt_prefix_length = strlen(bc_talk_mqtt_prefix);
-    if ((sizeof(bc_talk_msq.topic) - bc_talk_mqtt_prefix_length) < 128)
+    if ((sizeof(bc_talk_msg.topic) - bc_talk_mqtt_prefix_length) < 128)
     {
         bc_log_fatal("too long prefix");
     }
-    strncpy(bc_talk_msq.topic, bc_talk_mqtt_prefix, bc_talk_mqtt_prefix_length);
-    strncat(bc_talk_msq.topic, "/", 1);
+    strncpy(bc_talk_msg.topic, bc_talk_mqtt_prefix, bc_talk_mqtt_prefix_length);
+    strncat(bc_talk_msg.topic, "/", 1);
 
     char serverURI[64];
     sprintf(serverURI, "tcp://%s:%d", host, port);
@@ -118,10 +118,10 @@ void bc_talk_publish_begin(char *topic)
     bc_os_mutex_lock(&bc_talk_mutex);
     bc_talk_add_comma = false;
 
-    strncpy(bc_talk_msq.topic + bc_talk_mqtt_prefix_length + 1, topic,
-            sizeof(bc_talk_msq.topic) - bc_talk_mqtt_prefix_length - 1);
-    strncpy(bc_talk_msq.payload, "{", sizeof(bc_talk_msq.payload));
-    bc_talk_msq.length = 1;
+    strncpy(bc_talk_msg.topic + bc_talk_mqtt_prefix_length + 1, topic,
+            sizeof(bc_talk_msg.topic) - bc_talk_mqtt_prefix_length - 1);
+    strncpy(bc_talk_msg.payload, "{", sizeof(bc_talk_msg.payload));
+    bc_talk_msg.length = 1;
 }
 
 void bc_talk_publish_begin_auto(uint8_t i2c_channel, uint8_t device_address)
@@ -146,20 +146,20 @@ void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...)
 
     if (bc_talk_add_comma)
     {
-        strncat(bc_talk_msq.payload, ", ", sizeof(bc_talk_msq.payload) - bc_talk_msq.length);
-        bc_talk_msq.length += 2;
+        strncat(bc_talk_msg.payload, ", ", sizeof(bc_talk_msg.payload) - bc_talk_msg.length);
+        bc_talk_msg.length += 2;
     }
 
-    bc_talk_msq.length += snprintf(bc_talk_msq.payload + bc_talk_msq.length,
-                                   sizeof(bc_talk_msq.payload) - bc_talk_msq.length, "\"%s\": [", name);
+    bc_talk_msg.length += snprintf(bc_talk_msg.payload + bc_talk_msg.length,
+                                   sizeof(bc_talk_msg.payload) - bc_talk_msg.length, "\"%s\": [", name);
 
     va_start(ap, value);
-    bc_talk_msq.length += vsnprintf(bc_talk_msq.payload + bc_talk_msq.length,
-                                    sizeof(bc_talk_msq.payload) - bc_talk_msq.length, value, ap);
+    bc_talk_msg.length += vsnprintf(bc_talk_msg.payload + bc_talk_msg.length,
+                                    sizeof(bc_talk_msg.payload) - bc_talk_msg.length, value, ap);
     va_end(ap);
 
-    bc_talk_msq.length += snprintf(bc_talk_msq.payload + bc_talk_msq.length,
-                                   sizeof(bc_talk_msq.payload) - bc_talk_msq.length, ", \"%s\"]", unit);
+    bc_talk_msg.length += snprintf(bc_talk_msg.payload + bc_talk_msg.length,
+                                   sizeof(bc_talk_msg.payload) - bc_talk_msg.length, ", \"%s\"]", unit);
 
     bc_talk_add_comma = true;
 }
@@ -170,16 +170,16 @@ void bc_talk_publish_add_value(char *name, char *value, ...)
 
     if (bc_talk_add_comma)
     {
-        strncat(bc_talk_msq.payload, ", ", sizeof(bc_talk_msq.payload) - bc_talk_msq.length);
-        bc_talk_msq.length += 2;
+        strncat(bc_talk_msg.payload, ", ", sizeof(bc_talk_msg.payload) - bc_talk_msg.length);
+        bc_talk_msg.length += 2;
     }
 
-    bc_talk_msq.length += snprintf(bc_talk_msq.payload + bc_talk_msq.length,
-                                   sizeof(bc_talk_msq.payload) - bc_talk_msq.length, "\"%s\": ", name);
+    bc_talk_msg.length += snprintf(bc_talk_msg.payload + bc_talk_msg.length,
+                                   sizeof(bc_talk_msg.payload) - bc_talk_msg.length, "\"%s\": ", name);
 
     va_start(ap, value);
-    bc_talk_msq.length += vsnprintf(bc_talk_msq.payload + bc_talk_msq.length,
-                                    sizeof(bc_talk_msq.payload) - bc_talk_msq.length, value, ap);
+    bc_talk_msg.length += vsnprintf(bc_talk_msg.payload + bc_talk_msg.length,
+                                    sizeof(bc_talk_msg.payload) - bc_talk_msg.length, value, ap);
     va_end(ap);
 
     bc_talk_add_comma = true;
@@ -188,23 +188,23 @@ void bc_talk_publish_add_value(char *name, char *value, ...)
 
 void bc_talk_publish_end(void)
 {
-    strncat(bc_talk_msq.payload, "}", sizeof(bc_talk_msq.payload) - bc_talk_msq.length);
-    bc_talk_msq.length++;
+    strncat(bc_talk_msg.payload, "}", sizeof(bc_talk_msg.payload) - bc_talk_msg.length);
+    bc_talk_msg.length++;
 
     if (bc_talk_mqtt)
     {
         MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
 
-        pubmsg.payload = bc_talk_msq.payload;
-        pubmsg.payloadlen = bc_talk_msq.length;
+        pubmsg.payload = bc_talk_msg.payload;
+        pubmsg.payloadlen = bc_talk_msg.length;
 
-        if (MQTTAsync_sendMessage(bc_talk_mqtt_client, bc_talk_msq.topic, &pubmsg, NULL) != MQTTASYNC_SUCCESS)
+        if (MQTTAsync_sendMessage(bc_talk_mqtt_client, bc_talk_msg.topic, &pubmsg, NULL) != MQTTASYNC_SUCCESS)
         {
             bc_log_warning("Mqtt failed to start send message");
         }
     }
 
-    fprintf(stdout, "[\"%s\", %s]\n", bc_talk_msq.topic, bc_talk_msq.payload);
+    fprintf(stdout, "[\"%s\", %s]\n", bc_talk_msg.topic, bc_talk_msg.payload);
     fflush(stdout);
 
     bc_os_mutex_unlock(&bc_talk_mutex);
