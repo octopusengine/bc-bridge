@@ -28,7 +28,7 @@ int main(int argc, char **argv)
             { "port",   OPTION_PORT,   "PORT",    0, "MQTT port to connect to (default is 1883)" },
             { "prefix", OPTION_PREFIX, "PREFIX",  0, "MQTT prefix topic" },
             { "furious", 'f',          0,         0, "Do not wait for the initial start string" },
-            { "log",     'L',          "level",   0, "Set desired log level to one of the following options: dump|debug|info|warning|error|fatal" },
+            { "log",     'L',          "LEVEL",   0, "Set desired log level to one of the following options: dump|debug|info|warning|error|fatal" },
             { "version", 'v',          0,         0, "Give version information" },
             { 0 }
         };

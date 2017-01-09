@@ -53,12 +53,12 @@ static void *bc_talk_worker_stdin(void *parameter);
 void _bc_talk_token_get_data(char *line, jsmntok_t *tok, bc_talk_data_t *data);
 static char *_bc_talk_data_to_string(bc_talk_data_t *data);
 
-static void _bc_talk_mqtt_connect_callback(void* context, MQTTAsync_successData* response);
+static void _bc_talk_mqtt_connect_callback(void *context, MQTTAsync_successData *response);
 static int _bc_talk_mqtt_message_callback(void *context, char *topic, int length, MQTTAsync_message *message);
 
 static void _bc_talk_mqtt_connection_lost_callback(void *context, char *cause);
-void _bc_talk_mqtt_connect_failure_callback(void* context, MQTTAsync_failureData* response);
-static void _bc_talk_mqtt_subscribe_failure_callback(void* context, MQTTAsync_failureData* response);
+void _bc_talk_mqtt_connect_failure_callback(void *context, MQTTAsync_failureData *response);
+static void _bc_talk_mqtt_subscribe_failure_callback(void *context, MQTTAsync_failureData *response);
 
 void bc_talk_init_std(bc_talk_parse_callback callback)
 {
@@ -73,9 +73,13 @@ void bc_talk_init_mqtt(bc_talk_parse_callback callback, char *host, int port, ch
 
     bc_talk_mqtt = true;
     bc_talk_mqtt_prefix = prefix;
-    strcpy(bc_talk_msq.topic, bc_talk_mqtt_prefix);
-    strcat(bc_talk_msq.topic, "/");
     bc_talk_mqtt_prefix_length = strlen(bc_talk_mqtt_prefix);
+    if ((sizeof(bc_talk_msq.topic) - bc_talk_mqtt_prefix_length) < 128)
+    {
+        bc_log_fatal("too long prefix");
+    }
+    strncpy(bc_talk_msq.topic, bc_talk_mqtt_prefix, bc_talk_mqtt_prefix_length);
+    strncat(bc_talk_msq.topic, "/", 1);
 
     char serverURI[64];
     sprintf(serverURI, "tcp://%s:%d", host, port);
@@ -114,8 +118,9 @@ void bc_talk_publish_begin(char *topic)
     bc_os_mutex_lock(&bc_talk_mutex);
     bc_talk_add_comma = false;
 
-    strcpy(bc_talk_msq.topic + bc_talk_mqtt_prefix_length + 1, topic);
-    strcpy(bc_talk_msq.payload, "{");
+    strncpy(bc_talk_msq.topic + bc_talk_mqtt_prefix_length + 1, topic,
+            sizeof(bc_talk_msq.topic) - bc_talk_mqtt_prefix_length - 1);
+    strncpy(bc_talk_msq.payload, "{", sizeof(bc_talk_msq.payload));
     bc_talk_msq.length = 1;
 }
 
@@ -141,17 +146,20 @@ void bc_talk_publish_add_quantity(char *name, char *unit, char *value, ...)
 
     if (bc_talk_add_comma)
     {
-        strcat(bc_talk_msq.payload, ", ");
+        strncat(bc_talk_msq.payload, ", ", sizeof(bc_talk_msq.payload) - bc_talk_msq.length);
         bc_talk_msq.length += 2;
     }
 
-    bc_talk_msq.length += sprintf(bc_talk_msq.payload + bc_talk_msq.length, "\"%s\": [", name);
+    bc_talk_msq.length += snprintf(bc_talk_msq.payload + bc_talk_msq.length,
+                                   sizeof(bc_talk_msq.payload) - bc_talk_msq.length, "\"%s\": [", name);
 
     va_start(ap, value);
-    bc_talk_msq.length += vsprintf(bc_talk_msq.payload + bc_talk_msq.length, value, ap);
+    bc_talk_msq.length += vsnprintf(bc_talk_msq.payload + bc_talk_msq.length,
+                                    sizeof(bc_talk_msq.payload) - bc_talk_msq.length, value, ap);
     va_end(ap);
 
-    bc_talk_msq.length += sprintf(bc_talk_msq.payload + bc_talk_msq.length, ", \"%s\"]", unit);
+    bc_talk_msq.length += snprintf(bc_talk_msq.payload + bc_talk_msq.length,
+                                   sizeof(bc_talk_msq.payload) - bc_talk_msq.length, ", \"%s\"]", unit);
 
     bc_talk_add_comma = true;
 }
@@ -162,14 +170,16 @@ void bc_talk_publish_add_value(char *name, char *value, ...)
 
     if (bc_talk_add_comma)
     {
-        strcat(bc_talk_msq.payload, ", ");
+        strncat(bc_talk_msq.payload, ", ", sizeof(bc_talk_msq.payload) - bc_talk_msq.length);
         bc_talk_msq.length += 2;
     }
 
-    bc_talk_msq.length += sprintf(bc_talk_msq.payload + bc_talk_msq.length, "\"%s\": ", name);
+    bc_talk_msq.length += snprintf(bc_talk_msq.payload + bc_talk_msq.length,
+                                   sizeof(bc_talk_msq.payload) - bc_talk_msq.length, "\"%s\": ", name);
 
     va_start(ap, value);
-    bc_talk_msq.length += vsprintf(bc_talk_msq.payload + bc_talk_msq.length, value, ap);
+    bc_talk_msq.length += vsnprintf(bc_talk_msq.payload + bc_talk_msq.length,
+                                    sizeof(bc_talk_msq.payload) - bc_talk_msq.length, value, ap);
     va_end(ap);
 
     bc_talk_add_comma = true;
@@ -178,7 +188,7 @@ void bc_talk_publish_add_value(char *name, char *value, ...)
 
 void bc_talk_publish_end(void)
 {
-    strcat(bc_talk_msq.payload, "}");
+    strncat(bc_talk_msq.payload, "}", sizeof(bc_talk_msq.payload) - bc_talk_msq.length);
     bc_talk_msq.length++;
 
     if (bc_talk_mqtt)
@@ -186,7 +196,7 @@ void bc_talk_publish_end(void)
         MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
 
         pubmsg.payload = bc_talk_msq.payload;
-        pubmsg.payloadlen = strlen(bc_talk_msq.payload);
+        pubmsg.payloadlen = bc_talk_msq.length;
 
         if (MQTTAsync_sendMessage(bc_talk_mqtt_client, bc_talk_msq.topic, &pubmsg, NULL) != MQTTASYNC_SUCCESS)
         {
@@ -224,7 +234,7 @@ char *bc_talk_get_device_name(uint8_t device_address, char *output_str, size_t m
         return NULL;
     }
 
-    strcpy(output_str, str);
+    strncpy(output_str, str, max_len);
     return output_str;
 }
 
@@ -1162,9 +1172,9 @@ static void *bc_talk_worker_stdin(void *parameter)
     return NULL;
 }
 
-void _bc_talk_mqtt_connect_callback(void* context, MQTTAsync_successData* response)
+void _bc_talk_mqtt_connect_callback(void *context, MQTTAsync_successData *response)
 {
-    MQTTAsync client = (MQTTAsync)context;
+    MQTTAsync client = (MQTTAsync) context;
     MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
 
     bc_log_info("Mqtt successful connection");
@@ -1181,7 +1191,7 @@ void _bc_talk_mqtt_connect_callback(void* context, MQTTAsync_successData* respon
     }
 
     sprintf(topic, "%s/+/+/+/+", bc_talk_mqtt_prefix);
-    if (MQTTAsync_subscribe(client,  topic, 0, &opts) != MQTTASYNC_SUCCESS)
+    if (MQTTAsync_subscribe(client, topic, 0, &opts) != MQTTASYNC_SUCCESS)
     {
         bc_log_fatal("Mqtt failed to start subscribe");
     }
@@ -1198,9 +1208,11 @@ static int _bc_talk_mqtt_message_callback(void *context, char *topic, int length
 
         bc_log_info("mqtt message %s %s\n", topic, (char *) message->payload);
 
-        if ((strncmp(topic, bc_talk_mqtt_prefix, bc_talk_mqtt_prefix_length) == 0) && (bc_talk_mqtt_prefix_length + 2 < length))
+        if ((strncmp(topic, bc_talk_mqtt_prefix, bc_talk_mqtt_prefix_length) == 0) &&
+            (bc_talk_mqtt_prefix_length + 2 < length))
         {
-            size_t length = sprintf(bc_talk_mqtt_talk_buffer, "[\"%s\",%s]", topic + bc_talk_mqtt_prefix_length + 1, (char *) message->payload);
+            size_t length = sprintf(bc_talk_mqtt_talk_buffer, "[\"%s\",%s]", topic + bc_talk_mqtt_prefix_length + 1,
+                                    (char *) message->payload);
 
             bc_talk_parse(bc_talk_mqtt_talk_buffer, length, bc_talk_callback);
         }
@@ -1221,12 +1233,12 @@ static void _bc_talk_mqtt_connection_lost_callback(void *context, char *cause)
     bc_log_warning("Mqtt connection lost, cause: %s", cause);
 }
 
-void _bc_talk_mqtt_connect_failure_callback(void* context, MQTTAsync_failureData* response)
+void _bc_talk_mqtt_connect_failure_callback(void *context, MQTTAsync_failureData *response)
 {
     bc_log_warning("Mqtt connect failed, rc %d", response ? response->code : 0);
 }
 
-static void _bc_talk_mqtt_subscribe_failure_callback(void* context, MQTTAsync_failureData* response)
+static void _bc_talk_mqtt_subscribe_failure_callback(void *context, MQTTAsync_failureData *response)
 {
     bc_log_warning("Mqtt subscribe failed, rc %d", response ? response->code : 0);
 }
