@@ -3,8 +3,8 @@
 
 == link:{gh-url}/tree/v1.1.0[1.1.0] (unreleased)
 Added::
-* Support for Humidity TAG R2.1
-* Support mqtt
+* Support for Humidity Tag R2.1
+* Support MQTT
 * New command options:
 ** `--list` Show list of available devices
 ** `--dev` Select device by ID or PATH (beware that ID may change with USB ports' manipulation)
@@ -36,10 +36,10 @@ Fixed::
 == link:{gh-url}/tree/v1.0.0[1.0.0] (2016-10-28)
 
 Added::
-* Temperature TAG
-* Luxmeter TAG
-* Humidity TAG
-* Barometer TAG
+* Temperature Tag
+* Luxmeter Tag
+* Humidity Tag
+* Barometer Tag
 * CO2 Module
 * Relay Module
 * OLED I2C Device
