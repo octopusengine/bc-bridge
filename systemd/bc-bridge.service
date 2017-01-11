@@ -1,5 +1,5 @@
 [Unit]
-Description=BigClown bridge
+Description=Software interface between Clown.Hub and Bridge Module
 After=network.target mosquitto.service dev-bcbridgehid0.device
 BindsTo=dev-bcbridgehid0.device
 Requires=mosquitto.service
