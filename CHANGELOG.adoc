@@ -1,7 +1,12 @@
 = Change Log
 :gh-url: https://github.com/bigclownlabs/bc-bridge
 
-== link:{gh-url}/tree/v1.1.0[1.1.0] (unreleased)
+== link:{gh-url}/tree/v1.1.1[1.1.1] (2016-01-11)
+
+Fixed::
+* Fix postinst script
+
+== link:{gh-url}/tree/v1.1.0[1.1.0] (2016-01-11)
 Added::
 * Support for Humidity Tag R2.1
 * Support MQTT
