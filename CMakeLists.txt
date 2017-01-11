@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 cmake_policy(SET CMP0048 NEW)
 
-project(bc-bridge VERSION 1.0.2 LANGUAGES C)
+project(bc-bridge VERSION 1.1.0 LANGUAGES C)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
@@ -107,7 +107,6 @@ endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin COMPONENT main)
 
-
 ################################################################################
 # Configure CPack                                                              #
 ################################################################################
@@ -134,8 +133,10 @@ set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/bigclownlabs/bc-bridge")
 
 set(CPACK_DEBIAN_MAIN_PACKAGE_NAME ${PROJECT_NAME})
 set(CPACK_DEBIAN_MAIN_PACKAGE_SECTION comm)
+
+set(CPACK_DEBIAN_MAIN_PACKAGE_DEPENDS "bc-common")
 if(NOT BUILD_STATIC)
-    set(CPACK_DEBIAN_MAIN_PACKAGE_DEPENDS "libudev1")
+    set(CPACK_DEBIAN_MAIN_PACKAGE_DEPENDS "${CPACK_DEBIAN_MAIN_PACKAGE_DEPENDS}, libudev1")
 endif()
 
 set(CPACK_DEBIAN_DBG_PACKAGE_DESCRIPTION_SUMMARY "${CPACK_PACKAGE_DESCRIPTION_SUMMARY} (debug symbols)")
@@ -149,5 +150,9 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "armhf|armv7")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|armv8|arm64")
     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE arm64)
 endif()
+
+configure_file(${CMAKE_SOURCE_DIR}/systemd/bc-bridge.service ${PROJECT_BINARY_DIR}/systemd/bc-bridge.service)
+install(FILES ${PROJECT_BINARY_DIR}/systemd/bc-bridge.service DESTINATION lib/systemd/system COMPONENT main)
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/systemd/postinst;${CMAKE_CURRENT_SOURCE_DIR}/systemd/prerm;")
 
 include(CPack)

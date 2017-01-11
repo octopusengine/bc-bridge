@@ -1,0 +1,15 @@
+[Unit]
+Description=BigClown bridge
+After=network.target mosquitto.service dev-bcbridgehid0.device
+BindsTo=dev-bcbridgehid0.device
+Requires=mosquitto.service
+Requisite=dev-bcbridgehid0.device
+
+[Service]
+ExecStart=/usr/bin/bc-bridge --host localhost --prefix nodes/bridge/0
+User=bigclown
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=dev-bcbridgehid0.device
