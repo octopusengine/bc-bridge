@@ -1,10 +1,12 @@
 = Change Log
 :gh-url: https://github.com/bigclownlabs/bc-bridge
 
-== link:{gh-url}/tree/v1.1.1[1.1.1] (2016-01-11)
-
+== link:{gh-url}/tree/v1.1.1[1.1.1] (2016-01-12)
 Fixed::
 * Fix postinst script
+
+Changed::
+* Systemd service dependency
 
 == link:{gh-url}/tree/v1.1.0[1.1.0] (2016-01-11)
 Added::
