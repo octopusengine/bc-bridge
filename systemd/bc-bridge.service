@@ -1,9 +1,9 @@
 [Unit]
 Description=Software interface between Clown.Hub and Bridge Module
-After=network.target mosquitto.service dev-bcbridgehid0.device
-BindsTo=dev-bcbridgehid0.device
+After=network.target mosquitto.service dev-ft260hidraw0.device
+BindsTo=dev-ft260hidraw0.device
 Requires=mosquitto.service
-Requisite=dev-bcbridgehid0.device
+Requisite=dev-ft260hidraw0.device
 
 [Service]
 ExecStart=/usr/bin/bc-bridge --host localhost --prefix nodes/bridge/0
@@ -12,4 +12,4 @@ Restart=on-failure
 RestartSec=10s
 
 [Install]
-WantedBy=dev-bcbridgehid0.device
+WantedBy=dev-ft260hidraw0.device
